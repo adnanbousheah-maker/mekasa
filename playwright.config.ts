@@ -1,10 +1,16 @@
+import { existsSync } from "node:fs";
 import { defineConfig, devices } from "@playwright/test";
+
+// الاختبارات بتحتاج Supabase المحلي (db:start + db:seed-staff) ومفاتيحه من .env.local
+if (existsSync(".env.local")) process.loadEnvFile(".env.local");
 
 const PORT = 3000;
 
 export default defineConfig({
   testDir: "./tests/e2e",
-  fullyParallel: true,
+  // الاختبارات بتغير حالة الموظفين التجريبيين، فواحد ورا الثاني
+  fullyParallel: false,
+  workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: "list",

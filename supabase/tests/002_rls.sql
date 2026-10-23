@@ -66,7 +66,8 @@ select results_eq(
   $$ values ('11111111-0000-4000-8000-000000000001'::uuid) $$,
   'staff read only their own staff row (no other phone numbers)'
 );
-select is((select count(*)::int from public.v_staff_names), 4, 'staff can read every active colleague''s name');
+-- (بس موظفين هالاختبار؛ ممكن يكون في موظفين تجريبيين من db:seed-staff)
+select is((select count(*)::int from public.v_staff_names where id::text like '11111111-%'), 4, 'staff can read every active colleague''s name');
 select throws_ok(
   $$ update public.v_staff_names set full_name = 'اسم ثاني' $$,
   '42501', null,
@@ -189,7 +190,7 @@ select tests.authenticate_as('11111111-0000-4000-8000-000000000004');
 
 select is((select count(*)::int from public.stock_counts), 3, 'admin sees counts at every location');
 select is((select count(*)::int from public.waste_records), 2, 'admin sees waste at every location');
-select is((select count(*)::int from public.staff), 4, 'admin sees all staff');
+select is((select count(*)::int from public.staff where id::text like '11111111-%'), 4, 'admin sees all staff');
 select isnt_empty($$ select 1 from public.audit_log where table_name = 'staff' $$, 'admin reads the audit log');
 select isnt_empty(
   $$ update public.products set name_ar = 'كلاسيك شوكو' where name_en = 'Classic Choco' returning id $$,

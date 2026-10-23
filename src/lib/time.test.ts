@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { businessDate, formatClock, formatLongDate } from "./time";
+import { businessDate, formatClock, formatLastSeen, formatLongDate, greetingFor } from "./time";
 
 describe("businessDate", () => {
   it("uses Amman time, not UTC", () => {
@@ -22,6 +22,37 @@ describe("formatClock", () => {
 
   it("shows midnight as 0:00", () => {
     expect(formatClock(new Date("2026-10-22T21:00:00Z"))).toBe("0:00");
+  });
+});
+
+describe("greetingFor", () => {
+  it("says good morning before noon in Amman", () => {
+    expect(greetingFor(new Date("2026-10-23T08:59:00Z"))).toBe("صباح الخير");
+  });
+
+  it("says good evening from noon in Amman", () => {
+    expect(greetingFor(new Date("2026-10-23T09:00:00Z"))).toBe("مسا الخير");
+  });
+});
+
+describe("formatLastSeen", () => {
+  const now = new Date("2026-10-23T09:30:00Z"); // 12:30 بعمّان
+
+  it("shows today with the time", () => {
+    expect(formatLastSeen(new Date("2026-10-23T06:12:00Z"), now)).toBe("اليوم 9:12");
+  });
+
+  it("shows yesterday with the time", () => {
+    expect(formatLastSeen(new Date("2026-10-22T18:40:00Z"), now)).toBe("أمس 21:40");
+  });
+
+  it("counts days for anything older", () => {
+    expect(formatLastSeen(new Date("2026-10-20T06:00:00Z"), now)).toBe("قبل 3 أيام");
+    expect(formatLastSeen(new Date("2026-10-11T06:00:00Z"), now)).toBe("قبل 12 يوم");
+  });
+
+  it("says never for someone who has not signed in", () => {
+    expect(formatLastSeen(null, now)).toBe("ما دخل لسا");
   });
 });
 

@@ -2514,7 +2514,28 @@ export type Database = {
       };
     };
     Functions: {
+      admin_record_pin_reset: { Args: { p_staff_id: string }; Returns: undefined };
+      admin_save_staff: {
+        Args: {
+          p_full_name: string;
+          p_location_id?: string;
+          p_phone: string;
+          p_roles: Database["public"]["Enums"]["app_role"][];
+          p_staff_id: string;
+        };
+        Returns: undefined;
+      };
+      admin_set_staff_active: { Args: { p_active: boolean; p_staff_id: string }; Returns: undefined };
       amman_today: { Args: Record<PropertyKey, never>; Returns: string };
+      auth_record_login_success: { Args: { p_attempt_id: number; p_staff_id: string }; Returns: undefined };
+      auth_reserve_login_attempt: {
+        Args: { p_ip?: unknown; p_phone: string };
+        Returns: {
+          attempt_id: number;
+          staff_id: string;
+          status: string;
+        }[];
+      };
       day_number: { Args: { d: string }; Returns: number };
     };
     Enums: {
