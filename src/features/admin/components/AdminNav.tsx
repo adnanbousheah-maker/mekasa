@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import { Logo } from "@/components/ui/Logo";
 import { ActiveNavItems } from "./ActiveNavItems";
@@ -20,10 +21,13 @@ export function AdminNav({ footer }: { footer: ReactNode }) {
       </Suspense>
 
       <div className="min-h-6 grow" />
-      <span className="flex h-12 items-center gap-2.5 rounded-xl bg-quiet px-3.5 text-[15px] font-semibold text-muted">
+      <Link
+        href="/admin/ai"
+        className="flex h-12 items-center gap-2.5 rounded-xl bg-ink px-3.5 text-[15px] font-semibold text-white"
+      >
+        <span aria-hidden="true">✦</span>
         اسأل المساعد
-        <span className="text-xs font-normal">المرحلة 4</span>
-      </span>
+      </Link>
       {footer}
     </nav>
   );
