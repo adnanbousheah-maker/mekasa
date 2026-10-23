@@ -2235,6 +2235,41 @@ export type Database = {
       };
     };
     Views: {
+      v_branch_stock_age: {
+        Row: {
+          age_days: number | null;
+          is_expired: boolean | null;
+          location_id: string | null;
+          near_expiry: boolean | null;
+          oldest_receipt_at: string | null;
+          product_id: string | null;
+          qty_pieces: number | null;
+        };
+        ComputedFields: never;
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       v_count_consumption: {
         Row: {
           business_date: string | null;
@@ -2576,7 +2611,16 @@ export type Database = {
         Args: { p_line_id: string; p_loose_pieces: number; p_reason: string; p_whole_cakes: number };
         Returns: undefined;
       };
+      admin_decide_request: { Args: { p_approve: boolean; p_request_id: string }; Returns: undefined };
       admin_record_pin_reset: { Args: { p_staff_id: string }; Returns: undefined };
+      admin_resolve_receipt_line: {
+        Args: {
+          p_line_id: string;
+          p_note?: string;
+          p_resolution: Database["public"]["Enums"]["discrepancy_resolution"];
+        };
+        Returns: undefined;
+      };
       admin_save_staff: {
         Args: {
           p_full_name: string;
@@ -2598,6 +2642,7 @@ export type Database = {
           status: string;
         }[];
       };
+      cancel_request: { Args: { p_request_id: string }; Returns: undefined };
       count_breakdown: {
         Args: { p_count_id: string };
         Returns: {
@@ -2621,7 +2666,29 @@ export type Database = {
           whole_cakes: number;
         }[];
       };
+      create_dispatch: {
+        Args: {
+          p_confirm_fefo_override?: boolean;
+          p_lines: Json;
+          p_note?: string;
+          p_request_id?: string;
+          p_to_location_id: string;
+        };
+        Returns: string;
+      };
+      create_request: { Args: { p_lines: Json; p_note?: string }; Returns: string };
       day_number: { Args: { d: string }; Returns: number };
+      decide_return: {
+        Args: {
+          p_receipt_line_id: string;
+          p_to_stock_pieces: number;
+          p_to_stock_production_date?: string;
+          p_to_waste_pieces: number;
+        };
+        Returns: string;
+      };
+      receive_dispatch: { Args: { p_dispatch_id: string; p_lines: Json }; Returns: string };
+      record_production: { Args: { p_lines: Json; p_note?: string }; Returns: string };
       record_waste: {
         Args: {
           p_location_id: string;
