@@ -2,8 +2,8 @@
 
 ## الوضع الحالي (23 أكتوبر 2026)
 - **Supabase:** مشروع `mekasa` (`nuqbkajkdenblfyaklkd`، Frankfurt). الـ migrations انرفعت عن طريق Supabase MCP (أسماءها بالسجل من غير التاريخ، فـ `supabase db push` رح يشوفها مش مرفوعة: استعمل `supabase migration repair` قبل أول push). البيانات الأساسية من `seed.sql` موجودة، وأسرار Vault (`mekasa_app_url`، `mekasa_cron_secret`) محطوطة. الهيكلية انفحصت مقابل المحلي (بصمة الدوال والأعمدة والـ policies والـ triggers والـ views) وطابقت.
-- **ناقص بقاعدة البيانات:** `admin_save_staff` و`admin_set_staff_active` من `20261023101000_staff_admin.sql`، كل `20261023101600_movement_between_locations.sql`، ومهمة `mekasa-login-attempts-cleanup` من `20261023101400_cron.sql`. أداة MCP بتطلب موافقة على أي SQL فيه `delete`/`truncate`، فلازم ينحطوا من SQL Editor.
-- **Vercel:** مشروع `mekasa` مربوط بالمستودع، `https://mekasa.vercel.app` (fra1). المتغيرات كلها محطوطة إلا `SUPABASE_SERVICE_ROLE_KEY` و`ANTHROPIC_API_KEY`. الفرع `main` قديم، فالنشر الحالي من `feat/auth-nxciay`؛ بعد الدمج بـ `main` كل push بينشر لحاله.
+- **قاعدة البيانات كاملة:** آخر 3 أجزاء (فيها `delete`/`truncate`، وأداة MCP بتطلب عليها موافقة) انحطوا من SQL Editor. الدوال اللي إجت من هناك نهايات أسطرها `\r\n` (نسخ من ويندوز)، وغير هيك مطابقة للأصل.
+- **Vercel:** مشروع `mekasa` مربوط بالمستودع، `https://mekasa.vercel.app` (fra1). المتغيرات كلها محطوطة إلا `ANTHROPIC_API_KEY`. تذكيرات pg_cron شغالة (200). الفرع `main` قديم، فالنشر الحالي من `feat/auth-nxciay`؛ بعد الدمج بـ `main` كل push بينشر لحاله.
 - **إعدادات Auth بالسحابة** (الخطوة 1.3 تحت) لسا لازم تنعمل من اللوحة.
 
 هالدليل لصاحب المشروع. كل المفاتيح بتنحط بلوحات Supabase وVercel أو بملف محلي مش على git، وممنوع تنبعت لحدا.
