@@ -2514,6 +2514,10 @@ export type Database = {
       };
     };
     Functions: {
+      admin_correct_count_line: {
+        Args: { p_line_id: string; p_loose_pieces: number; p_reason: string; p_whole_cakes: number };
+        Returns: undefined;
+      };
       admin_record_pin_reset: { Args: { p_staff_id: string }; Returns: undefined };
       admin_save_staff: {
         Args: {
@@ -2537,6 +2541,18 @@ export type Database = {
         }[];
       };
       day_number: { Args: { d: string }; Returns: number };
+      submit_count: {
+        Args: {
+          p_form_version_id?: string;
+          p_lines: Json;
+          p_location_id: string;
+          p_method?: Database["public"]["Enums"]["count_method"];
+          p_photo_path?: string;
+          p_schedule_id?: string;
+          p_started_at?: string;
+        };
+        Returns: string;
+      };
     };
     Enums: {
       ai_feature: "count_ocr" | "assistant";
