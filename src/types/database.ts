@@ -2642,6 +2642,14 @@ export type Database = {
           status: string;
         }[];
       };
+      branch_suggestions: {
+        Args: { p_branch_id: string };
+        Returns: {
+          par_pieces: number;
+          product_id: string;
+          stock_pieces: number;
+        }[];
+      };
       cancel_request: { Args: { p_request_id: string }; Returns: undefined };
       count_breakdown: {
         Args: { p_count_id: string };

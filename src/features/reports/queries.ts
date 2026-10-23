@@ -440,3 +440,106 @@ export async function lastCountByLocation(): Promise<Map<string, CountListRow>> 
 export function yesterdayOf(todayIso: string): string {
   return addDays(todayIso, -1);
 }
+
+// ─── المصنع والدفعات ─────────────────────────────────────────────────
+
+export interface FactoryMatrix {
+  factoryId: string | null;
+  dates: string[];
+  shelfLifeDays: number;
+  rows: { productId: string; nameEn: string; piecesPerCake: number | null; byDate: Map<string, number> }[];
+}
+
+/** ستوك المصنع: صنف × تاريخ إنتاج (رقم اليوم)، الأقدم أول. */
+export async function factoryMatrix(): Promise<FactoryMatrix> {
+  const supabase = await db();
+  const [locations, products, { data: batches, error }, { data: settings }] = await Promise.all([
+    listReportLocations(),
+    listReportProducts(),
+    supabase
+      .from("v_factory_batches")
+      .select("product_id, production_date, qty_pieces, location_id")
+      .gt("qty_pieces", 0),
+    supabase.from("app_settings").select("factory_shelf_life_days").single(),
+  ]);
+  if (error) fail("factory batches", error);
+  const factory = locations.find((l) => l.kind === "factory") ?? null;
+  const today = businessDate(new Date());
+  const shelf = settings?.factory_shelf_life_days ?? 7;
+  const rows = products
+    .map((p) => {
+      const byDate = new Map<string, number>();
+      for (const b of batches.filter((b) => b.product_id === p.id && b.location_id === factory?.id)) {
+        byDate.set(b.production_date!, (byDate.get(b.production_date!) ?? 0) + b.qty_pieces!);
+      }
+      return { productId: p.id, nameEn: p.nameEn, piecesPerCake: p.piecesPerCake, byDate };
+    })
+    .filter((r) => r.byDate.size > 0);
+  const older = [...new Set(batches.map((b) => b.production_date!))].filter(
+    (d) => d < addDays(today, -(shelf - 1)),
+  );
+  const dates = [...older.sort(), ...Array.from({ length: shelf }, (_, i) => addDays(today, i - shelf + 1))];
+  return { factoryId: factory?.id ?? null, dates, shelfLifeDays: shelf, rows };
+}
+
+export interface ProductionCheck {
+  productId: string;
+  nameEn: string;
+  piecesPerCake: number | null;
+  produced: number;
+  out: number;
+  waste: number;
+  expected: number;
+  counted: number | null;
+}
+
+/** إنتاج اليوم ناقص اللي طلع منه (والتالف) لازم يساوي جرد دفعة اليوم. */
+export async function productionVsCount(factoryId: string): Promise<ProductionCheck[]> {
+  const supabase = await db();
+  const today = businessDate(new Date());
+  const [{ data: batches }, products] = await Promise.all([
+    supabase.from("batches").select("id, product_id").eq("production_date", today),
+    listReportProducts(),
+  ]);
+  if (!batches?.length) return [];
+  const ids = batches.map((b) => b.id);
+  const [{ data: moves, error }, { data: lines }] = await Promise.all([
+    supabase
+      .from("stock_movements")
+      .select("batch_id, qty_pieces, movement_type, occurred_at")
+      .eq("location_id", factoryId)
+      .in("batch_id", ids),
+    supabase
+      .from("stock_count_lines")
+      .select("batch_id, qty_pieces, count:stock_counts!inner(location_id, status, started_at)")
+      .in("batch_id", ids)
+      .eq("count.location_id", factoryId)
+      .eq("count.status", "confirmed"),
+  ]);
+  if (error) fail("production check", error);
+  const byId = new Map(products.map((p) => [p.id, p]));
+  return batches
+    .map((b) => {
+      const m = (moves ?? []).filter((x) => x.batch_id === b.id);
+      const sum = (types: string[]) =>
+        m.filter((x) => types.includes(x.movement_type)).reduce((s, x) => s + x.qty_pieces, 0);
+      const latest = (lines ?? [])
+        .filter((l) => l.batch_id === b.id)
+        .sort((a, c) => c.count.started_at.localeCompare(a.count.started_at))[0];
+      const produced = sum(["production"]);
+      const out = -sum(["dispatch_out"]);
+      const waste = -sum(["waste"]);
+      const p = byId.get(b.product_id);
+      return {
+        productId: b.product_id,
+        nameEn: p?.nameEn ?? "",
+        piecesPerCake: p?.piecesPerCake ?? null,
+        produced,
+        out,
+        waste,
+        expected: produced - out - waste,
+        counted: latest ? (latest.qty_pieces ?? 0) : null,
+      };
+    })
+    .filter((r) => r.produced > 0);
+}

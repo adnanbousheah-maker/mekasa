@@ -1,14 +1,26 @@
+import Link from "next/link";
 import { DayBadge } from "@/components/ui/DayBadge";
 import { Logo } from "@/components/ui/Logo";
 import { LogoutButton } from "@/features/auth/components/LogoutButton";
+import type { CurrentStaff } from "@/features/auth/session";
 import { CountReminder } from "@/features/reminders/components/CountReminder";
 import { EnableNotifications } from "@/features/reminders/components/EnableNotifications";
 import type { OpenSlot } from "@/features/reminders/queries";
-import type { CurrentStaff } from "@/features/auth/session";
 import { ROLE_LABELS } from "@/features/staff/roles";
-import { dayNumberOf } from "@/lib/day-number";
+import { dayNumberOf, type DayNumber } from "@/lib/day-number";
 import { businessDate, formatLongDate, greetingFor } from "@/lib/time";
-import { ClipboardIcon, TrashIcon } from "./icons";
+import { formatQuantity } from "@/lib/units";
+import type { BranchHomeData, FactoryHomeData } from "../queries";
+import {
+  BoxIcon,
+  CartIcon,
+  ClipboardIcon,
+  ListIcon,
+  OvenIcon,
+  ReturnIcon,
+  TrashIcon,
+  TruckIcon,
+} from "./icons";
 import { TaskLink } from "./TaskLink";
 
 type Props = {
@@ -16,13 +28,19 @@ type Props = {
   now: Date;
   slot?: OpenSlot | null;
   vapidPublicKey?: string | null;
+  branch?: BranchHomeData | null;
+  factory?: FactoryHomeData | null;
 };
 
-/**
- * الرئيسية للفرع (design/branch/Main) وللمصنع (design/factory/FactoryHome).
- * بتعرض بس المهام اللي انبنت؛ الطلب والاستلام والإخراج والإنتاج والمواد بمراحلهم.
- */
-export function StaffHome({ staff, now, slot = null, vapidPublicKey = null }: Props) {
+/** الرئيسية للفرع (design/branch/Main) وللمصنع (design/factory/FactoryHome). */
+export function StaffHome({
+  staff,
+  now,
+  slot = null,
+  vapidPublicKey = null,
+  branch = null,
+  factory = null,
+}: Props) {
   const today = businessDate(now);
   const day = dayNumberOf(today);
   const firstName = staff.fullName.split(" ")[0];
@@ -56,7 +74,7 @@ export function StaffHome({ staff, now, slot = null, vapidPublicKey = null }: Pr
 
       {slot && <CountReminder slot={slot} now={now} />}
 
-      {atFactory ? <FactoryTasks staff={staff} /> : <BranchTasks />}
+      {atFactory ? <FactoryTasks staff={staff} data={factory} /> : <BranchTasks data={branch} />}
 
       <div className="grow" />
       <EnableNotifications vapidPublicKey={vapidPublicKey} />
@@ -65,35 +83,179 @@ export function StaffHome({ staff, now, slot = null, vapidPublicKey = null }: Pr
   );
 }
 
-function BranchTasks() {
+function Badge({ n }: { n: number }) {
+  if (n <= 0) return null;
   return (
-    <nav aria-label="المهام" className="flex flex-col gap-3">
-      <TaskLink href="/count" title="جرد" description="عدّ الكيك الموجود بالفرع" icon={<ClipboardIcon />} />
-      <TaskLink
-        href="/waste"
-        title="تالف"
-        description="سجّل كيك انكسر أو انتهت مدته"
-        icon={
-          <span className="text-danger">
-            <TrashIcon />
-          </span>
-        }
-      />
-    </nav>
+    <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-ink px-2 text-base font-bold text-white">
+      {n}
+    </span>
   );
 }
 
-function FactoryTasks({ staff }: { staff: CurrentStaff }) {
+function BranchTasks({ data }: { data: BranchHomeData | null }) {
+  const incoming = data?.incoming ?? 0;
+  return (
+    <>
+      {data && data.nearExpiry.length > 0 && (
+        <Link
+          href="/waste"
+          className="flex items-center gap-3 rounded-[14px] border border-danger-line bg-danger-soft px-3.5 py-2.5"
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            className="shrink-0 text-danger"
+          >
+            <circle cx="12" cy="13" r="8" />
+            <path d="M12 9v4l2 2M9 2h6" />
+          </svg>
+          <span className="flex grow flex-col text-danger-text">
+            <strong className="text-[15px]">
+              {data.nearExpiry.length}{" "}
+              {data.nearExpiry.length >= 3 && data.nearExpiry.length <= 10 ? "أصناف" : "صنف"} قربت تخلص مدتها
+            </strong>
+            <span dir="auto" className="text-[13px]">
+              {data.nearExpiry.slice(0, 4).join("، ")} · بيعهم أول
+            </span>
+          </span>
+        </Link>
+      )}
+      <nav aria-label="المهام" className="flex flex-col gap-3">
+        <TaskLink href="/count" title="جرد" description="عدّ الكيك الموجود بالفرع" icon={<ClipboardIcon />} />
+        <TaskLink
+          href="/orders"
+          title="استلام"
+          description={
+            incoming === 0
+              ? "ما في شي بالطريق"
+              : incoming === 1
+                ? "طلبية وحدة بالطريق"
+                : `${incoming} طلبيات بالطريق`
+          }
+          icon={<TruckIcon />}
+          aside={<Badge n={incoming} />}
+        />
+        <TaskLink href="/order" title="طلب" description="اطلب كيك من المصنع" icon={<CartIcon />} />
+      </nav>
+      <div className="grid grid-cols-2 gap-3">
+        <Link
+          href="/waste"
+          className="flex h-14 items-center justify-center gap-2 rounded-[14px] border border-line bg-surface text-base font-semibold"
+        >
+          <span className="text-danger">
+            <TrashIcon size={20} />
+          </span>
+          تسجيل تالف
+        </Link>
+        <Link
+          href="/orders"
+          className="flex h-14 items-center justify-center gap-2 rounded-[14px] border border-line bg-surface text-base font-semibold"
+        >
+          <span className="text-muted">
+            <ListIcon size={20} />
+          </span>
+          طلبياتي
+        </Link>
+      </div>
+    </>
+  );
+}
+
+function FactoryTasks({ staff, data }: { staff: CurrentStaff; data: FactoryHomeData | null }) {
   const isStorekeeper = staff.roles.includes("storekeeper");
   const isDispatcher = staff.roles.includes("dispatcher");
+  const lastDay = data?.lastDay ?? [];
 
   return (
     <>
+      {(lastDay.length > 0 || (data?.rawBelowMin.length ?? 0) > 0) && (
+        <section aria-label="تنبيهات" className="flex flex-col gap-2">
+          {lastDay.slice(0, 3).map((b) => (
+            <Link
+              key={`${b.productName}-${b.dayNumber}`}
+              href={isDispatcher ? "/factory/requests" : "/count"}
+              className="flex items-center gap-3 rounded-[14px] border border-danger-line bg-danger-soft px-3.5 py-2.5 text-danger-text"
+            >
+              <DayBadge day={b.dayNumber as DayNumber} />
+              <span className="flex flex-col">
+                <strong className="text-[15px]">دفعة رقم {b.dayNumber} آخر يوم إلها</strong>
+                <span dir="auto" className="text-[13px]">
+                  {b.productName}: {formatQuantity(b.qty, b.piecesPerCake)} لازم تطلع اليوم
+                </span>
+              </span>
+            </Link>
+          ))}
+          {data && data.rawBelowMin.length > 0 && (
+            <Link
+              href="/factory/raw"
+              className="flex items-center gap-3 rounded-[14px] border border-warn-line bg-warn-soft px-3.5 py-2.5 text-warn-text"
+            >
+              <BoxIcon size={24} />
+              <span className="flex flex-col">
+                <strong className="text-[15px]">
+                  {data.rawBelowMin.length === 1
+                    ? "مادة وحدة"
+                    : data.rawBelowMin.length === 2
+                      ? "مادتين"
+                      : `${data.rawBelowMin.length} مواد`}{" "}
+                  تحت الحد الأدنى
+                </strong>
+                <span className="text-[13px]">{data.rawBelowMin.slice(0, 4).join("، ")}</span>
+              </span>
+            </Link>
+          )}
+        </section>
+      )}
+      {isDispatcher && (
+        <section className="flex flex-col gap-2.5">
+          <h2 className="text-[15px] font-semibold text-muted">الإخراج</h2>
+          <div className="grid grid-cols-2 gap-2.5">
+            <TaskLink
+              variant="tile"
+              href="/factory/requests"
+              title="طلبات الفروع"
+              icon={<ListIcon size={24} />}
+              aside={<Badge n={data?.pendingRequests ?? 0} />}
+            />
+            <TaskLink
+              variant="tile"
+              href="/factory/dispatch"
+              title="إخراج جديد"
+              icon={<TruckIcon size={24} />}
+            />
+          </div>
+        </section>
+      )}
       {isStorekeeper && (
         <section className="flex flex-col gap-2.5">
           <h2 className="text-[15px] font-semibold text-muted">المستودع</h2>
           <div className="grid grid-cols-2 gap-2.5">
+            <TaskLink
+              variant="tile"
+              href="/factory/production"
+              title="تسجيل إنتاج"
+              icon={<OvenIcon size={24} />}
+            />
             <TaskLink variant="tile" href="/count" title="جرد المصنع" icon={<ClipboardIcon size={24} />} />
+            <TaskLink
+              variant="tile"
+              href="/factory/raw"
+              title="المواد الأولية"
+              icon={<BoxIcon size={24} />}
+            />
+            <TaskLink
+              variant="tile"
+              href="/factory/raw/move"
+              title="استلام وصرف مواد"
+              icon={<TruckIcon size={24} />}
+            />
             <TaskLink
               variant="tile"
               href="/waste"
@@ -104,15 +266,16 @@ function FactoryTasks({ staff }: { staff: CurrentStaff }) {
                 </span>
               }
             />
+            {data?.returnsEnabled && (
+              <TaskLink
+                variant="tile"
+                href="/factory/returns"
+                title="المرتجعات"
+                icon={<ReturnIcon size={24} />}
+                aside={<Badge n={data.openReturns} />}
+              />
+            )}
           </div>
-        </section>
-      )}
-      {isDispatcher && (
-        <section className="flex flex-col gap-2.5">
-          <h2 className="text-[15px] font-semibold text-muted">الإخراج</h2>
-          <p className="rounded-[14px] border border-line bg-surface px-4 py-3 text-sm text-muted">
-            طلبات الفروع والإخراج جايين بالمرحلة الثانية.
-          </p>
         </section>
       )}
     </>

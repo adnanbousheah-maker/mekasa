@@ -83,5 +83,43 @@ export async function runReminders(now = new Date()): Promise<ReminderRun> {
     await db.from("notification_log").update({ recipients }).eq("id", logged.id);
     result.sent.push({ kind: alert.kind, scheduleId: alert.schedule.id, recipients });
   }
+  await alertUnreceivedDispatches(db, result);
   return result;
+}
+
+/** إخراج ما انستلم بعد عدد الساعات المحدد: إشعار لموظفين الوجهة وللأدمن، مرة وحدة. */
+async function alertUnreceivedDispatches(db: ReturnType<typeof createAdminClient>, result: ReminderRun) {
+  const { data: overdue, error } = await db
+    .from("v_unreceived_dispatches")
+    .select("id, to_location_id, hours_in_transit")
+    .eq("is_overdue", true);
+  if (error) throw new Error(error.message);
+  for (const d of overdue ?? []) {
+    const { data: logged } = await db
+      .from("notification_log")
+      .insert({ kind: "dispatch_unreceived", location_id: d.to_location_id, dispatch_id: d.id })
+      .select("id")
+      .maybeSingle();
+    if (!logged) continue;
+    const [{ data: staff }, { data: admins }, { data: loc }] = await Promise.all([
+      db.from("staff").select("id").eq("is_active", true).eq("location_id", d.to_location_id!),
+      db
+        .from("staff")
+        .select("id, staff_roles!staff_roles_staff_id_fkey!inner(role)")
+        .eq("is_active", true)
+        .eq("staff_roles.role", "admin"),
+      db.from("locations").select("name").eq("id", d.to_location_id!).single(),
+    ]);
+    const recipients = await sendPushToStaff(
+      [...new Set([...(staff ?? []), ...(admins ?? [])].map((s) => s.id))],
+      {
+        title: "إخراج ما انستلم",
+        body: `في إخراج لـ${loc?.name ?? ""} بالطريق من ${Math.floor(Number(d.hours_in_transit ?? 0))} ساعة. استلمه أو بلّغ عن مشكلة.`,
+        url: "/orders",
+        tag: `dispatch-${d.id}`,
+      },
+    );
+    await db.from("notification_log").update({ recipients }).eq("id", logged.id);
+    result.sent.push({ kind: "dispatch_unreceived", scheduleId: d.id!, recipients });
+  }
 }

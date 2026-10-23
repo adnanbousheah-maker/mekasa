@@ -3,6 +3,7 @@ import { getCurrentStaff } from "@/features/auth/session";
 import { addDays, parseRange, toCakes } from "@/features/reports/format";
 import {
   consumptionSince,
+  factoryMatrix,
   getCountDetail,
   listCounts,
   listReportLocations,
@@ -10,6 +11,7 @@ import {
   listWaste,
   stockByProduct,
 } from "@/features/reports/queries";
+import { loadDocuments } from "@/features/orders/queries";
 import { listStaff } from "@/features/staff/queries";
 import { ROLE_LABELS } from "@/features/staff/roles";
 import { WASTE_REASON_LABELS } from "@/features/waste/schemas";
@@ -145,6 +147,76 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             { header: "ملاحظة", value: (r) => r.note, width: 30 },
             { header: "مين", value: (r) => r.recordedBy },
             { header: "صورة", value: (r) => (r.photoPath ? "نعم" : "") },
+          ],
+        }),
+      ];
+      break;
+    }
+    case "orders": {
+      const { requests, dispatches } = await loadDocuments({ requests: {}, dispatches: {}, sinceDays: 60 });
+      const rows = dispatches.flatMap((d) =>
+        d.lines.map((l) => {
+          const request = requests.find((r) => r.id === d.requestId);
+          const requested = request?.lines.find((rl) => rl.lineId === l.requestLineId);
+          return { d, l, requested };
+        }),
+      );
+      sheets = [
+        sheet({
+          name: "الإخراج والاستلام",
+          rows,
+          columns: [
+            { header: "طلع", value: (r) => r.d.dispatchedAt },
+            {
+              header: "النوع",
+              value: (r) => ({ replenishment: "إخراج", transfer: "تحويل", return: "إرجاع" })[r.d.kind],
+            },
+            { header: "من", value: (r) => r.d.fromName },
+            { header: "لـ", value: (r) => r.d.toName },
+            { header: "الصنف", value: (r) => r.l.productName, width: 28 },
+            { header: "المطلوب (قطع)", value: (r) => r.requested?.qtyPieces ?? null },
+            { header: "طلع (قطع)", value: (r) => r.l.qtyPieces },
+            { header: "وصل (قطع)", value: (r) => r.l.received?.qtyPieces ?? null },
+            {
+              header: "الدفعات",
+              value: (r) =>
+                r.l.batches
+                  .map((b) => `رقم ${b.dayNumber}: ${b.qtyPieces}${b.isOverride ? " (تجاوز)" : ""}`)
+                  .join("، "),
+            },
+            { header: "ملاحظة الاستلام", value: (r) => r.l.received?.note ?? "" },
+            { header: "طلّعه", value: (r) => r.d.dispatchedBy },
+            { header: "استلمه", value: (r) => r.d.receivedBy ?? "" },
+          ],
+        }),
+        sheet({
+          name: "الطلبات",
+          rows: requests.flatMap((r) => r.lines.map((l) => ({ r, l }))),
+          columns: [
+            { header: "الوقت", value: (x) => x.r.requestedAt },
+            { header: "الفرع", value: (x) => x.r.fromName },
+            { header: "الحالة", value: (x) => x.r.status },
+            { header: "الصنف", value: (x) => x.l.productName, width: 28 },
+            { header: "المطلوب (قطع)", value: (x) => x.l.qtyPieces },
+            { header: "المقترح (قطع)", value: (x) => x.l.suggestedPieces },
+            { header: "طلبه", value: (x) => x.r.requestedBy },
+          ],
+        }),
+      ];
+      break;
+    }
+    case "factory": {
+      const matrix = await factoryMatrix();
+      sheets = [
+        sheet({
+          name: "دفعات المصنع",
+          rows: matrix.rows,
+          columns: [
+            { header: "الصنف", value: (r) => r.nameEn, width: 28 },
+            ...matrix.dates.map((d) => ({
+              header: `${d} (قطع)`,
+              value: (r: (typeof matrix.rows)[number]) => r.byDate.get(d) ?? 0,
+            })),
           ],
         }),
       ];

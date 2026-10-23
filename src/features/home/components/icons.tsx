@@ -39,3 +39,58 @@ export function TrashIcon(props: Props) {
     </Icon>
   );
 }
+
+export function TruckIcon(props: Props) {
+  return (
+    <Icon {...props}>
+      <path d="M3 7h11v9H3z" />
+      <path d="M14 10h4l3 3v3h-7" />
+      <circle cx="7" cy="18" r="2" />
+      <circle cx="17" cy="18" r="2" />
+    </Icon>
+  );
+}
+
+export function CartIcon(props: Props) {
+  return (
+    <Icon {...props}>
+      <path d="M4 5h2l2 11h10l2-8H7" />
+      <circle cx="10" cy="20" r="1.5" />
+      <circle cx="17" cy="20" r="1.5" />
+    </Icon>
+  );
+}
+
+export function ListIcon(props: Props) {
+  return (
+    <Icon {...props}>
+      <path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" />
+    </Icon>
+  );
+}
+
+export function OvenIcon(props: Props) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M3 9h18M8 14h8" />
+    </Icon>
+  );
+}
+
+export function BoxIcon(props: Props) {
+  return (
+    <Icon {...props}>
+      <path d="M6 8h12l-1 12H7zM9 8V5h6v3" />
+    </Icon>
+  );
+}
+
+export function ReturnIcon(props: Props) {
+  return (
+    <Icon {...props}>
+      <path d="M9 14L4 9l5-5" />
+      <path d="M4 9h11a5 5 0 0 1 0 10h-3" />
+    </Icon>
+  );
+}

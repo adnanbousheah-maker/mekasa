@@ -13,7 +13,9 @@ test("branch staff sign in to their branch home and sign out", async ({ page }) 
 
   await expect(page.getByRole("heading", { level: 1 })).toContainText(BRANCH.name);
   await expect(page.getByText("فرع الصويفية")).toBeVisible();
-  await expect(page.getByRole("link", { name: /جرد/ })).toBeVisible();
+  await expect(
+    page.getByRole("navigation", { name: "المهام" }).getByRole("link", { name: /جرد/ }),
+  ).toBeVisible();
 
   // الجلسة بكوكي ما بيقدر أي سكربت بالصفحة يقرأها
   const authCookies = (await page.context().cookies()).filter((c) => c.name.includes("auth-token"));

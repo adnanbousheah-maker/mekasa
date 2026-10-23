@@ -156,8 +156,11 @@
 - **تصحيح الجرد (`admin_correct_count_line`):** حركة بالفرق على السطر المصحح، والعكس على أول جرد بعده (على سطره، أو `admin_correction` إذا ما فيه هالصنف)، فالستوك الحالي ما بيتغير والاستهلاك بالفترتين بيضل صح.
 - **الصور:** بتنضغط بالجوال (`src/lib/image.ts`، أطول ضلع 2000px JPEG) وبتنرفع بـ server action (`uploadPhotoAction`) بجلسة الموظف لـ `{location_id}/{date}/{uuid}.jpg`. حد الـ server actions 4MB (`next.config.ts`). العرض بروابط مؤقتة (`signedPhotoUrl`).
 - **قراءة الفورم (`src/features/count-form`):** Claude بيرجع رمز النسخة وأسطر برقم السطر، والسطر n = الصنف n بنسخة الفورم. نسخة مش مقروءة أو لموقع ثاني = آخر نسخة لموقع الموظف. أصناف انضافت بعد الطباعة بتطلع صفر وبرتقالي. `MEKASA_FAKE_OCR=1` (مش بالإنتاج) بيرجع أرقام ثابتة، والـ e2e بيستعمله. بدون `ANTHROPIC_API_KEY` القراءة بتفشل والموظف بيدخل يدوي.
+- **فحوصات pgTAP بتفترض دفتر نضيف لكل موقع**، فبتشتغل بعد `db:reset` مباشرة (قبل e2e). `npm run db:verify` = reset + pgTAP + الموظفين التجريبيين.
 - **بعد `db:reset` لازم `db:seed-staff`** (الـ reset بيمسح الموظفين).
 - **تقارير الأدمن (`src/features/reports`):** `count_breakdown(count_id)` (المتوقع = العد − التعديل، والباقي للشرح) و`v_count_list` (الاستهلاك بالقطع وبالكيكات حسب حجم كل صنف، والأرقام المستحيلة، وتصحيحات الموظف لقراءة الصورة). كل جدول إله تصدير بـ `/admin/export/{report}` (exceljs، RTL، `buildWorkbook` + `sheet()`).
+- **الإخراج (`create_dispatch`):** من المصنع لازم دور الإخراج، ومن الفرع (تحويل أو إرجاع) دور الفرع وحسب الإعدادات. الدفعات: إذا ما انبعتت، FEFO من الأقدم (بدون المنتهية). أي دفعة أحدث انأخذ منها وفي أقدم ضل فيها = تجاوز، والدالة بترجع خطأ `hint = 'fefo_override'` لحد ما ينبعت `p_confirm_fefo_override`. نفس المنطق بالواجهة (`fefoAllocate` بـ `src/features/orders/logic.ts`). أخطاء الستوك `hint = 'not_enough_stock'` و`'expired_batch'`.
+- **الكمية المقترحة لفرع (`branch_suggestions`):** دالة definer بترجع الموجود والحد بس، لأن الإخراج بالمصنع ما بيشوف ستوك الفروع بـ RLS.
 - **قراءة البيانات بالصفحة** جوا `<Suspense>` بالصفحة نفسها (مش بس بالـ layout)، وإلا Next بيشتكي "uncached data during a navigation" (cacheComponents).
 - **الألوان والخطوط** tokens بـ `src/app/globals.css` (مثلاً `bg-ink`، `text-muted`، `bg-warn-soft`). ما في ألوان hex جوا المكونات، إلا ألوان أرقام الأيام من `DAY_COLORS`.
 

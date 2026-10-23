@@ -102,6 +102,55 @@ export async function temporarySchedule(locationCode: string, timeOfDay: string)
   };
 }
 
+/** الحد المطلوب بفرع: كل الأصناف صفر إلا اللي بالخريطة (بالقطع). بيرجع دالة بترجّع القيم القديمة. */
+export async function setParLevels(locationCode: string, pieces: Record<string, number>) {
+  const db = serviceClient();
+  const { data: loc } = await db.from("locations").select("id").eq("code", locationCode).single();
+  const { data: before } = await db
+    .from("par_levels")
+    .select("product_id, par_pieces")
+    .eq("location_id", loc!.id);
+  const { data: products } = await db.from("products").select("id, name_en");
+  const rows = (products ?? []).map((p) => ({
+    location_id: loc!.id,
+    product_id: p.id,
+    par_pieces: pieces[p.name_en] ?? 0,
+  }));
+  const { error } = await db.from("par_levels").upsert(rows, { onConflict: "location_id,product_id" });
+  if (error) throw error;
+  return async () => {
+    await db.from("par_levels").upsert(
+      (before ?? []).map((b) => ({
+        location_id: loc!.id,
+        product_id: b.product_id,
+        par_pieces: b.par_pieces,
+      })),
+      { onConflict: "location_id,product_id" },
+    );
+  };
+}
+
+/** ستوك دفعة اليوم بالمصنع لصنف. */
+export async function factoryTodayStock(productName: string): Promise<number> {
+  const db = serviceClient();
+  const { data: fac } = await db.from("locations").select("id").eq("code", "FAC").single();
+  const { data: product } = await db.from("products").select("id").eq("name_en", productName).single();
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Amman" }).format(new Date());
+  const { data: batch } = await db
+    .from("batches")
+    .select("id")
+    .eq("product_id", product!.id)
+    .eq("production_date", today)
+    .maybeSingle();
+  if (!batch) return 0;
+  const { data } = await db
+    .from("stock_movements")
+    .select("qty_pieces")
+    .eq("location_id", fac!.id)
+    .eq("batch_id", batch.id);
+  return (data ?? []).reduce((s, m) => s + m.qty_pieces, 0);
+}
+
 // صورة PNG صغيرة (1×1) للاختبارات
 export const TINY_PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",

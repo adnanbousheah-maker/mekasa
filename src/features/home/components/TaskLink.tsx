@@ -7,17 +7,22 @@ type Props = {
   description?: string;
   icon: ReactNode;
   variant?: "row" | "tile";
+  // عدد (مثلاً طلبات جديدة) بآخر الزر
+  aside?: ReactNode;
 };
 
 /** زر مهمة كبير: صف بالفرع (design/branch/Main)، ومربع بالمصنع (design/factory/FactoryHome). */
-export function TaskLink({ href, title, description, icon, variant = "row" }: Props) {
+export function TaskLink({ href, title, description, icon, variant = "row", aside }: Props) {
   if (variant === "tile") {
     return (
       <Link
         href={href}
         className="flex h-[116px] flex-col gap-2.5 rounded-[18px] border border-line bg-surface p-4 active:bg-quiet"
       >
-        <span className="flex size-11 items-center justify-center rounded-xl bg-quiet">{icon}</span>
+        <span className="flex items-start justify-between">
+          <span className="flex size-11 items-center justify-center rounded-xl bg-quiet">{icon}</span>
+          {aside}
+        </span>
         <span className="text-lg font-bold">{title}</span>
       </Link>
     );
@@ -35,6 +40,7 @@ export function TaskLink({ href, title, description, icon, variant = "row" }: Pr
         <span className="text-[22px] font-bold">{title}</span>
         {description && <span className="text-sm text-muted">{description}</span>}
       </span>
+      {aside}
     </Link>
   );
 }

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { GeneralTab } from "@/features/settings/components/GeneralTab";
+import { ParTab } from "@/features/settings/components/ParTab";
 import { ProductsTab } from "@/features/settings/components/ProductsTab";
+import { listReportLocations, listReportProducts, parLevels } from "@/features/reports/queries";
 import { ScheduleCard } from "@/features/settings/components/ScheduleCard";
 import { getSettings, listProducts, listScheduleLocations } from "@/features/settings/queries";
 
@@ -62,12 +64,17 @@ async function Settings({ searchParams }: { searchParams: SearchParams }) {
 
 async function TabContent({ tab }: { tab: TabId }) {
   if (tab === "par") {
+    const [locations, products, par] = await Promise.all([
+      listReportLocations(),
+      listReportProducts(),
+      parLevels(),
+    ]);
     return (
-      <p className="rounded-2xl border border-line bg-surface p-5 text-[15px] leading-relaxed text-muted">
-        الحد المطلوب = كم بدك يكون موجود من كل صنف بالفرع بعد الاستلام. التطبيق بيقترح على الفرع يطلب الفرق،
-        وبيقترح على المصنع يطلّعه. هالشاشة بتنبني مع الطلب والإخراج بالمرحلة الثانية، وحالياً 20 كيكة من كل
-        صنف بكل فرع.
-      </p>
+      <ParTab
+        branches={locations.filter((l) => l.kind === "branch")}
+        products={products.filter((p) => p.isActive)}
+        par={par}
+      />
     );
   }
 

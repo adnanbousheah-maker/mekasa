@@ -14,10 +14,19 @@ import {
   slotsToday,
   stockByProduct,
 } from "@/features/reports/queries";
+import { linesSummary } from "@/features/orders/logic";
+import { loadDocuments } from "@/features/orders/queries";
 import { lateLabel } from "@/features/reminders/slots";
 import { formatScheduleTime } from "@/features/settings/schemas";
 import { businessDate, formatClock, formatLongDate, greetingFor } from "@/lib/time";
+import { createClient } from "@/lib/supabase/server";
 import { formatQuantityCompact } from "@/lib/units";
+
+async function unreceivedAlertHours(): Promise<number> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("app_settings").select("unreceived_alert_hours").single();
+  return data?.unreceived_alert_hours ?? 3;
+}
 
 // design/admin/AdminOverview.dc.html
 export default function AdminOverviewPage() {
@@ -43,18 +52,31 @@ async function Overview() {
   const admin = await requireAdmin();
   const now = new Date();
   const today = businessDate(now);
-  const [locations, products, stock, par, slots, batches, lastCounts, yesterdayUse, weekUse] =
-    await Promise.all([
-      listReportLocations(),
-      listReportProducts(),
-      stockByProduct(),
-      parLevels(),
-      slotsToday(),
-      factoryBatchAlerts(),
-      lastCountByLocation(),
-      consumptionSince(addDays(today, -1), addDays(today, -1)),
-      consumptionSince(addDays(today, -6)),
-    ]);
+  const [
+    locations,
+    products,
+    stock,
+    par,
+    slots,
+    batches,
+    lastCounts,
+    yesterdayUse,
+    weekUse,
+    docs,
+    alertHours,
+  ] = await Promise.all([
+    listReportLocations(),
+    listReportProducts(),
+    stockByProduct(),
+    parLevels(),
+    slotsToday(),
+    factoryBatchAlerts(),
+    lastCountByLocation(),
+    consumptionSince(addDays(today, -1), addDays(today, -1)),
+    consumptionSince(addDays(today, -6)),
+    loadDocuments({ requests: { statuses: ["pending_approval", "sent"] }, dispatches: {}, sinceDays: 14 }),
+    unreceivedAlertHours(),
+  ]);
   const productById = new Map(products.map((p) => [p.id, p]));
 
   const cakesAt = (use: Map<string, Map<string, number>>, locationId: string) =>
@@ -65,6 +87,38 @@ async function Overview() {
     );
 
   const alerts: Alert[] = [];
+  for (const d of docs.dispatches.filter(
+    (d) => d.status === "in_transit" && d.hoursInTransit >= alertHours,
+  )) {
+    alerts.push({
+      tone: "danger",
+      title: `إخراج ${d.toName} ما انستلم من ${Math.floor(d.hoursInTransit)} ساعة`,
+      sub: `طلع ${formatLongDate(d.dispatchedAt.slice(0, 10))} ${formatClock(new Date(d.dispatchedAt))} · ${linesSummary(d.lines)}`,
+      action: "تابع",
+      href: `/admin/orders?filter=road&id=${d.requestId ?? d.id}`,
+    });
+  }
+  for (const d of docs.dispatches.filter((d) =>
+    d.lines.some((l) => l.received && l.received.qtyPieces !== l.qtyPieces && !l.received.resolution),
+  )) {
+    const line = d.lines.find((l) => l.received && l.received.qtyPieces !== l.qtyPieces)!;
+    alerts.push({
+      tone: "danger",
+      title: `فرق استلام بـ${d.toName}`,
+      sub: `${line.productName}: طلع ${formatQuantityCompact(line.qtyPieces, line.piecesPerCake)} ووصل ${formatQuantityCompact(line.received!.qtyPieces, line.piecesPerCake)}${line.received!.note ? ` · ${line.received!.note}` : ""}`,
+      action: "شوف",
+      href: `/admin/orders?filter=diff&id=${d.requestId ?? d.id}`,
+    });
+  }
+  for (const r of docs.requests.filter((r) => r.status === "pending_approval")) {
+    alerts.push({
+      tone: "warn",
+      title: `طلب ${r.fromName} بانتظار موافقتك`,
+      sub: linesSummary(r.lines),
+      action: "وافق",
+      href: `/admin/orders?filter=wait&id=${r.id}`,
+    });
+  }
   for (const b of batches) {
     alerts.push({
       tone: "danger",
@@ -207,17 +261,40 @@ async function Overview() {
             </Link>
           ))}
         </section>
-        <section className="flex flex-[1_1_280px] flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
-          <h2 className="text-[17px] font-bold">الاستهلاك هالأسبوع</h2>
-          <span className="text-[13px] text-muted">
-            الفرق بين الجرودات بعد المستلم والتالف، بالكيكة (حسب عدد القطع بكل صنف)
-          </span>
-          <Bars
-            items={locations
-              .filter((l) => l.kind === "branch")
-              .map((l) => ({ label: l.name, value: Math.round(cakesAt(weekUse, l.id) * 10) / 10 }))}
-          />
-        </section>
+        <div className="flex flex-[1_1_280px] flex-col gap-4">
+          <section className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5">
+            <h2 className="text-[17px] font-bold">الاستهلاك هالأسبوع</h2>
+            <span className="text-[13px] text-muted">
+              الفرق بين الجرودات بعد المستلم والتالف، بالكيكة (حسب عدد القطع بكل صنف)
+            </span>
+            <Bars
+              items={locations
+                .filter((l) => l.kind === "branch")
+                .map((l) => ({ label: l.name, value: Math.round(cakesAt(weekUse, l.id) * 10) / 10 }))}
+            />
+          </section>
+          <section className="flex flex-col gap-2.5 rounded-2xl border border-line bg-surface p-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[17px] font-bold">طلبات بانتظار الإخراج</h2>
+              <Link href="/admin/orders?filter=wait" className="text-sm font-semibold underline">
+                الكل
+              </Link>
+            </div>
+            {docs.requests.filter((r) => r.status === "sent").length === 0 && (
+              <span className="text-sm text-muted">ما في.</span>
+            )}
+            {docs.requests
+              .filter((r) => r.status === "sent")
+              .map((r) => (
+                <div key={r.id} className="flex justify-between gap-2 text-sm">
+                  <span className="font-semibold">
+                    {r.fromName} · {formatClock(new Date(r.requestedAt))}
+                  </span>
+                  <span className="text-muted">{linesSummary(r.lines)}</span>
+                </div>
+              ))}
+          </section>
+        </div>
       </div>
     </>
   );

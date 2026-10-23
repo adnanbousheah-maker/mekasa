@@ -13,6 +13,7 @@ import {
   numberSettingSchema,
   piecesOverrideSchema,
   scheduleTimeSchema,
+  wholeNumber,
 } from "./schemas";
 
 // كل الكتابة هون بجلسة الأدمن نفسه: RLS بتسمح للأدمن بس، والـ triggers بتسجل كل تغيير بـ audit_log.
@@ -205,6 +206,44 @@ export async function removeScheduleTimeAction(scheduleId: string): Promise<Save
     return fail(SAVE_FAILED);
   }
   if (!data) return fail("الموعد مش موجود");
+  refresh();
+  return done;
+}
+
+const parSchema = z.object({ locationId: z.uuid(), productId: z.uuid() });
+
+/** الحد المطلوب لصنف بفرع. بيندخل بالكيكات (أو بالقطع للأصناف اللي قطع بس) وبينحفظ بالقطع. */
+export async function setParLevelAction(
+  locationId: string,
+  productId: string,
+  value: string,
+): Promise<SaveResult> {
+  const admin = await requireAdmin();
+  if (!parSchema.safeParse({ locationId, productId }).success) return fail("الصنف أو الفرع مش موجود");
+  const amount = wholeNumber({ min: 0, max: 999 }).safeParse(value);
+  if (!amount.success) return fail(firstIssue(amount.error));
+
+  const supabase = await createClient();
+  const { data: product, error: readError } = await supabase
+    .from("v_products")
+    .select("effective_pieces_per_cake")
+    .eq("id", productId)
+    .maybeSingle();
+  if (readError || !product) return fail("الصنف مش موجود");
+
+  const { error } = await supabase.from("par_levels").upsert(
+    {
+      location_id: locationId,
+      product_id: productId,
+      par_pieces: amount.data * (product.effective_pieces_per_cake ?? 1),
+      updated_by: admin.id,
+    },
+    { onConflict: "location_id,product_id" },
+  );
+  if (error) {
+    console.error("setParLevel", error);
+    return fail(SAVE_FAILED);
+  }
   refresh();
   return done;
 }
