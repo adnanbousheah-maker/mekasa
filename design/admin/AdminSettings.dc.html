@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>لوحة الأدمن - الإعدادات</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;family=Jost:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+[dir="ltr"]{font-family:'Jost','IBM Plex Sans Arabic',sans-serif}
+a{color:#111111;text-decoration:none}a:hover{color:#111111}
+</style>
+</helmet>
+<div dir="rtl" style="min-height: 1100px; background: #FAFAF8; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; color: #111111; display: flex; flex-wrap: wrap">
+<div style="flex: 0 0 240px; display: flex">
+<dc-import name="AdminNav" active="settings" hint-size="240px,1100px"></dc-import>
+</div>
+<main style="flex: 999 1 560px; min-width: 0; padding: 32px 32px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px; max-width: 1200px">
+
+<h1 style="margin: 0; font-size: 26px; font-weight: 700">الإعدادات</h1>
+
+<div role="tablist" aria-label="أقسام الإعدادات" style="display: flex; gap: 4px; border-bottom: 1px solid #E6E4E0; flex-wrap: wrap">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+<button type="button" role="tab" onClick="{{t.pick}}" style="{{t.style}}">{{t.label}}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{isProducts}}" hint-placeholder-val="{{ true }}">
+<section style="display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px">
+<div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap"><label style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600">عدد القطع بالكيكة (لكل الأصناف) <input type="number" value="10" aria-label="عدد القطع العام" style="width: 64px; height: 40px; border-radius: 8px; border: 1.5px solid #111111; text-align: center; font-family: inherit; font-size: 15px; font-weight: 700"></label><span style="font-size: 13px; color: #5F5B55">وأي صنف بتقدر تعطيه رقم خاص بالجدول</span></div>
+<button type="button" style="height: 44px; padding: 0 16px; border-radius: 10px; border: none; background: #111111; color: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer">+ صنف جديد</button>
+</div>
+<div style="background: #FFFFFF; border: 1px solid #E6E4E0; border-radius: 16px; overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; min-width: 720px; font-size: 14px">
+<thead><tr style="background: #F5F4F1">
+<th scope="col" style="padding: 12px; width: 56px"></th>
+<th scope="col" style="text-align: right; padding: 12px 8px; font-weight: 600; color: #3F3C38">الاسم</th>
+<th scope="col" style="text-align: right; padding: 12px 8px; font-weight: 600; color: #3F3C38">الاسم بالعربي</th>
+<th scope="col" style="padding: 12px 8px; font-weight: 600; color: #3F3C38">النوع</th>
+<th scope="col" style="padding: 12px 8px; font-weight: 600; color: #3F3C38">قطع بالكيكة</th>
+<th scope="col" style="padding: 12px 8px; font-weight: 600; color: #3F3C38">فعّال</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{products}}" as="p" hint-placeholder-count="8">
+<tr style="border-top: 1px solid #EFEDE9">
+<td style="padding: 8px 12px"><span role="img" aria-label="صورة الصنف" style="display: block; width: 40px; height: 40px; border-radius: 8px; background: #ECEAE6"></span></td>
+<td dir="ltr" style="text-align: right; padding: 8px; font-weight: 600">{{p.name}}</td>
+<td style="padding: 8px"><input type="text" placeholder="[الاسم بالعربي]" aria-label="الاسم بالعربي" style="width: 160px; height: 36px; border-radius: 8px; border: 1px solid #D4D1CB; padding: 0 10px; font-family: inherit; font-size: 14px"></td>
+<td style="padding: 8px; text-align: center"><span style="font-size: 13px; background: #EEEDEA; padding: 4px 10px; border-radius: 10px">{{p.type}}</span></td>
+<td style="padding: 8px; text-align: center"><input type="number" value="{{p.pcs}}" aria-label="قطع بالكيكة" style="width: 56px; height: 36px; border-radius: 8px; border: 1px solid #D4D1CB; text-align: center; font-family: inherit; font-size: 14px"><span style="display: block; font-size: 11px; color: #5F5B55; margin-top: 2px">{{p.pcsNote}}</span></td>
+<td style="padding: 8px; text-align: center"><span role="switch" aria-checked="true" aria-label="فعّال" style="display: inline-flex; width: 44px; height: 24px; border-radius: 12px; background: #2E7D4F; padding: 2px; box-sizing: border-box; justify-content: flex-start"><span style="width: 20px; height: 20px; border-radius: 10px; background: #FFFFFF"></span></span></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{isPar}}" hint-placeholder-val="{{ false }}">
+<section style="display: flex; flex-direction: column; gap: 12px">
+<span style="font-size: 14px; color: #5F5B55; line-height: 1.7">حالياً 20 من كل صنف كمثال. الحد المطلوب = كم بدك يكون موجود من كل صنف بالفرع بعد الاستلام. التطبيق بيقترح على الفرع يطلب الفرق، وبيقترح على المصنع يطلّعه.</span>
+<div style="background: #FFFFFF; border: 1px solid #E6E4E0; border-radius: 16px; overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; min-width: 560px; font-size: 14px">
+<thead><tr style="background: #F5F4F1">
+<th scope="col" style="text-align: right; padding: 12px 16px; font-weight: 600; color: #3F3C38">الصنف</th>
+<th scope="col" style="padding: 12px; font-weight: 600; color: #3F3C38">الصويفية</th>
+<th scope="col" style="padding: 12px; font-weight: 600; color: #3F3C38">الجبيهة</th>
+<th scope="col" style="padding: 12px; font-weight: 600; color: #3F3C38">دابوق</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{par}}" as="r" hint-placeholder-count="8">
+<tr style="border-top: 1px solid #EFEDE9">
+<th scope="row" dir="ltr" style="text-align: right; padding: 8px 16px; font-weight: 600">{{r.name}}</th>
+<td style="padding: 6px; text-align: center"><input type="number" value="{{r.a}}" aria-label="الصويفية" style="width: 64px; height: 36px; border-radius: 8px; border: 1px solid #D4D1CB; text-align: center; font-family: inherit; font-size: 14px"></td>
+<td style="padding: 6px; text-align: center"><input type="number" value="{{r.b}}" aria-label="الجبيهة" style="width: 64px; height: 36px; border-radius: 8px; border: 1px solid #D4D1CB; text-align: center; font-family: inherit; font-size: 14px"></td>
+<td style="padding: 6px; text-align: center"><input type="number" value="{{r.c}}" aria-label="دابوق" style="width: 64px; height: 36px; border-radius: 8px; border: 1px solid #D4D1CB; text-align: center; font-family: inherit; font-size: 14px"></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<span style="font-size: 13px; color: #1E40AF">نصيحة: بعد أسبوعين من الجرد، التطبيق بيقترح حد لكل صنف من الاستهلاك الحقيقي.</span>
+</section>
+</sc-if>
+
+<sc-if value="{{isSchedule}}" hint-placeholder-val="{{ false }}">
+<section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px">
+<sc-for list="{{schedules}}" as="s" hint-placeholder-count="4">
+<div style="background: #FFFFFF; border: 1px solid #E6E4E0; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 17px; font-weight: 700">{{s.name}}</span><button type="button" style="height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid #D4D1CB; background: #FFFFFF; font-family: inherit; font-size: 13px; color: #111111; cursor: pointer">اطبع الفورم</button></div>
+<span style="font-size: 13px; color: #5F5B55">مواعيد الجرد اليومية</span>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<sc-for list="{{s.times}}" as="t" hint-placeholder-count="2">
+<span style="display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 18px; background: #F1F0EE; font-size: 15px; font-weight: 600">{{t}}</span>
+</sc-for>
+<button type="button" style="height: 36px; padding: 0 12px; border-radius: 18px; border: 1px dashed #BDB9B2; background: transparent; font-family: inherit; font-size: 13px; color: #5F5B55; cursor: pointer">+ موعد</button>
+</div>
+<span style="font-size: 13px; color: #5F5B55">{{s.note}}</span>
+</div>
+</sc-for>
+</section>
+</sc-if>
+
+<sc-if value="{{isGeneral}}" hint-placeholder-val="{{ false }}">
+<section style="background: #FFFFFF; border: 1px solid #E6E4E0; border-radius: 16px; padding: 8px 20px; display: flex; flex-direction: column">
+<sc-for list="{{general}}" as="g" hint-placeholder-count="5">
+<div style="display: flex; align-items: center; gap: 16px; padding: 16px 0; border-bottom: 1px solid #EFEDE9; flex-wrap: wrap">
+<div style="display: flex; flex-direction: column; flex: 1 1 280px"><span style="font-size: 15px; font-weight: 600">{{g.title}}</span><span style="font-size: 13px; color: #5F5B55">{{g.sub}}</span></div>
+<sc-if value="{{g.isToggle}}" hint-placeholder-val="{{ false }}"><span style="display: inline-flex; align-items: center; gap: 10px"><span style="font-size: 14px; color: #5F5B55">{{g.value}}</span><span role="switch" aria-checked="{{g.on}}" aria-label="{{g.title}}" style="{{g.ctrlStyle}}"><span style="width: 22px; height: 22px; border-radius: 11px; background: #FFFFFF"></span></span></span></sc-if>
+<sc-if value="{{g.isField}}" hint-placeholder-val="{{ true }}"><span style="{{g.ctrlStyle}}">{{g.value}}</span></sc-if>
+</div>
+</sc-for>
+</section>
+</sc-if>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1100}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { tab: 'products' }; }
+  renderVals() {
+    const tab = this.state.tab;
+    const defs = [['products', 'الأصناف'], ['par', 'الحد المطلوب بالفروع'], ['schedule', 'مواعيد الجرد'], ['general', 'عام']];
+    const tabs = defs.map((d) => ({
+      label: d[1], pick: () => this.setState({ tab: d[0] }),
+      style: 'height: 44px; padding: 0 16px; border: none; background: transparent; font-family: inherit; font-size: 15px; cursor: pointer; margin-bottom: -1px; ' + (tab === d[0] ? 'border-bottom: 3px solid #111111; color: #111111; font-weight: 700' : 'border-bottom: 3px solid transparent; color: #5F5B55')
+    }));
+    const names = ['Classic Choco', 'The Red One', 'The One', 'Qudrat Qader', 'Flan', 'Strawberry', 'Belgian Choco', 'Black & White', 'Nightmare', 'Tiramisu'];
+    const products = names.map((n) => ({ name: n, type: n === 'Tiramisu' ? 'قطعة بس' : 'كيكة وقطع', pcs: n === 'Tiramisu' ? '—' : (n === 'Flan' ? 8 : 10), pcsNote: n === 'Tiramisu' ? '' : (n === 'Flan' ? 'خاص' : 'العام') }));
+    const par = names.slice(0, 9).map((n) => ({ name: n, a: 20, b: 20, c: 20 }));
+    const schedules = [
+      { name: 'المصنع', times: ['8:00'], note: 'جرد الكيك بالدفعات + المواد الأولية' },
+      { name: 'الصويفية', times: ['9:00', '21:00'], note: 'تذكير قبل 10 دقايق · متأخر بعد 15 دقيقة' },
+      { name: 'الجبيهة', times: ['9:00', '21:00'], note: 'تذكير قبل 10 دقايق · متأخر بعد 15 دقيقة' },
+      { name: 'دابوق', times: ['9:00'], note: 'تذكير قبل 10 دقايق · متأخر بعد 15 دقيقة' }
+    ];
+    const toggleOn = 'display: inline-flex; width: 52px; height: 28px; border-radius: 14px; background: #2E7D4F; padding: 3px; box-sizing: border-box; justify-content: flex-start';
+    const toggleOff = 'display: inline-flex; width: 52px; height: 28px; border-radius: 14px; background: #ADA9A2; padding: 3px; box-sizing: border-box; justify-content: flex-end';
+    const field = 'display: inline-flex; align-items: center; justify-content: center; min-width: 120px; height: 40px; padding: 0 12px; border-radius: 8px; border: 1px solid #D4D1CB; font-size: 15px; font-weight: 600';
+    const general = [
+      ['موافقة الأدمن على طلبات الفروع', 'إذا مفعّلة، الطلب ما بيوصل للمصنع إلا بعد موافقتك', toggleOff, 'موقوفة'],
+      ['تنبيه الإخراج اللي ما انستلم', 'تنبيه للفرع ولإلك إذا ما انستلم خلال', field, '3 ساعات'],
+      ['مدة حياة الكيك بالمصنع', 'بعدها الدفعة بتتلون أحمر وبتطلع بالتنبيهات', field, '7 أيام'],
+      ['مدة حياة الكيك بالفرع (للتقدير)', 'بنستعملها لنقدّر الكيك القديم بالفروع', field, '3 أيام'],
+      ['الجرد بالصورة', 'إذا موقوف، الموظفين بيجردوا يدوي بس', toggleOn, 'مفعّل'],
+      ['التحويل بين الفروع', 'إخراج من فرع لفرع، مع استلام بالفرع الثاني', toggleOn, 'مفعّل'],
+      ['الإرجاع من الفروع للمصنع', 'الكيك الراجع بيروح لخانة المرتجعات، وأمين المستودع بيقرر يرجع للستوك أو تالف', toggleOff, 'موقوف']
+    ];
+    return {
+      tabs, products, par, schedules,
+      general: general.map((g) => ({ title: g[0], sub: g[1], ctrlStyle: g[2], value: g[3], isToggle: g[2] !== field, isField: g[2] === field, on: g[2] === toggleOn ? 'true' : 'false' })),
+      isProducts: tab === 'products', isPar: tab === 'par', isSchedule: tab === 'schedule', isGeneral: tab === 'general'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>لوحة الأدمن - الطلب والإخراج والاستلام</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;family=Jost:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+[dir="ltr"]{font-family:'Jost','IBM Plex Sans Arabic',sans-serif}
+a{color:#111111;text-decoration:none}a:hover{color:#111111}
+</style>
+</helmet>
+<div dir="rtl" style="min-height: 1000px; background: #FAFAF8; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; color: #111111; display: flex; flex-wrap: wrap">
+<div style="flex: 0 0 240px; display: flex">
+<dc-import name="AdminNav" active="orders" hint-size="240px,1000px"></dc-import>
+</div>
+<main style="flex: 999 1 560px; min-width: 0; padding: 32px 32px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px; max-width: 1200px">
+
+<header style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-size: 26px; font-weight: 700">الطلب والإخراج والاستلام</h1>
+<span style="font-size: 14px; color: #5F5B55">كل حركة بين المواقع: طلبات الفروع، والإخراج، والتحويل، والإرجاع</span>
+</div>
+<div style="display: flex; gap: 8px">
+<button type="button" style="height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid #D4D1CB; background: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 600; color: #111111; cursor: pointer">تصدير Excel</button>
+<button type="button" style="height: 44px; padding: 0 16px; border-radius: 10px; border: none; background: #111111; font-family: inherit; font-size: 14px; font-weight: 600; color: #FFFFFF; cursor: pointer">+ تحويل أو إرجاع</button>
+</div>
+</header>
+
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<sc-for list="{{filters}}" as="f" hint-placeholder-count="5">
+<button type="button" onClick="{{f.pick}}" style="{{f.style}}">{{f.label}}</button>
+</sc-for>
+</div>
+
+<div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start">
+
+<section aria-label="الحركات" style="flex: 1 1 300px; max-width: 380px; display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{moves}}" as="m" hint-placeholder-count="6">
+<button type="button" onClick="{{m.pick}}" style="{{m.style}}">
+<span style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><span style="font-size: 15px; font-weight: 700">{{m.title}}</span><span style="{{m.badgeStyle}}">{{m.badge}}</span></span>
+<span style="font-size: 13px; color: #5F5B55">{{m.sub}}</span>
+</button>
+</sc-for>
+</section>
+
+<section aria-label="التفاصيل" style="flex: 999 1 460px; min-width: 0; background: #FFFFFF; border: 1px solid #E6E4E0; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 700">الصويفية · الأربعاء</h2>
+<span style="font-size: 13px; color: #5F5B55">طلبته منى 7:55 · طلّعه سامر 8:40 · استلمه أحمد 9:05</span>
+</div>
+<span style="font-size: 13px; font-weight: 600; color: #8C1D13; background: #FDECEA; padding: 4px 12px; border-radius: 12px">فرق بالاستلام</span>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<div style="background: #F5F4F1; border-radius: 12px; padding: 12px"><span style="display: block; font-size: 12px; color: #5F5B55">المطلوب</span><span style="font-size: 20px; font-weight: 700">13 ك · 10 ق</span></div>
+<div style="background: #F5F4F1; border-radius: 12px; padding: 12px"><span style="display: block; font-size: 12px; color: #5F5B55">طلع</span><span style="font-size: 20px; font-weight: 700">16 ك · 10 ق</span></div>
+<div style="background: #FDECEA; border-radius: 12px; padding: 12px"><span style="display: block; font-size: 12px; color: #8C1D13">وصل</span><span style="font-size: 20px; font-weight: 700">15 ك · 10 ق</span></div>
+</div>
+
+<div style="overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; min-width: 520px; font-size: 14px">
+<thead><tr style="background: #F5F4F1">
+<th scope="col" style="text-align: right; padding: 10px 12px; font-weight: 600; color: #3F3C38">الصنف</th>
+<th scope="col" style="text-align: center; padding: 10px; font-weight: 600; color: #3F3C38">المطلوب</th>
+<th scope="col" style="text-align: center; padding: 10px; font-weight: 600; color: #3F3C38">طلع</th>
+<th scope="col" style="text-align: center; padding: 10px; font-weight: 600; color: #3F3C38">وصل</th>
+<th scope="col" style="text-align: right; padding: 10px; font-weight: 600; color: #3F3C38">ملاحظة</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{lines}}" as="l" hint-placeholder-count="7">
+<tr style="border-top: 1px solid #EFEDE9">
+<th scope="row" dir="ltr" style="text-align: right; padding: 10px 12px; font-weight: 600">{{l.name}}</th>
+<td style="text-align: center; padding: 10px">{{l.req}}</td>
+<td style="{{l.sentStyle}}">{{l.sent}}</td>
+<td style="{{l.gotStyle}}">{{l.got}}</td>
+<td style="padding: 10px; font-size: 13px; color: #5F5B55">{{l.note}}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div style="display: flex; gap: 16px; font-size: 13px; color: #5F5B55; flex-wrap: wrap">
+<span style="display: flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; border-radius: 3px; background: #E0E9FB"></span>المصنع غيّر عن الطلب (معلومة)</span>
+<span style="display: flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; border-radius: 3px; background: #FDECEA"></span>وصل غير اللي طلع (مشكلة)</span>
+</div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<button type="button" style="height: 44px; padding: 0 16px; border-radius: 10px; border: none; background: #111111; color: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer">اعتمد الفرق كتالف</button>
+<button type="button" style="height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid #D4D1CB; background: #FFFFFF; font-family: inherit; font-size: 14px; color: #111111; cursor: pointer">علّق للمراجعة</button>
+</div>
+</section>
+
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { filter: 'all', sel: 0 }; }
+  renderVals() {
+    const fl = this.state.filter;
+    const filterDefs = [['all', 'الكل'], ['wait', 'بانتظار الإخراج (2)'], ['road', 'بالطريق (2)'], ['diff', 'فيها فرق (1)'], ['move', 'تحويل وإرجاع']];
+    const filters = filterDefs.map((f) => ({
+      label: f[1], pick: () => this.setState({ filter: f[0] }),
+      style: 'height: 36px; padding: 0 14px; border-radius: 18px; font-family: inherit; font-size: 13px; cursor: pointer; ' + (fl === f[0] ? 'border: none; background: #111111; color: #FFFFFF; font-weight: 600' : 'border: 1px solid #D4D1CB; background: #FFFFFF; color: #111111')
+    }));
+    const badges = {
+      diff: ['فرق بالاستلام', '#8C1D13', '#FDECEA'], wait: ['بانتظار الإخراج', '#3F3C38', '#EEEDEA'],
+      road: ['بالطريق', '#1E40AF', '#E0E9FB'], late: ['ما انستلم 16 ساعة', '#8C1D13', '#FDECEA'], ok: ['مستلم', '#1E5434', '#E3F2E8']
+    };
+    const all = [
+      ['diff', 'الصويفية · الأربعاء', 'طلب ← إخراج ← استلام · 7 أصناف', 'diff'],
+      ['wait', 'الجبيهة · طلب 9:10', '6 أصناف · 11 كيكة · 8 قطع', 'wait'],
+      ['wait', 'دابوق · طلب 9:32', '4 أصناف · 7 كيكات', 'wait'],
+      ['late', 'دابوق · إخراج أمس', 'بدون طلب · 5 أصناف · 9 كيكات', 'road'],
+      ['road', 'تحويل: الجبيهة ← دابوق', '2 أصناف · 3 كيكات · 9:25', 'move'],
+      ['ok', 'إرجاع: الصويفية ← المصنع', 'Nightmare · 2 كيكة قريبة تنتهي', 'move']
+    ];
+    const vis = all.map((m, i) => Object.assign({ i }, { m })).filter((x) => fl === 'all' || x.m[3] === fl || (fl === 'road' && x.m[0] === 'late'));
+    const moves = vis.map((x) => {
+      const b = badges[x.m[0]];
+      return {
+        title: x.m[1], sub: x.m[2], badge: b[0],
+        badgeStyle: 'font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 10px; white-space: nowrap; color: ' + b[1] + '; background: ' + b[2],
+        pick: () => this.setState({ sel: x.i }),
+        style: 'display: flex; flex-direction: column; gap: 4px; text-align: right; padding: 14px; border-radius: 14px; font-family: inherit; cursor: pointer; color: #111111; ' + (this.state.sel === x.i ? 'border: 2px solid #111111; background: #FFFFFF' : 'border: 1px solid #E6E4E0; background: #FFFFFF')
+      };
+    });
+    const data = [
+      ['Classic Choco', 3, 3, 3, '', 'ك'], ['Flan', 4, 3, 2, 'وحدة وصلت مكسورة (أحمد)', 'ك'], ['Strawberry', 2, 2, 2, '', 'ك'],
+      ['Black & White', 2, 4, 4, 'المصنع زاد 2', 'ك'], ['Double Choco', 2, 2, 2, '', 'ك'], ['Tiramisu', 10, 10, 10, '', 'ق'], ['Carrot', 0, 2, 2, 'صنف إضافي من المصنع', 'ك']
+    ];
+    const lines = data.map((d) => ({
+      name: d[0], req: d[1] === 0 ? '—' : d[1] + ' ' + d[5], sent: d[2] + ' ' + d[5], got: d[3] + ' ' + d[5], note: d[4],
+      sentStyle: 'text-align: center; padding: 10px; ' + (d[2] !== d[1] ? 'background: #E0E9FB; font-weight: 600' : ''),
+      gotStyle: 'text-align: center; padding: 10px; ' + (d[3] !== d[2] ? 'background: #FDECEA; font-weight: 700; color: #8C1D13' : '')
+    }));
+    return { filters, moves, lines };
+  }
+}
+</script>
+</body>
+</html>

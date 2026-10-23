@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>الإخراج</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;family=Jost:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+[dir="ltr"]{font-family:'Jost','IBM Plex Sans Arabic',sans-serif}
+a{color:#111111;text-decoration:none}a:hover{color:#111111}
+</style>
+</helmet>
+<div dir="rtl" style="width: 390px; height: 1240px; box-sizing: border-box; background: #FAFAF8; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; color: #111111; display: flex; flex-direction: column; position: relative">
+
+<div style="padding: 16px 20px 12px; display: flex; flex-direction: column; gap: 12px; border-bottom: 1px solid #E6E4E0">
+<header style="display: flex; align-items: center; gap: 8px">
+<a href="FactoryRequests.dc.html" aria-label="رجوع" style="width: 48px; height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #E6E4E0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></a>
+<div style="display: flex; flex-direction: column">
+<h1 style="margin: 0; font-size: 22px; font-weight: 700">إخراج</h1>
+<span style="font-size: 14px; color: #5F5B55">من طلب رنا · 9:10 الصبح</span>
+</div>
+</header>
+<button type="button" style="display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 14px; border-radius: 12px; border: 1px solid #D4D1CB; background: #FFFFFF; font-family: inherit; cursor: pointer; text-align: right">
+<span style="font-size: 14px; color: #5F5B55">الوجهة</span>
+<span style="flex-grow: 1; font-size: 17px; font-weight: 700; color: #111111">فرع الجبيهة</span>
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5F5B55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+</button>
+<span style="font-size: 13px; color: #5F5B55">الكميات معبّاية من الطلب. غيّر براحتك، والنظام بيطلّع من الدفعة الأقدم أول.</span>
+</div>
+
+<div style="flex-grow: 1; overflow-y: auto; padding: 12px 20px; display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{lines}}" as="ln" hint-placeholder-count="6">
+<div style="{{ln.cardStyle}}">
+<div style="display: flex; align-items: center; gap: 8px">
+<span dir="ltr" style="flex-grow: 1; text-align: right; font-size: 17px; font-weight: 600">{{ln.name}}</span>
+<sc-if value="{{ln.hasTag}}" hint-placeholder-val="{{ false }}"><span style="{{ln.tagStyle}}">{{ln.tag}}</span></sc-if>
+</div>
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="font-size: 13px; color: #5F5B55; min-width: 64px">{{ln.reqText}}</span>
+<div style="display: flex; align-items: center; justify-content: space-between; flex-grow: 1; height: 48px; border-radius: 12px; border: 1px solid #D4D1CB; background: #FFFFFF; overflow: hidden">
+<button type="button" onClick="{{ln.plus}}" aria-label="زيد" style="width: 48px; height: 48px; border: none; background: #F1F0EE; font-family: inherit; font-size: 24px; color: #111111; cursor: pointer">+</button>
+<span style="font-size: 20px; font-weight: 700">{{ln.outText}}</span>
+<button type="button" onClick="{{ln.minus}}" aria-label="نقّص" style="width: 48px; height: 48px; border: none; background: #F1F0EE; font-family: inherit; font-size: 24px; color: #111111; cursor: pointer">−</button>
+</div>
+</div>
+<sc-if value="{{ln.hasStock}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 12px; color: #5F5B55">الدفعات بالمصنع (اكبس لتختار)</span>
+<div style="display: flex; gap: 6px; flex-wrap: wrap">
+<sc-for list="{{ln.chips}}" as="c" hint-placeholder-count="2">
+<button type="button" onClick="{{c.pick}}" aria-label="{{c.aria}}" style="{{c.style}}"><span style="{{c.dot}}">{{c.day}}</span><span>{{c.qty}}</span></button>
+</sc-for>
+</div>
+<span style="{{ln.allocStyle}}">{{ln.alloc}}</span>
+</div>
+</sc-if>
+<sc-if value="{{ln.noStock}}" hint-placeholder-val="{{ false }}"><span style="font-size: 13px; color: #B42318">ما في ستوك من هالصنف بالمصنع</span></sc-if>
+</div>
+</sc-for>
+<button type="button" style="height: 52px; border-radius: 14px; border: 1.5px dashed #BDB9B2; background: transparent; font-family: inherit; font-size: 16px; font-weight: 600; color: #5F5B55; cursor: pointer">+ أضف صنف ما انطلب</button>
+</div>
+
+<div style="padding: 12px 20px 24px; border-top: 1px solid #E6E4E0; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 14px; color: #5F5B55; text-align: center">{{summary}}</span>
+<a href="FactoryRequests.dc.html" style="display: flex; align-items: center; justify-content: center; height: 56px; border-radius: 14px; background: #111111; color: #FFFFFF; font-size: 18px; font-weight: 600">تأكيد الإخراج</a>
+</div>
+
+<sc-if value="{{showAlert}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; background: rgba(17,17,17,0.55); display: flex; align-items: center; justify-content: center; padding: 20px">
+<div role="alertdialog" aria-label="تنبيه دفعة أقدم" style="background: #FFFFFF; border-radius: 20px; padding: 24px 20px 20px; display: flex; flex-direction: column; gap: 14px; border-top: 6px solid #B42318">
+<div style="display: flex; align-items: center; gap: 10px">
+<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#B42318" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 16H3z"></path><path d="M12 10v4M12 17h.01"></path></svg>
+<h2 style="margin: 0; font-size: 20px; font-weight: 700; color: #8C1D13">في دفعة أقدم!</h2>
+</div>
+<p style="margin: 0; font-size: 16px; line-height: 1.7">{{alertText}}</p>
+<button type="button" onClick="{{useOldest}}" style="height: 52px; border-radius: 12px; border: none; background: #111111; color: #FFFFFF; font-family: inherit; font-size: 17px; font-weight: 600; cursor: pointer">{{oldestBtn}}</button>
+<button type="button" onClick="{{override}}" style="height: 48px; border-radius: 12px; border: 1px solid #F3B7B0; background: #FFFFFF; color: #8C1D13; font-family: inherit; font-size: 15px; cursor: pointer">{{overrideBtn}}</button>
+</div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1240}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      alert: null,
+      lines: [
+        { name: 'Classic Choco', unit: 'كيكة', req: 3, out: 3, batches: [[1, 2], [4, 6]], first: null },
+        { name: 'Flan', unit: 'كيكة', req: 2, out: 3, batches: [[2, 4], [5, 3]], first: null },
+        { name: 'Strawberry', unit: 'كيكة', req: 2, out: 1, batches: [[6, 1]], first: null },
+        { name: 'Black & White', unit: 'كيكة', req: 2, out: 2, batches: [[1, 3], [7, 6]], first: null },
+        { name: 'Nightmare', unit: 'كيكة', req: 2, out: 0, batches: [], first: null },
+        { name: 'Tiramisu', unit: 'قطعة', req: 8, out: 8, batches: [[5, 12]], first: null },
+        { name: 'Carrot', unit: 'كيكة', req: 0, out: 2, batches: [[2, 2], [7, 4]], first: null }
+      ]
+    };
+  }
+  setLine(i, patch) {
+    const lines = this.state.lines.slice();
+    lines[i] = Object.assign({}, lines[i], patch);
+    this.setState({ lines });
+  }
+  alloc(l) {
+    const order = l.batches.slice();
+    if (l.first !== null) {
+      order.sort((a, b) => (a[0] === l.first ? -1 : b[0] === l.first ? 1 : a[0] - b[0]));
+    }
+    let left = l.out;
+    const parts = [];
+    order.forEach((b) => { if (left > 0) { const t = Math.min(left, b[1]); parts.push('رقم ' + b[0] + ': ' + t); left -= t; } });
+    return parts;
+  }
+  renderVals() {
+    const colors = { 1: '#B42318', 2: '#C2410C', 3: '#A16207', 4: '#15803D', 5: '#0E7490', 6: '#1D4ED8', 7: '#7E22CE' };
+    const lines = this.state.lines.map((l, i) => {
+      const avail = l.batches.reduce((s, b) => s + b[1], 0);
+      const oldest = l.batches.length ? l.batches[0][0] : null;
+      let tag = '';
+      if (l.req === 0) tag = 'إضافي';
+      else if (l.out === 0) tag = 'ما طلع';
+      else if (l.out > l.req) tag = 'زيادة ' + (l.out - l.req);
+      else if (l.out < l.req) tag = 'أقل ' + (l.req - l.out);
+      const overridden = l.first !== null && l.first !== oldest;
+      const chips = l.batches.map((b) => {
+        const active = (l.first === null ? b[0] === oldest : b[0] === l.first);
+        return {
+          day: b[0], qty: b[1] + (b[0] === oldest ? ' · الأقدم' : ''),
+          aria: 'دفعة رقم ' + b[0] + '، فيها ' + b[1],
+          dot: 'min-width: 22px; height: 22px; border-radius: 11px; background: ' + colors[b[0]] + '; color: #FFFFFF; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center',
+          style: 'display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 10px 0 6px; border-radius: 18px; font-family: inherit; font-size: 13px; cursor: pointer; color: #111111; ' + (active ? 'border: 2px solid #111111; background: #F1F0EE; font-weight: 600' : 'border: 1px solid #D4D1CB; background: #FFFFFF'),
+          pick: () => {
+            if (b[0] === oldest) { this.setLine(i, { first: null }); return; }
+            this.setState({ alert: { i, day: b[0], oldest } });
+          }
+        };
+      });
+      const parts = this.alloc(l);
+      return {
+        name: l.name, tag, hasTag: tag !== '',
+        tagStyle: 'font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 10px; ' + (tag === 'ما طلع' ? 'color: #3F3C38; background: #EEEDEA' : 'color: #1E40AF; background: #E0E9FB'),
+        reqText: l.req === 0 ? 'ما انطلب' : ('طلبوا ' + l.req),
+        outText: l.out + ' ' + l.unit,
+        cardStyle: 'display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 16px; background: #FFFFFF; border: ' + (overridden ? '2px solid #E59A3A' : '1px solid #E6E4E0'),
+        hasStock: avail > 0, noStock: avail === 0, chips,
+        alloc: overridden ? ('تجاوزت الأقدم: ' + parts.join(' · ')) : (parts.length ? 'رح يطلع ' + parts.join(' · ') : ''),
+        allocStyle: overridden ? 'font-size: 13px; font-weight: 600; color: #7A3E06' : 'font-size: 13px; color: #5F5B55',
+        plus: () => this.setLine(i, { out: Math.min(avail, l.out + 1) }),
+        minus: () => this.setLine(i, { out: Math.max(0, l.out - 1) })
+      };
+    });
+    const st = this.state.lines;
+    const cakes = st.filter((l) => l.unit === 'كيكة').reduce((s, l) => s + l.out, 0);
+    const pcs = st.filter((l) => l.unit === 'قطعة').reduce((s, l) => s + l.out, 0);
+    const changed = st.filter((l) => l.out !== l.req).length;
+    const a = this.state.alert;
+    return {
+      lines,
+      summary: st.filter((l) => l.out > 0).length + ' أصناف · ' + cakes + ' كيكة · ' + pcs + ' قطعة · ' + changed + ' أسطر غير عن الطلب',
+      showAlert: !!a,
+      alertText: a ? ('اخترت دفعة رقم ' + a.day + '، بس في دفعة أقدم رقم ' + a.oldest + ' لازم تطلع أول مشان ما تنتهي بالمصنع.') : '',
+      oldestBtn: a ? ('طلّع من رقم ' + a.oldest + ' (الأقدم)') : '',
+      overrideBtn: a ? ('متأكد، طلّع من رقم ' + a.day) : '',
+      useOldest: () => { if (a) this.setLine(a.i, { first: null }); this.setState({ alert: null }); },
+      override: () => { if (a) this.setLine(a.i, { first: a.day }); this.setState({ alert: null }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>الجرد - تأكيد الأرقام</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;family=Jost:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+[dir="ltr"]{font-family:'Jost','IBM Plex Sans Arabic',sans-serif}
+a{color:#111111;text-decoration:none}a:hover{color:#111111}
+</style>
+</helmet>
+<div dir="rtl" style="width: 390px; height: 1240px; box-sizing: border-box; background: #FAFAF8; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; color: #111111; display: flex; flex-direction: column">
+
+<div style="padding: 16px 20px 12px; display: flex; flex-direction: column; gap: 12px; border-bottom: 1px solid #E6E4E0; background: #FAFAF8">
+<header style="display: flex; align-items: center; gap: 8px">
+<a href="CountMethod.dc.html" aria-label="رجوع" style="width: 48px; height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #E6E4E0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></a>
+<div style="display: flex; flex-direction: column; flex-grow: 1">
+<h1 style="margin: 0; font-size: 22px; font-weight: 700">راجع الأرقام</h1>
+<span style="font-size: 14px; color: #5F5B55">صحح أي رقم غلط، وبعدين أكّد</span>
+</div>
+<button type="button" aria-label="كبّر صورة الفورم" style="width: 52px; height: 64px; border-radius: 8px; border: 1px solid #D4D1CB; background: #F5F4F1; padding: 6px; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px; cursor: pointer">
+<span style="height: 4px; border-radius: 2px; background: #CFCBC4"></span><span style="height: 4px; border-radius: 2px; background: #CFCBC4"></span><span style="height: 4px; border-radius: 2px; background: #CFCBC4"></span><span style="height: 4px; border-radius: 2px; background: #CFCBC4"></span><span style="height: 4px; border-radius: 2px; background: #CFCBC4"></span><span style="font-size: 9px; color: #5F5B55">الصورة</span>
+</button>
+</header>
+
+<div role="status" style="display: flex; align-items: center; gap: 10px; background: #FFF4E5; border: 1px solid #F3C98B; border-radius: 12px; padding: 10px 14px">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 16H3z"></path><path d="M12 10v4M12 17h.01"></path></svg>
+<span style="font-size: 15px; color: #7A3E06"><strong>رقمين</strong> مش واضحين بالصورة، تأكد منهم</span>
+</div>
+</div>
+
+<div style="flex-grow: 1; overflow-y: auto; padding: 12px 20px; display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{items}}" as="it" hint-placeholder-count="8">
+<div style="{{it.cardStyle}}">
+<div style="display: flex; align-items: center; gap: 12px">
+<span aria-hidden="true" style="width: 44px; height: 44px; border-radius: 10px; background: #ECEAE6; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A8A39B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16v-6H4z"></path><path d="M4 14c0-2 2-4 8-4s8 2 8 4"></path><path d="M12 10V6"></path></svg></span>
+<span dir="ltr" style="flex-grow: 1; text-align: right; font-size: 17px; font-weight: 600">{{it.name}}</span>
+<sc-if value="{{it.unsure}}" hint-placeholder-val="{{ false }}"><span style="font-size: 12px; font-weight: 600; color: #7A3E06; background: #FDE3C2; padding: 3px 10px; border-radius: 10px">تأكد</span></sc-if>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<sc-if value="{{it.hasWhole}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 13px; color: #5F5B55">كيكات</span>
+<div style="display: flex; align-items: center; justify-content: space-between; height: 48px; border-radius: 12px; border: 1px solid #D4D1CB; background: #FFFFFF; overflow: hidden">
+<button type="button" onClick="{{it.wholePlus}}" aria-label="زيد كيكة" style="width: 48px; height: 48px; border: none; background: #F1F0EE; font-family: inherit; font-size: 24px; color: #111111; cursor: pointer">+</button>
+<span style="font-size: 22px; font-weight: 700">{{it.whole}}</span>
+<button type="button" onClick="{{it.wholeMinus}}" aria-label="نقّص كيكة" style="width: 48px; height: 48px; border: none; background: #F1F0EE; font-family: inherit; font-size: 24px; color: #111111; cursor: pointer">−</button>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{it.sliceOnly}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 13px; color: #5F5B55">كيكات</span>
+<div style="height: 48px; border-radius: 12px; background: #F1F0EE; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #5F5B55">قطع بس</div>
+</div>
+</sc-if>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 13px; color: #5F5B55">قطع</span>
+<div style="display: flex; align-items: center; justify-content: space-between; height: 48px; border-radius: 12px; border: 1px solid #D4D1CB; background: #FFFFFF; overflow: hidden">
+<button type="button" onClick="{{it.slicePlus}}" aria-label="زيد قطعة" style="width: 48px; height: 48px; border: none; background: #F1F0EE; font-family: inherit; font-size: 24px; color: #111111; cursor: pointer">+</button>
+<span style="font-size: 22px; font-weight: 700">{{it.slice}}</span>
+<button type="button" onClick="{{it.sliceMinus}}" aria-label="نقّص قطعة" style="width: 48px; height: 48px; border: none; background: #F1F0EE; font-family: inherit; font-size: 24px; color: #111111; cursor: pointer">−</button>
+</div>
+</div>
+</div>
+</div>
+</sc-for>
+</div>
+
+<div style="padding: 12px 20px 24px; border-top: 1px solid #E6E4E0; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 14px; color: #5F5B55; text-align: center">{{summary}}</span>
+<a href="CountDone.dc.html" style="display: flex; align-items: center; justify-content: center; height: 56px; border-radius: 14px; background: #111111; color: #FFFFFF; font-size: 18px; font-weight: 600">تأكيد الجرد</a>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1240}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const base = [
+      ['Classic Choco', 4, 2], ['The Red One', 2, 7, true], ['The One', 0, 5], ['Qudrat Qader', 3, 0],
+      ['Flan', 1, 9], ['Strawberry', 2, 4], ['Belgian Choco', 0, 11, true], ['Black & White', 5, 3],
+      ['Classic Crunch', 1, 6], ['Classic Strawberry', 2, 0], ['Nightmare', 0, 8], ['Caramel Crunch', 3, 2],
+      ['Latte', 1, 1], ['Carrot', 2, 5], ['Pecan', 1, 0], ['Double Choco', 4, 6], ['San Sebastian', 2, 3],
+      ['Cheesecake for Two – Chocolate', 0, 4, false, true], ['Cheesecake for Two – Original', 0, 3, false, true], ['Tiramisu', 0, 7, false, true]
+    ];
+    this.state = { rows: base.map((b) => ({ name: b[0], whole: b[1], slice: b[2], unsure: !!b[3], sliceOnly: !!b[4] })) };
+  }
+  bump(i, key, d) {
+    const rows = this.state.rows.slice();
+    const r = Object.assign({}, rows[i]);
+    r[key] = Math.max(0, r[key] + d);
+    r.unsure = false;
+    rows[i] = r;
+    this.setState({ rows });
+  }
+  renderVals() {
+    const rows = this.state.rows;
+    const items = rows.map((r, i) => ({
+      name: r.name, whole: r.whole, slice: r.slice, unsure: r.unsure,
+      sliceOnly: r.sliceOnly, hasWhole: !r.sliceOnly,
+      cardStyle: 'display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 16px; background: #FFFFFF; border: ' + (r.unsure ? '2px solid #E59A3A' : '1px solid #E6E4E0'),
+      wholePlus: () => this.bump(i, 'whole', 1), wholeMinus: () => this.bump(i, 'whole', -1),
+      slicePlus: () => this.bump(i, 'slice', 1), sliceMinus: () => this.bump(i, 'slice', -1)
+    }));
+    const wholes = rows.reduce((s, r) => s + r.whole, 0);
+    const slices = rows.reduce((s, r) => s + r.slice, 0);
+    return { items, summary: '20 صنف · ' + wholes + ' كيكة · ' + slices + ' قطعة' };
+  }
+}
+</script>
+</body>
+</html>

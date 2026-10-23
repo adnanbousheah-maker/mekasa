@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>لوحة الأدمن - الموظفين والأدوار</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;family=Jost:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+[dir="ltr"]{font-family:'Jost','IBM Plex Sans Arabic',sans-serif}
+a{color:#111111;text-decoration:none}a:hover{color:#111111}
+</style>
+</helmet>
+<div dir="rtl" style="min-height: 1000px; background: #FAFAF8; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; color: #111111; display: flex; flex-wrap: wrap">
+<div style="flex: 0 0 240px; display: flex">
+<dc-import name="AdminNav" active="staff" hint-size="240px,1000px"></dc-import>
+</div>
+<main style="flex: 999 1 560px; min-width: 0; padding: 32px 32px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px; max-width: 1200px">
+
+<header style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-size: 26px; font-weight: 700">الموظفين والأدوار</h1>
+<span style="font-size: 14px; color: #5F5B55">الموظف ممكن ياخذ أكثر من دور، والدور ممكن يكون عند أكثر من موظف</span>
+</div>
+<button type="button" style="height: 44px; padding: 0 16px; border-radius: 10px; border: none; background: #111111; color: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer">+ موظف جديد</button>
+</header>
+
+<div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start">
+<section style="flex: 999 1 560px; min-width: 0; background: #FFFFFF; border: 1px solid #E6E4E0; border-radius: 16px; overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; min-width: 680px; font-size: 14px">
+<thead><tr style="background: #F5F4F1">
+<th scope="col" style="text-align: right; padding: 12px 16px; font-weight: 600; color: #3F3C38">الموظف</th>
+<th scope="col" style="text-align: right; padding: 12px 8px; font-weight: 600; color: #3F3C38">الموقع</th>
+<th scope="col" style="text-align: right; padding: 12px 8px; font-weight: 600; color: #3F3C38">الأدوار</th>
+<th scope="col" style="text-align: right; padding: 12px 8px; font-weight: 600; color: #3F3C38">آخر دخول</th>
+<th scope="col" style="padding: 12px 8px; font-weight: 600; color: #3F3C38">الحالة</th>
+<th scope="col" style="padding: 12px 8px"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">إجراءات</span></th>
+</tr></thead>
+<tbody>
+<sc-for list="{{staff}}" as="s" hint-placeholder-count="7">
+<tr style="{{s.tr}}">
+<th scope="row" style="text-align: right; padding: 12px 16px; font-weight: 600"><span style="display: block">{{s.name}}</span><span dir="ltr" style="display: block; font-size: 12px; color: #5F5B55; font-weight: 400; text-align: right">{{s.phone}}</span></th>
+<td style="padding: 12px 8px">{{s.loc}}</td>
+<td style="padding: 12px 8px"><span style="display: flex; gap: 6px; flex-wrap: wrap"><sc-for list="{{s.roles}}" as="r" hint-placeholder-count="1"><span style="font-size: 12px; background: #F1F0EE; color: #111111; padding: 3px 10px; border-radius: 10px">{{r}}</span></sc-for></span></td>
+<td style="padding: 12px 8px; color: #5F5B55">{{s.last}}</td>
+<td style="padding: 12px 8px; text-align: center"><span style="{{s.statusStyle}}">{{s.status}}</span></td>
+<td style="padding: 8px; text-align: left; white-space: nowrap">
+<button type="button" style="height: 34px; padding: 0 10px; border-radius: 8px; border: 1px solid #D4D1CB; background: #FFFFFF; font-family: inherit; font-size: 13px; color: #111111; cursor: pointer">تعديل</button>
+<button type="button" style="height: 34px; padding: 0 10px; border-radius: 8px; border: 1px solid #D4D1CB; background: #FFFFFF; font-family: inherit; font-size: 13px; color: #111111; cursor: pointer">رمز جديد</button>
+<button type="button" onClick="{{s.toggle}}" style="{{s.toggleStyle}}">{{s.toggleLabel}}</button>
+</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</section>
+
+<section style="flex: 1 1 280px; max-width: 340px; background: #FFFFFF; border: 1px solid #E6E4E0; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 17px; font-weight: 700">الأدوار</h2>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">موظف فرع · 4</span><span style="font-size: 13px; color: #5F5B55">جرد، طلب، استلام، تالف. بفرعه بس.</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">الإخراج · 1</span><span style="font-size: 13px; color: #5F5B55">طلبات الفروع، الإخراج والتحويل، اختيار الدفعات.</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">أمين المستودع · 2</span><span style="font-size: 13px; color: #5F5B55">الإنتاج، المواد الأولية، جرد المصنع.</span></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">أدمن · 1</span><span style="font-size: 13px; color: #5F5B55">كل شي، وتعديل الأرقام مع سبب.</span></div>
+<span style="font-size: 13px; color: #1E40AF; line-height: 1.6">إيقاف الموظف بيطلّعه من كل الأجهزة فوراً، وكل حركاته القديمة بتضل باسمه.</span>
+</section>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { off: { 'لينا': true } };
+  }
+  renderVals() {
+    const list = [
+      ['أحمد', '079 ••• 4567', 'الصويفية', ['موظف فرع'], 'اليوم 9:12'],
+      ['منى', '078 ••• 1290', 'الصويفية', ['موظف فرع'], 'أمس 9:40 م'],
+      ['رنا', '079 ••• 8831', 'الجبيهة', ['موظف فرع'], 'اليوم 9:05'],
+      ['خالد', '077 ••• 3402', 'دابوق', ['موظف فرع'], 'اليوم 9:30'],
+      ['سامر', '079 ••• 6618', 'المصنع', ['الإخراج', 'أمين المستودع'], 'اليوم 7:02'],
+      ['الشيف وليد', '078 ••• 2251', 'المصنع', ['أمين المستودع'], 'أمس 4:28 م'],
+      ['لينا', '077 ••• 9174', 'الجبيهة', ['موظف فرع'], 'قبل 12 يوم']
+    ];
+    const staff = list.map((s) => {
+      const off = !!this.state.off[s[0]];
+      return {
+        name: s[0], phone: s[1], loc: s[2], roles: s[3], last: s[4],
+        status: off ? 'موقوف' : 'نشط',
+        statusStyle: 'font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 10px; ' + (off ? 'color: #3F3C38; background: #EEEDEA' : 'color: #1E5434; background: #E3F2E8'),
+        tr: 'border-top: 1px solid #EFEDE9; ' + (off ? 'opacity: 0.6' : ''),
+        toggleLabel: off ? 'تفعيل' : 'إيقاف',
+        toggleStyle: 'height: 34px; padding: 0 10px; border-radius: 8px; font-family: inherit; font-size: 13px; cursor: pointer; ' + (off ? 'border: 1px solid #2E7D4F; background: #FFFFFF; color: #1E5434' : 'border: 1px solid #F3B7B0; background: #FFFFFF; color: #8C1D13'),
+        toggle: () => { const o = Object.assign({}, this.state.off); o[s[0]] = !off; this.setState({ off: o }); }
+      };
+    });
+    return { staff };
+  }
+}
+</script>
+</body>
+</html>

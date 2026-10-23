@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>فورم جرد A4</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;family=Jost:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+[dir="ltr"]{font-family:'Jost','IBM Plex Sans Arabic',sans-serif}
+</style>
+</helmet>
+<div dir="rtl" style="width: 794px; height: 1123px; box-sizing: border-box; background: #FFFFFF; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; color: #111111; position: relative; padding: 56px 64px 48px; display: flex; flex-direction: column; gap: 14px">
+
+<span aria-hidden="true" style="position: absolute; top: 24px; right: 24px; width: 22px; height: 22px; background: #000000"></span>
+<span aria-hidden="true" style="position: absolute; top: 24px; left: 24px; width: 22px; height: 22px; background: #000000"></span>
+<span aria-hidden="true" style="position: absolute; bottom: 24px; right: 24px; width: 22px; height: 22px; background: #000000"></span>
+<span aria-hidden="true" style="position: absolute; bottom: 24px; left: 24px; width: 22px; height: 22px; background: #000000"></span>
+
+<header style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<img src="/_blob/4715b420fbf7b743c5b3fe8ef06de73a" alt="ميكاسا" style="width: 162px; height: 81px; object-fit: cover; object-position: center; mix-blend-mode: multiply; display: block">
+<h1 style="margin: 0; font-size: 26px; font-weight: 700">فورم جرد · فرع الصويفية</h1>
+<div style="display: flex; gap: 24px; font-size: 15px; margin-top: 6px">
+<span>التاريخ: ____ / ____</span>
+<span>الساعة: ________</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px">
+<div role="img" aria-label="رمز QR للموقع" style="width: 96px; height: 96px; border: 6px solid #000000; box-sizing: border-box; background: repeating-linear-gradient(0deg, #000 0 6px, #fff 6px 12px), #fff; background-blend-mode: normal; position: relative; overflow: hidden">
+<span style="position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(255,255,255,0.9) 0 9px, transparent 9px 15px)"></span>
+</div>
+<span style="font-size: 11px">SWF-COUNT-v1</span>
+</div>
+</header>
+
+<div style="display: flex; justify-content: space-between; font-size: 13px; border-top: 2px solid #000000; padding-top: 8px">
+<span>اكتب الرقم واضح جوا المربع، والمربع الفاضي = صفر.</span>
+<span style="display: flex; gap: 12px"><strong style="width: 52px; text-align: center">كيكات</strong><strong style="width: 52px; text-align: center">قطع</strong></span>
+</div>
+
+<div style="display: flex; flex-direction: column">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="20">
+<div style="display: flex; align-items: center; gap: 12px; height: 37px; border-bottom: 1px solid #BBBBBB">
+<span style="width: 24px; font-size: 13px; color: #444444">{{r.n}}</span>
+<span dir="ltr" style="flex-grow: 1; text-align: right; font-size: 16px; font-weight: 600">{{r.name}}</span>
+<span style="width: 140px; font-size: 13px; color: #666666">[الاسم بالعربي]</span>
+<span style="{{r.wholeBox}}">{{r.wholeMark}}</span>
+<span style="width: 52px; height: 30px; border: 2.5px solid #000000; box-sizing: border-box"></span>
+</div>
+</sc-for>
+</div>
+
+<div style="flex-grow: 1"></div>
+<footer style="display: flex; gap: 40px; font-size: 15px; border-top: 2px solid #000000; padding-top: 14px">
+<span>اسم الموظف: ______________________</span>
+<span>التوقيع: ______________</span>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":794,"height":1123}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const names = ['Classic Choco', 'The Red One', 'The One', 'Qudrat Qader', 'Flan', 'Strawberry', 'Belgian Choco', 'Black & White', 'Classic Crunch', 'Classic Strawberry', 'Nightmare', 'Caramel Crunch', 'Latte', 'Carrot', 'Pecan', 'Double Choco', 'San Sebastian', 'Cheesecake for Two – Chocolate', 'Cheesecake for Two – Original', 'Tiramisu'];
+    const rows = names.map((n, i) => {
+      const slice = i >= 17;
+      return {
+        n: i + 1, name: n, wholeMark: slice ? '—' : '',
+        wholeBox: 'width: 52px; height: 30px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #888888; ' + (slice ? 'border: 1px dashed #BBBBBB; background: #F2F2F2' : 'border: 2.5px solid #000000')
+      };
+    });
+    return { rows };
+  }
+}
+</script>
+</body>
+</html>

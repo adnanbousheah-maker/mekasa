@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>لوحة الأدمن - مساعد الذكاء الاصطناعي</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;family=Jost:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+[dir="ltr"]{font-family:'Jost','IBM Plex Sans Arabic',sans-serif}
+a{color:#111111;text-decoration:none}a:hover{color:#111111}
+</style>
+</helmet>
+<div dir="rtl" style="min-height: 1000px; background: #FAFAF8; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; color: #111111; display: flex; flex-wrap: wrap; position: relative">
+<div style="flex: 0 0 240px; display: flex">
+<dc-import name="AdminNav" active="overview" hint-size="240px,1000px"></dc-import>
+</div>
+<main aria-hidden="true" style="flex: 999 1 560px; min-width: 0; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px; opacity: 0.35">
+<div style="height: 36px; width: 320px; border-radius: 8px; background: #E6E4E0"></div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px"><div style="height: 130px; border-radius: 16px; background: #FFFFFF; border: 1px solid #E6E4E0"></div><div style="height: 130px; border-radius: 16px; background: #FFFFFF; border: 1px solid #E6E4E0"></div><div style="height: 130px; border-radius: 16px; background: #FFFFFF; border: 1px solid #E6E4E0"></div><div style="height: 130px; border-radius: 16px; background: #FFFFFF; border: 1px solid #E6E4E0"></div></div>
+<div style="height: 420px; border-radius: 16px; background: #FFFFFF; border: 1px solid #E6E4E0"></div>
+</main>
+
+<aside role="dialog" aria-label="مساعد ميكاسا" style="position: absolute; top: 0; bottom: 0; left: 0; width: min(440px, 100%); background: #FFFFFF; border-right: 1px solid #E6E4E0; box-shadow: 8px 0 32px rgba(17,17,17,0.12); display: flex; flex-direction: column">
+<div style="padding: 20px 20px 16px; border-bottom: 1px solid #E6E4E0; display: flex; align-items: center; gap: 12px">
+<span style="width: 44px; height: 44px; border-radius: 22px; background: #111111; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></span>
+<div style="display: flex; flex-direction: column; flex-grow: 1"><span style="font-size: 18px; font-weight: 700">مساعد ميكاسا</span><span style="font-size: 13px; color: #5F5B55">بيجاوب من بيانات التطبيق بس، وما بيغير شي</span></div>
+<a href="AdminOverview.dc.html" aria-label="سكّر" style="width: 40px; height: 40px; border-radius: 20px; display: flex; align-items: center; justify-content: center; border: 1px solid #E6E4E0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></a>
+</div>
+
+<div style="flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 14px; background: #FAFAF8">
+
+<div style="align-self: flex-start; max-width: 85%; background: #111111; color: #FFFFFF; border-radius: 16px 16px 4px 16px; padding: 10px 14px; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #FFFFFF"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path></svg>رسالة صوتية · 0:03</span>
+<span style="font-size: 15px">قديش في كلاسيك بالجبيهة؟</span>
+</div>
+<div style="align-self: flex-end; max-width: 90%; background: #FFFFFF; border: 1px solid #E6E4E0; border-radius: 16px 16px 16px 4px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 15px; line-height: 1.7"><strong dir="ltr">Classic Choco</strong> بالجبيهة: <strong>6 كيكات و9 قطع</strong>. جرد اليوم 9:00 لسا ما انعمل، فهاد الرقم من جرد أمس.</span>
+<span style="align-self: flex-start; font-size: 12px; color: #5F5B55; background: #F5F4F1; padding: 3px 10px; border-radius: 10px">المصدر: جرد الجبيهة · أمس 9:00 المسا</span>
+</div>
+
+<div style="align-self: flex-start; max-width: 85%; background: #111111; color: #FFFFFF; border-radius: 16px 16px 4px 16px; padding: 10px 14px"><span style="font-size: 15px">شو لازم يطلع اليوم من المصنع؟</span></div>
+<div style="align-self: flex-end; max-width: 90%; background: #FFFFFF; border: 1px solid #E6E4E0; border-radius: 16px 16px 16px 4px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 15px; line-height: 1.7">دفعة <strong>رقم 1</strong> (السبت الماضي) آخر يوم إلها:</span>
+<span style="font-size: 15px; line-height: 1.7"><span dir="ltr">Classic Choco</span>: 2 كيكة · <span dir="ltr">Black &amp; White</span>: 3 كيكات</span>
+<span style="font-size: 14px; color: #5F5B55; line-height: 1.6">طلب الجبيهة فيه الصنفين، فممكن يطلعوا معه.</span>
+<span style="align-self: flex-start; font-size: 12px; color: #5F5B55; background: #F5F4F1; padding: 3px 10px; border-radius: 10px">المصدر: جرد المصنع · اليوم 8:00</span>
+</div>
+
+<div style="align-self: flex-start; max-width: 85%; background: #111111; color: #FFFFFF; border-radius: 16px 16px 4px 16px; padding: 10px 14px"><span style="font-size: 15px">مين ربح ماتش امبارح؟</span></div>
+<div style="align-self: flex-end; max-width: 90%; background: #FFFFFF; border: 1px solid #E6E4E0; border-radius: 16px 16px 16px 4px; padding: 12px 14px"><span style="font-size: 15px; line-height: 1.7">أنا بساعدك بس بأمور ميكاسا: الستوك، والجرد، والطلبيات، والتالف، والمواد الأولية.</span></div>
+
+</div>
+
+<div style="padding: 14px 20px 20px; border-top: 1px solid #E6E4E0; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; gap: 6px; flex-wrap: wrap">
+<button type="button" style="height: 32px; padding: 0 12px; border-radius: 16px; border: 1px solid #D4D1CB; background: #FFFFFF; font-family: inherit; font-size: 13px; color: #111111; cursor: pointer">مين ما جرد اليوم؟</button>
+<button type="button" style="height: 32px; padding: 0 12px; border-radius: 16px; border: 1px solid #D4D1CB; background: #FFFFFF; font-family: inherit; font-size: 13px; color: #111111; cursor: pointer">شو تحت الحد المطلوب؟</button>
+<button type="button" style="height: 32px; padding: 0 12px; border-radius: 16px; border: 1px solid #D4D1CB; background: #FFFFFF; font-family: inherit; font-size: 13px; color: #111111; cursor: pointer">التالف هالأسبوع</button>
+</div>
+<div style="display: flex; gap: 10px; align-items: center">
+<label style="flex-grow: 1; display: flex; align-items: center; height: 52px; padding: 0 14px; border-radius: 14px; border: 1px solid #D4D1CB; background: #FFFFFF"><input type="text" placeholder="{{placeholder}}" aria-label="اكتب سؤالك" style="border: none; outline: none; background: transparent; font-family: inherit; font-size: 15px; flex-grow: 1"></label>
+<button type="button" onClick="{{toggleMic}}" aria-label="{{micLabel}}" style="{{micStyle}}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></svg></button>
+</div>
+</div>
+</aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { listening: false }; }
+  renderVals() {
+    const l = this.state.listening;
+    return {
+      toggleMic: () => this.setState({ listening: !l }),
+      micLabel: l ? 'وقّف التسجيل' : 'اسأل بالصوت',
+      placeholder: l ? 'عم بسمعك…' : 'اسأل عن أي شي بميكاسا',
+      micStyle: 'width: 56px; height: 56px; border-radius: 28px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; ' + (l ? 'background: #B42318; box-shadow: 0 0 0 6px rgba(180,35,24,0.18)' : 'background: #111111')
+    };
+  }
+}
+</script>
+</body>
+</html>

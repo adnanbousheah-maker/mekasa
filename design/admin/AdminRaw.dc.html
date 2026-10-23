@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>لوحة الأدمن - المواد الأولية</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;family=Jost:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+[dir="ltr"]{font-family:'Jost','IBM Plex Sans Arabic',sans-serif}
+a{color:#111111;text-decoration:none}a:hover{color:#111111}
+</style>
+</helmet>
+<div dir="rtl" style="min-height: 1000px; background: #FAFAF8; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; color: #111111; display: flex; flex-wrap: wrap">
+<div style="flex: 0 0 240px; display: flex">
+<dc-import name="AdminNav" active="raw" hint-size="240px,1000px"></dc-import>
+</div>
+<main style="flex: 999 1 560px; min-width: 0; padding: 32px 32px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px; max-width: 1200px">
+
+<header style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-size: 26px; font-weight: 700">المواد الأولية</h1>
+<span style="font-size: 14px; color: #5F5B55">الأيام المتبقية محسوبة من معدل الصرف بآخر 14 يوم</span>
+</div>
+<div style="display: flex; gap: 8px">
+<button type="button" style="height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid #D4D1CB; background: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 600; color: #111111; cursor: pointer">تصدير Excel</button>
+<button type="button" style="height: 44px; padding: 0 16px; border-radius: 10px; border: none; background: #111111; font-family: inherit; font-size: 14px; font-weight: 600; color: #FFFFFF; cursor: pointer">+ مادة جديدة</button>
+</div>
+</header>
+
+<div style="background: #FFFFFF; border: 1px solid #E6E4E0; border-radius: 16px; overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; min-width: 760px; font-size: 14px">
+<thead><tr style="background: #F5F4F1">
+<th scope="col" style="text-align: right; padding: 12px 16px; font-weight: 600; color: #3F3C38">المادة</th>
+<th scope="col" style="padding: 12px 8px; font-weight: 600; color: #3F3C38">الموجود</th>
+<th scope="col" style="padding: 12px 8px; font-weight: 600; color: #3F3C38">الحد الأدنى</th>
+<th scope="col" style="padding: 12px 8px; font-weight: 600; color: #3F3C38">صرف يومي</th>
+<th scope="col" style="padding: 12px 8px; font-weight: 600; color: #3F3C38">بيكفي</th>
+<th scope="col" style="text-align: right; padding: 12px 8px; font-weight: 600; color: #3F3C38">التحويلات</th>
+<th scope="col" style="text-align: right; padding: 12px 8px; font-weight: 600; color: #3F3C38">آخر استلام</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+<tr style="{{r.tr}}">
+<th scope="row" style="text-align: right; padding: 12px 16px; font-weight: 600">{{r.name}}</th>
+<td style="text-align: center; padding: 12px 8px; font-weight: 700">{{r.qty}}</td>
+<td style="text-align: center; padding: 12px 8px">{{r.min}}</td>
+<td style="text-align: center; padding: 12px 8px">{{r.daily}}</td>
+<td style="{{r.daysStyle}}">{{r.days}}</td>
+<td style="padding: 12px 8px; color: #5F5B55">{{r.conv}}</td>
+<td style="padding: 12px 8px; color: #5F5B55">{{r.last}}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+
+<section style="background: #FFFFFF; border: 1px solid #E6E4E0; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 8px">
+<h2 style="margin: 0 0 6px; font-size: 18px; font-weight: 700">آخر الحركات</h2>
+<sc-for list="{{moves}}" as="m" hint-placeholder-count="5">
+<div style="display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #EFEDE9; font-size: 14px">
+<span style="{{m.tag}}">{{m.kind}}</span>
+<span style="flex-grow: 1">{{m.text}}</span>
+<span style="color: #5F5B55">{{m.who}}</span>
+</div>
+</sc-for>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const d = [
+      ['طحين', 38, 100, 'كيلو', 22, 'كيس = 25 كيلو', 'الأحد · 8 أكياس'],
+      ['كريمة طبخ', 6, 20, 'لتر', 5, 'كرتونة = 12 لتر', 'الاثنين · 2 كرتونة'],
+      ['سكر', 120, 60, 'كيلو', 14, 'كيس = 50 كيلو', 'الثلاثاء · 3 أكياس'],
+      ['زبدة', 24, 15, 'كيلو', 4, 'كرتونة = 10 كيلو', 'الأربعاء · 3 كرتونة'],
+      ['بيض', 360, 180, 'حبة', 90, 'كرتونة = 30 حبة', 'الخميس · 12 كرتونة'],
+      ['شوكولاتة داكنة', 18, 10, 'كيلو', 3, 'كيس = 5 كيلو', 'الأحد · 4 أكياس'],
+      ['جبنة كريمية', 30, 12, 'كيلو', 4, 'علبة = 2 كيلو', 'الثلاثاء · 10 علب'],
+      ['فراولة', 12, 8, 'كيلو', 3, '—', 'الخميس · 15 كيلو']
+    ];
+    const rows = d.map((r) => {
+      const days = Math.floor(r[1] / r[4]);
+      const low = r[1] < r[2];
+      return {
+        name: r[0], qty: r[1] + ' ' + r[3], min: r[2] + ' ' + r[3], daily: r[4] + ' ' + r[3],
+        days: days < 1 ? 'أقل من يوم' : days + (days <= 2 ? ' يوم' : ' أيام'),
+        daysStyle: 'text-align: center; padding: 12px 8px; font-weight: 700; ' + (days <= 2 ? 'color: #8C1D13' : (days <= 4 ? 'color: #7A3E06' : 'color: #1E5434')),
+        conv: r[5], last: r[6],
+        tr: 'border-top: 1px solid #EFEDE9; ' + (low ? 'background: #FFF4E5' : '')
+      };
+    });
+    const tag = (c, b) => 'font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 10px; color: ' + c + '; background: ' + b;
+    const moves = [
+      ['صرف', 'طحين · 20 كيلو للإنتاج', 'سامر · 7:10', '#7A3E06', '#FDE3C2'],
+      ['صرف', 'زبدة · 4 كيلو للإنتاج', 'سامر · 7:10', '#7A3E06', '#FDE3C2'],
+      ['استلام', 'بيض · 12 كرتونة (360 حبة) · مع صورة فاتورة', 'الشيف وليد · أمس 4:30', '#1E5434', '#E3F2E8'],
+      ['جرد', 'جرد المواد الأولية · فرق بالسكر −2 كيلو', 'سامر · أمس 9:00', '#3F3C38', '#EEEDEA'],
+      ['استلام', 'فراولة · 15 كيلو', 'الشيف وليد · أمس 8:15', '#1E5434', '#E3F2E8']
+    ];
+    return { rows, moves: moves.map((m) => ({ kind: m[0], text: m[1], who: m[2], tag: tag(m[3], m[4]) })) };
+  }
+}
+</script>
+</body>
+</html>

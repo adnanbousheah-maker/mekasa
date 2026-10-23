@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>لوحة الأدمن - ستوك المصنع والدفعات</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;family=Jost:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+[dir="ltr"]{font-family:'Jost','IBM Plex Sans Arabic',sans-serif}
+a{color:#111111;text-decoration:none}a:hover{color:#111111}
+</style>
+</helmet>
+<div dir="rtl" style="min-height: 1000px; background: #FAFAF8; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; color: #111111; display: flex; flex-wrap: wrap">
+<div style="flex: 0 0 240px; display: flex">
+<dc-import name="AdminNav" active="factory" hint-size="240px,1000px"></dc-import>
+</div>
+<main style="flex: 999 1 560px; min-width: 0; padding: 32px 32px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px; max-width: 1200px">
+
+<header style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 style="margin: 0; font-size: 26px; font-weight: 700">ستوك المصنع والدفعات</h1>
+<span style="font-size: 14px; color: #5F5B55">كل عمود رقم يوم إنتاج. الأقدم على اليمين، ولازم يطلع أول.</span>
+</div>
+<button type="button" style="height: 44px; padding: 0 16px; border-radius: 10px; border: 1px solid #D4D1CB; background: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 600; color: #111111; cursor: pointer">تصدير Excel</button>
+</header>
+
+<div style="background: #FFFFFF; border: 1px solid #E6E4E0; border-radius: 16px; overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; min-width: 760px; font-size: 14px">
+<thead><tr style="background: #F5F4F1">
+<th scope="col" style="text-align: right; padding: 12px 16px; font-weight: 600; color: #3F3C38">الصنف</th>
+<sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+<th scope="col" style="padding: 10px 6px; font-weight: 600; color: #3F3C38"><span style="{{d.badge}}">{{d.n}}</span><span style="display: block; font-size: 11px; color: #5F5B55; font-weight: 400; margin-top: 2px">{{d.label}}</span></th>
+</sc-for>
+<th scope="col" style="padding: 12px 8px; font-weight: 600; color: #3F3C38">المجموع</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+<tr style="border-top: 1px solid #EFEDE9">
+<th scope="row" dir="ltr" style="text-align: right; padding: 10px 16px; font-weight: 600">{{r.name}}</th>
+<sc-for list="{{r.cells}}" as="c" hint-placeholder-count="7">
+<td style="{{c.style}}">{{c.v}}</td>
+</sc-for>
+<td style="text-align: center; padding: 10px 8px; font-weight: 700">{{r.total}}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+
+<section style="background: #FFFFFF; border: 1px solid #E6E4E0; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 700">إنتاج اليوم مقابل الجرد</h2>
+<span style="font-size: 13px; color: #5F5B55">اللي انسجل إنتاج رقم 7، ناقص اللي طلع منه، لازم يساوي جرد رقم 7. أي فرق معناه إنتاج انسجل غلط أو بضاعة طلعت بدون إخراج.</span>
+<div style="overflow-x: auto">
+<table style="width: 100%; border-collapse: collapse; min-width: 520px; font-size: 14px">
+<thead><tr style="background: #F5F4F1"><th scope="col" style="text-align: right; padding: 10px 12px; font-weight: 600">الصنف</th><th scope="col" style="padding: 10px; font-weight: 600">انسجل إنتاج</th><th scope="col" style="padding: 10px; font-weight: 600">طلع منه</th><th scope="col" style="padding: 10px; font-weight: 600">المتوقع</th><th scope="col" style="padding: 10px; font-weight: 600">الجرد</th><th scope="col" style="padding: 10px; font-weight: 600">الفرق</th></tr></thead>
+<tbody>
+<tr style="border-top: 1px solid #EFEDE9"><th scope="row" dir="ltr" style="text-align: right; padding: 10px 12px; font-weight: 600">Classic Choco</th><td style="text-align: center">6</td><td style="text-align: center">0</td><td style="text-align: center">6</td><td style="text-align: center">6</td><td style="text-align: center; color: #1E5434; font-weight: 600">تمام</td></tr>
+<tr style="border-top: 1px solid #EFEDE9"><th scope="row" dir="ltr" style="text-align: right; padding: 10px 12px; font-weight: 600">Flan</th><td style="text-align: center">5</td><td style="text-align: center">0</td><td style="text-align: center">5</td><td style="text-align: center">5</td><td style="text-align: center; color: #1E5434; font-weight: 600">تمام</td></tr>
+<tr style="border-top: 1px solid #EFEDE9; background: #FFF4E5"><th scope="row" dir="ltr" style="text-align: right; padding: 10px 12px; font-weight: 600">Carrot</th><td style="text-align: center">3</td><td style="text-align: center">0</td><td style="text-align: center">3</td><td style="text-align: center">4</td><td style="text-align: center; color: #7A3E06; font-weight: 700">+1</td></tr>
+<tr style="border-top: 1px solid #EFEDE9"><th scope="row" dir="ltr" style="text-align: right; padding: 10px 12px; font-weight: 600">Tiramisu</th><td style="text-align: center">24 ق</td><td style="text-align: center">0</td><td style="text-align: center">24 ق</td><td style="text-align: center">24 ق</td><td style="text-align: center; color: #1E5434; font-weight: 600">تمام</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const colors = ['#B42318', '#C2410C', '#A16207', '#15803D', '#0E7490', '#1D4ED8', '#7E22CE'];
+    const labels = ['السبت · آخر يوم', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'اليوم'];
+    const days = colors.map((c, i) => ({
+      n: i + 1, label: labels[i],
+      badge: 'display: inline-flex; min-width: 26px; height: 26px; border-radius: 13px; background: ' + c + '; color: #FFFFFF; font-size: 13px; font-weight: 700; align-items: center; justify-content: center'
+    }));
+    const data = [
+      ['Classic Choco', [2, 0, 0, 6, 0, 0, 6]], ['The Red One', [0, 0, 3, 0, 0, 4, 0]], ['The One', [0, 2, 0, 0, 5, 0, 4]],
+      ['Flan', [0, 4, 0, 0, 3, 0, 5]], ['Strawberry', [0, 0, 0, 0, 0, 1, 0]], ['Black & White', [3, 0, 0, 0, 0, 0, 6]],
+      ['Nightmare', [0, 0, 0, 0, 0, 0, 4]], ['Carrot', [0, 2, 0, 0, 0, 0, 4]], ['Double Choco', [0, 0, 4, 0, 0, 3, 0]],
+      ['Tiramisu (قطع)', [0, 0, 0, 0, 12, 0, 24]]
+    ];
+    const rows = data.map((r) => ({
+      name: r[0], total: r[1].reduce((s, x) => s + x, 0),
+      cells: r[1].map((v, i) => ({
+        v: v === 0 ? '·' : v,
+        style: 'text-align: center; padding: 10px 6px; ' + (v === 0 ? 'color: #C9BFB2' : 'font-weight: 700') + (i === 0 && v > 0 ? '; background: #FDECEA; color: #8C1D13' : '')
+      }))
+    }));
+    return { days, rows };
+  }
+}
+</script>
+</body>
+</html>

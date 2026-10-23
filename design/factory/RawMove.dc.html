@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>استلام وصرف مواد</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;family=Jost:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+[dir="ltr"]{font-family:'Jost','IBM Plex Sans Arabic',sans-serif}
+a{color:#111111;text-decoration:none}a:hover{color:#111111}
+</style>
+</helmet>
+<div dir="rtl" style="width: 390px; height: 844px; box-sizing: border-box; background: #FAFAF8; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; color: #111111; display: flex; flex-direction: column; padding: 16px 20px 24px; gap: 18px">
+
+<header style="display: flex; align-items: center; gap: 8px">
+<a href="RawMaterials.dc.html" aria-label="رجوع" style="width: 48px; height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #E6E4E0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></a>
+<h1 style="margin: 0; font-size: 22px; font-weight: 700">حركة مواد أولية</h1>
+</header>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); height: 52px; border-radius: 14px; background: #EEEDEA; padding: 4px; box-sizing: border-box">
+<button type="button" onClick="{{toIn}}" style="{{inTab}}">استلام من مورد</button>
+<button type="button" onClick="{{toOut}}" style="{{outTab}}">صرف للإنتاج</button>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 15px; font-weight: 600">المادة</span>
+<button type="button" style="display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 14px; border-radius: 14px; border: 1px solid #D4D1CB; background: #FFFFFF; font-family: inherit; cursor: pointer; text-align: right">
+<span style="flex-grow: 1; font-size: 17px; font-weight: 600; color: #111111">طحين</span>
+<span style="font-size: 13px; color: #5F5B55">موجود 38 كيلو</span>
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5F5B55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+</button>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 15px; font-weight: 600">الكمية</span>
+<div style="display: flex; gap: 8px">
+<button type="button" onClick="{{toBag}}" style="{{bagChip}}">كيس (25 كيلو)</button>
+<button type="button" onClick="{{toKg}}" style="{{kgChip}}">كيلو</button>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between; height: 64px; border-radius: 14px; border: 1px solid #D4D1CB; background: #FFFFFF; overflow: hidden">
+<button type="button" onClick="{{plus}}" aria-label="زيد" style="width: 64px; height: 64px; border: none; background: #F1F0EE; font-family: inherit; font-size: 28px; color: #111111; cursor: pointer">+</button>
+<span style="font-size: 26px; font-weight: 700">{{qtyText}}</span>
+<button type="button" onClick="{{minus}}" aria-label="نقّص" style="width: 64px; height: 64px; border: none; background: #F1F0EE; font-family: inherit; font-size: 28px; color: #111111; cursor: pointer">−</button>
+</div>
+<span style="font-size: 14px; color: #5F5B55">{{convText}}</span>
+</div>
+
+<sc-if value="{{isIn}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 15px; font-weight: 600">المورد (اختياري)</span><input type="text" placeholder="اسم المورد" style="height: 52px; border-radius: 12px; border: 1px solid #D4D1CB; padding: 0 14px; font-family: inherit; font-size: 16px; background: #FFFFFF"></label>
+<button type="button" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 52px; border-radius: 12px; border: 1.5px dashed #BDB9B2; background: transparent; font-family: inherit; font-size: 15px; color: #5F5B55; cursor: pointer"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5F5B55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="4"></circle></svg>صورة الفاتورة (اختياري)</button>
+</div>
+</sc-if>
+
+<div style="flex-grow: 1"></div>
+<a href="RawMaterials.dc.html" style="display: flex; align-items: center; justify-content: center; height: 56px; border-radius: 14px; background: #111111; color: #FFFFFF; font-size: 18px; font-weight: 600">{{submit}}</a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { mode: 'in', unit: 'bag', qty: 4 }; }
+  renderVals() {
+    const s = this.state;
+    const on = 'border: none; border-radius: 10px; background: #FFFFFF; font-family: inherit; font-size: 15px; font-weight: 600; color: #111111; cursor: pointer; box-shadow: 0 1px 2px rgba(17,17,17,0.12)';
+    const off = 'border: none; border-radius: 10px; background: transparent; font-family: inherit; font-size: 15px; color: #5F5B55; cursor: pointer';
+    const chip = (a) => 'height: 40px; padding: 0 14px; border-radius: 20px; font-family: inherit; font-size: 14px; cursor: pointer; ' + (a ? 'border: 2px solid #111111; background: #F1F0EE; color: #111111; font-weight: 600' : 'border: 1px solid #D4D1CB; background: #FFFFFF; color: #111111');
+    const kg = s.unit === 'bag' ? s.qty * 25 : s.qty;
+    const after = s.mode === 'in' ? 38 + kg : 38 - kg;
+    return {
+      isIn: s.mode === 'in',
+      inTab: s.mode === 'in' ? on : off, outTab: s.mode === 'out' ? on : off,
+      toIn: () => this.setState({ mode: 'in' }), toOut: () => this.setState({ mode: 'out', unit: 'kg', qty: 10 }),
+      bagChip: chip(s.unit === 'bag'), kgChip: chip(s.unit === 'kg'),
+      toBag: () => this.setState({ unit: 'bag', qty: 1 }), toKg: () => this.setState({ unit: 'kg', qty: 10 }),
+      plus: () => this.setState({ qty: s.qty + 1 }), minus: () => this.setState({ qty: Math.max(1, s.qty - 1) }),
+      qtyText: s.qty + (s.unit === 'bag' ? ' كيس' : ' كيلو'),
+      convText: '= ' + kg + ' كيلو · بعدها بيصير الموجود ' + after + ' كيلو' + (after < 0 ? ' (أكثر من الموجود!)' : ''),
+      submit: s.mode === 'in' ? 'سجّل الاستلام' : 'سجّل الصرف'
+    };
+  }
+}
+</script>
+</body>
+</html>

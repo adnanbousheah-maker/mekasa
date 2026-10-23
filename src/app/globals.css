@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+/* ألوان ميكاسا من CLAUDE.md وملفات design/. أي لون جديد بينضاف هون، مش بالمكونات. */
+@theme {
+  /* الهوية: أسود على أبيض */
+  --color-ink: #111111;
+  --color-canvas: #fafaf8;
+  --color-surface: #ffffff;
+  --color-line: #e6e4e0;
+  --color-line-strong: #d4d1cb;
+  --color-line-soft: #efede9;
+  --color-muted: #5f5b55;
+  --color-quiet: #f1f0ee;
+  --color-quiet-strong: #eceae6;
+  --color-table-head: #f5f4f1;
+  --color-table-head-text: #3f3c38;
+
+  /* ألوان المعنى بس */
+  --color-ok: #2e7d4f;
+  --color-ok-soft: #e3f2e8;
+  --color-ok-text: #1e5434;
+  --color-warn: #b45309;
+  --color-warn-soft: #fff4e5;
+  --color-warn-line: #f3c98b;
+  --color-warn-chip: #fde3c2;
+  --color-warn-text: #7a3e06;
+  --color-warn-edge: #e59a3a;
+  --color-danger: #b42318;
+  --color-danger-soft: #fdecea;
+  --color-danger-line: #f3b7b0;
+  --color-danger-text: #8c1d13;
+  --color-info: #1d4ed8;
+  --color-info-soft: #e0e9fb;
+  --color-info-text: #1e40af;
+
+  /* أرقام الأيام: السبت 1 … الجمعة 7 */
+  --color-day-1: #b42318;
+  --color-day-2: #c2410c;
+  --color-day-3: #a16207;
+  --color-day-4: #15803d;
+  --color-day-5: #0e7490;
+  --color-day-6: #1d4ed8;
+  --color-day-7: #7e22ce;
+}
+
+/* الخطوط جاية من next/font كمتغيرات على <html> */
+@theme inline {
+  --font-sans: var(--font-plex-arabic), system-ui, sans-serif;
+  --font-latin: var(--font-jost), var(--font-plex-arabic), sans-serif;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+
+  /* متل التصميم: أي نص لاتيني (أسماء الأصناف، الجوال) بخط Jost */
+  [dir="ltr"] {
+    font-family: var(--font-latin);
+  }
+
+  button,
+  a {
+    touch-action: manipulation;
+  }
+}

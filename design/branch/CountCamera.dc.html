@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>الجرد - تصوير الفورم</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;family=Jost:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+[dir="ltr"]{font-family:'Jost','IBM Plex Sans Arabic',sans-serif}
+a{color:#FFFFFF;text-decoration:none}a:hover{color:#F1F0EE}
+</style>
+</helmet>
+<div dir="rtl" style="width: 390px; height: 844px; box-sizing: border-box; background: #111111; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; color: #FFFFFF; display: flex; flex-direction: column; padding: 16px 20px 32px; gap: 16px">
+
+<header style="display: flex; align-items: center; justify-content: space-between">
+<a href="CountMethod.dc.html" aria-label="رجوع" style="width: 48px; height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.12)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></a>
+<span style="font-size: 17px; font-weight: 600">صوّر فورم الجرد</span>
+<span style="width: 48px"></span>
+</header>
+
+<div style="flex-grow: 1; position: relative; border-radius: 20px; background: #262626; display: flex; align-items: center; justify-content: center; overflow: hidden">
+<sc-if value="{{reading}}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; background: rgba(17,17,17,0.82); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 2">
+<div style="width: 56px; height: 56px; border-radius: 28px; border: 4px solid rgba(255,255,255,0.2); border-top-color: #FFFFFF"></div>
+<span style="font-size: 20px; font-weight: 600">عم نقرأ الأرقام…</span>
+<span style="font-size: 15px; color: #D8CDBF">ثواني وبتطلعلك للتأكيد</span>
+<a href="CountConfirm.dc.html" style="margin-top: 8px; font-size: 15px; text-decoration: underline">التالي (للعرض)</a>
+</div>
+</sc-if>
+
+<div style="width: 268px; height: 380px; background: #F5F4F1; border-radius: 4px; box-sizing: border-box; padding: 20px 18px; display: flex; flex-direction: column; gap: 8px; transform: rotate(-2deg)">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<img src="/_blob/4715b420fbf7b743c5b3fe8ef06de73a" alt="ميكاسا" style="width: 99px; height: 49px; object-fit: cover; object-position: center; mix-blend-mode: multiply; display: block">
+<span style="width: 34px; height: 34px; background: repeating-linear-gradient(90deg,#111111 0 3px,#F5F4F1 3px 6px); border: 2px solid #111111; box-sizing: border-box"></span>
+</div>
+<span style="font-size: 11px; color: #111111">فورم جرد · فرع الصويفية</span>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+<div style="display: flex; align-items: center; gap: 6px; height: 20px">
+<span style="flex-grow: 1; height: 6px; border-radius: 3px; background: #CFCBC4"></span>
+<span style="width: 26px; height: 18px; border: 1.5px solid #111111; box-sizing: border-box; font-size: 11px; color: #1F3A8A; display: flex; align-items: center; justify-content: center">{{r.a}}</span>
+<span style="width: 26px; height: 18px; border: 1.5px solid #111111; box-sizing: border-box; font-size: 11px; color: #1F3A8A; display: flex; align-items: center; justify-content: center">{{r.b}}</span>
+</div>
+</sc-for>
+</div>
+
+<span style="position: absolute; top: 40px; right: 40px; width: 36px; height: 36px; border-top: 4px solid #FFFFFF; border-right: 4px solid #FFFFFF; border-radius: 0 8px 0 0"></span>
+<span style="position: absolute; top: 40px; left: 40px; width: 36px; height: 36px; border-top: 4px solid #FFFFFF; border-left: 4px solid #FFFFFF; border-radius: 8px 0 0 0"></span>
+<span style="position: absolute; bottom: 40px; right: 40px; width: 36px; height: 36px; border-bottom: 4px solid #FFFFFF; border-right: 4px solid #FFFFFF; border-radius: 0 0 8px 0"></span>
+<span style="position: absolute; bottom: 40px; left: 40px; width: 36px; height: 36px; border-bottom: 4px solid #FFFFFF; border-left: 4px solid #FFFFFF; border-radius: 0 0 0 8px"></span>
+</div>
+
+<div style="display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(46,125,79,0.25); border-radius: 12px; padding: 10px 14px; align-self: center">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7FD3A0" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg>
+<span style="font-size: 15px; color: #CFF2DC">الفورم كله جوا الإطار</span>
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 0 12px">
+<span style="width: 56px"></span>
+<button type="button" onClick="{{shoot}}" aria-label="التقط الصورة" style="width: 80px; height: 80px; border-radius: 40px; border: 5px solid rgba(255,255,255,0.45); background: #FFFFFF; background-clip: padding-box; cursor: pointer"></button>
+<button type="button" aria-label="تشغيل الفلاش" style="width: 56px; height: 56px; border-radius: 28px; border: none; background: rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"></path></svg></button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { reading: false }; }
+  renderVals() {
+    const vals = [['4','2'],['2','7'],['0','5'],['3','0'],['1','9'],['2','4'],['0','11'],['5','3'],['1','6'],['2','0'],['0','8'],['3','2']];
+    return {
+      reading: this.state.reading,
+      shoot: () => this.setState({ reading: true }),
+      rows: vals.map((v) => ({ a: v[0], b: v[1] }))
+    };
+  }
+}
+</script>
+</body>
+</html>

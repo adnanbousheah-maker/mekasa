@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>طلبات الفروع</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;family=Jost:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+[dir="ltr"]{font-family:'Jost','IBM Plex Sans Arabic',sans-serif}
+a{color:#111111;text-decoration:none}a:hover{color:#111111}
+</style>
+</helmet>
+<div dir="rtl" style="width: 390px; height: 844px; box-sizing: border-box; background: #FAFAF8; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; color: #111111; display: flex; flex-direction: column; padding: 16px 20px 24px; gap: 16px">
+
+<header style="display: flex; align-items: center; gap: 8px">
+<a href="FactoryHome.dc.html" aria-label="رجوع" style="width: 48px; height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #E6E4E0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></a>
+<h1 style="margin: 0; font-size: 22px; font-weight: 700">طلبات الفروع</h1>
+</header>
+
+<h2 style="margin: 0; font-size: 15px; font-weight: 600; color: #5F5B55">جديدة · بانتظار الإخراج</h2>
+
+<div style="background: #FFFFFF; border: 2px solid #111111; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span style="font-size: 19px; font-weight: 700">فرع الجبيهة</span>
+<span style="font-size: 14px; color: #5F5B55">9:10 الصبح</span>
+</div>
+<span style="font-size: 15px; color: #5F5B55">6 أصناف · 11 كيكة · 8 قطع · طلبتها رنا</span>
+<a href="Dispatch.dc.html" style="display: flex; align-items: center; justify-content: center; height: 52px; border-radius: 12px; background: #111111; color: #FFFFFF; font-size: 17px; font-weight: 600">ابدأ الإخراج</a>
+</div>
+
+<div style="background: #FFFFFF; border: 1px solid #E6E4E0; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span style="font-size: 19px; font-weight: 700">فرع دابوق</span>
+<span style="font-size: 14px; color: #5F5B55">9:32 الصبح</span>
+</div>
+<span style="font-size: 15px; color: #5F5B55">4 أصناف · 7 كيكات · طلبها خالد</span>
+<a href="Dispatch.dc.html" style="display: flex; align-items: center; justify-content: center; height: 52px; border-radius: 12px; background: #FFFFFF; border: 1.5px solid #111111; color: #111111; font-size: 17px; font-weight: 600">ابدأ الإخراج</a>
+</div>
+
+<h2 style="margin: 8px 0 0; font-size: 15px; font-weight: 600; color: #5F5B55">طلعت · بانتظار الاستلام</h2>
+
+<div style="background: #FDECEA; border: 1px solid #F3B7B0; border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span style="font-size: 17px; font-weight: 700">فرع دابوق</span>
+<span style="font-size: 13px; font-weight: 600; color: #8C1D13; background: #FFFFFF; padding: 3px 10px; border-radius: 10px">ما انستلم من 16 ساعة</span>
+</div>
+<span style="font-size: 14px; color: #8C1D13">طلع أمس 5:10 المسا · 5 أصناف · 9 كيكات</span>
+</div>
+
+<div style="background: #FFFFFF; border: 1px solid #E6E4E0; border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span style="font-size: 17px; font-weight: 700">فرع الصويفية</span>
+<span style="font-size: 13px; font-weight: 600; color: #1E40AF; background: #E0E9FB; padding: 3px 10px; border-radius: 10px">بالطريق</span>
+</div>
+<span style="font-size: 14px; color: #5F5B55">طلع 8:40 · 7 أصناف · 16 كيكة · 10 قطع</span>
+</div>
+
+<div style="flex-grow: 1"></div>
+<a href="Dispatch.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 8px; height: 52px; border-radius: 14px; border: 1px dashed #BDB9B2; font-size: 16px; font-weight: 600; color: #5F5B55">إخراج أو تحويل بدون طلب</a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>استلام طلبية</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;family=Jost:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+[dir="ltr"]{font-family:'Jost','IBM Plex Sans Arabic',sans-serif}
+a{color:#111111;text-decoration:none}a:hover{color:#111111}
+</style>
+</helmet>
+<div dir="rtl" style="width: 390px; height: 1000px; box-sizing: border-box; background: #FAFAF8; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; color: #111111; display: flex; flex-direction: column">
+
+<div style="padding: 16px 20px 12px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid #E6E4E0">
+<header style="display: flex; align-items: center; gap: 8px">
+<a href="Orders.dc.html" aria-label="رجوع" style="width: 48px; height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid #E6E4E0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></a>
+<div style="display: flex; flex-direction: column">
+<h1 style="margin: 0; font-size: 22px; font-weight: 700">استلام طلبية الأربعاء</h1>
+<span style="font-size: 14px; color: #5F5B55">عدّ اللي وصل وأكّد كل صنف · طلع من المصنع 8:40</span>
+</div>
+</header>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 14px; color: #5F5B55">{{progressText}}</span>
+<div style="height: 8px; border-radius: 4px; background: #E6E4E0; overflow: hidden"><div style="{{progressStyle}}"></div></div>
+</div>
+</div>
+
+<div style="flex-grow: 1; overflow-y: auto; padding: 12px 20px; display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{items}}" as="it" hint-placeholder-count="6">
+<div style="{{it.cardStyle}}">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="display: flex; flex-direction: column; flex-grow: 1; gap: 2px">
+<span dir="ltr" style="text-align: right; font-size: 17px; font-weight: 600">{{it.name}}</span>
+<span style="font-size: 14px; color: #111111; font-weight: 500">{{it.sentText}}</span>
+<span style="{{it.reqStyle}}">{{it.reqText}}</span>
+</div>
+<button type="button" onClick="{{it.toggle}}" aria-label="{{it.toggleLabel}}" style="{{it.checkStyle}}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg></button>
+</div>
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="font-size: 14px; color: #5F5B55">وصل فعلياً:</span>
+<div style="display: flex; align-items: center; justify-content: space-between; width: 150px; height: 44px; border-radius: 12px; border: 1px solid #D4D1CB; background: #FFFFFF; overflow: hidden">
+<button type="button" onClick="{{it.plus}}" aria-label="زيد" style="width: 44px; height: 44px; border: none; background: #F1F0EE; font-family: inherit; font-size: 22px; color: #111111; cursor: pointer">+</button>
+<span style="font-size: 20px; font-weight: 700">{{it.got}}</span>
+<button type="button" onClick="{{it.minus}}" aria-label="نقّص" style="width: 44px; height: 44px; border: none; background: #F1F0EE; font-family: inherit; font-size: 22px; color: #111111; cursor: pointer">−</button>
+</div>
+<span style="font-size: 14px; color: #5F5B55">{{it.unit}}</span>
+</div>
+<sc-if value="{{it.diff}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 14px; font-weight: 600; color: #B42318">{{it.diffText}}</span>
+<label style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; color: #5F5B55">ملاحظة (اختياري)</span><input type="text" placeholder="مثلاً: وحدة وصلت مكسورة" style="height: 44px; border-radius: 10px; border: 1px solid #D4D1CB; padding: 0 12px; font-family: inherit; font-size: 15px; background: #FFFFFF"></label>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+
+<div style="padding: 12px 20px 24px; border-top: 1px solid #E6E4E0; background: #FFFFFF; display: flex; flex-direction: column; gap: 8px">
+<sc-if value="{{hasDiff}}" hint-placeholder-val="{{ true }}"><span style="font-size: 14px; color: #B42318; text-align: center">في فرق بالكمية، رح يوصل للمدير</span></sc-if>
+<a href="Main.dc.html" style="{{doneStyle}}">تأكيد الاستلام</a>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const base = [
+      ['Classic Choco', 'كيكة', 3, 3, true, 3], ['Flan', 'كيكة', 3, 2, true, 4], ['Strawberry', 'كيكة', 2, 2, false, 2],
+      ['Black & White', 'كيكة', 4, 4, false, 2], ['Double Choco', 'كيكة', 2, 2, false, 2], ['Tiramisu', 'قطعة', 10, 10, false, 10],
+      ['Carrot', 'كيكة', 2, 2, false, 0]
+    ];
+    this.state = { rows: base.map((b) => ({ name: b[0], unit: b[1], sent: b[2], got: b[3], ok: b[4], req: b[5] })) };
+  }
+  change(i, patch) {
+    const rows = this.state.rows.slice();
+    rows[i] = Object.assign({}, rows[i], patch);
+    this.setState({ rows });
+  }
+  renderVals() {
+    const rows = this.state.rows;
+    const items = rows.map((r, i) => {
+      const diff = r.got !== r.sent;
+      const border = diff ? '2px solid #D9534F' : (r.ok ? '2px solid #2E7D4F' : '1px solid #E6E4E0');
+      return {
+        name: r.name, unit: r.unit, got: r.got,
+        sentText: 'طلع من المصنع: ' + r.sent + ' ' + r.unit,
+        reqText: r.req === 0 ? 'صنف إضافي، ما كان بطلبك' : (r.req === r.sent ? 'متل ما طلبت' : ('كنت طالب ' + r.req + ' ' + r.unit)),
+        reqStyle: r.req === r.sent ? 'font-size: 13px; color: #5F5B55' : 'align-self: flex-start; font-size: 13px; font-weight: 600; color: #1E40AF; background: #E0E9FB; padding: 2px 10px; border-radius: 10px',
+        diff, diffText: r.got < r.sent ? ('ناقص ' + (r.sent - r.got) + ' ' + r.unit) : ('زايد ' + (r.got - r.sent) + ' ' + r.unit),
+        cardStyle: 'display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 16px; background: #FFFFFF; border: ' + border,
+        checkStyle: 'width: 52px; height: 52px; border-radius: 26px; cursor: pointer; display: flex; align-items: center; justify-content: center; ' + (r.ok ? 'border: none; background: #2E7D4F; color: #FFFFFF' : 'border: 2px solid #D4D1CB; background: #FFFFFF; color: #ADA9A2'),
+        toggleLabel: r.ok ? 'إلغاء التأكيد' : 'تأكيد الصنف',
+        toggle: () => this.change(i, { ok: !r.ok }),
+        plus: () => this.change(i, { got: r.got + 1, ok: true }),
+        minus: () => this.change(i, { got: Math.max(0, r.got - 1), ok: true })
+      };
+    });
+    const done = rows.filter((r) => r.ok).length;
+    const all = done === rows.length;
+    return {
+      items,
+      hasDiff: rows.some((r) => r.got !== r.sent),
+      progressText: done + ' من ' + rows.length + ' أصناف تأكدت',
+      progressStyle: 'height: 8px; border-radius: 4px; background: #2E7D4F; width: ' + Math.round(done / rows.length * 100) + '%',
+      doneStyle: 'display: flex; align-items: center; justify-content: center; height: 56px; border-radius: 14px; font-size: 18px; font-weight: 600; ' + (all ? 'background: #111111; color: #FFFFFF' : 'background: #E6E4E0; color: #5F5B55; pointer-events: none')
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>تسجيل الدخول</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;family=Jost:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+[dir="ltr"]{font-family:'Jost','IBM Plex Sans Arabic',sans-serif}
+a{color:#111111;text-decoration:none}a:hover{color:#111111}
+</style>
+</helmet>
+<div dir="rtl" style="width: 390px; height: 844px; box-sizing: border-box; background: #FAFAF8; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; color: #111111; display: flex; flex-direction: column; align-items: center; padding: 56px 24px 24px; gap: 24px">
+
+<div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+<img src="/_blob/4715b420fbf7b743c5b3fe8ef06de73a" alt="ميكاسا" style="width: 240px; height: 120px; object-fit: cover; object-position: center; mix-blend-mode: multiply; display: block">
+<h1 style="margin: 8px 0 0; font-size: 24px; font-weight: 700">أهلاً فيك</h1>
+<p style="margin: 0; font-size: 16px; color: #5F5B55">ادخل رقم جوالك والرمز</p>
+</div>
+
+<div style="width: 100%; display: flex; flex-direction: column; gap: 8px">
+<label for="phone" style="font-size: 14px; color: #5F5B55">رقم الجوال</label>
+<input id="phone" type="tel" value="079 123 4567" dir="ltr" style="height: 56px; box-sizing: border-box; border: 1px solid #D4D1CB; border-radius: 14px; background: #FFFFFF; padding: 0 16px; font-family: inherit; font-size: 20px; color: #111111; text-align: right">
+</div>
+
+<div style="display: flex; flex-direction: column; align-items: center; gap: 12px">
+<span style="font-size: 16px; font-weight: 600">الرمز السري</span>
+<div aria-label="{{pinLabel}}" style="display: flex; gap: 16px; direction: ltr">
+<sc-for list="{{dots}}" as="d" hint-placeholder-count="4">
+<span style="{{d.style}}"></span>
+</sc-for>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; width: 100%; direction: ltr">
+<sc-for list="{{keys}}" as="k" hint-placeholder-count="12">
+<button type="button" onClick="{{k.press}}" aria-label="{{k.aria}}" style="height: 64px; border-radius: 16px; border: 1px solid #E6E4E0; background: {{k.bg}}; font-family: inherit; font-size: 26px; font-weight: 600; color: #111111; cursor: pointer">{{k.label}}</button>
+</sc-for>
+</div>
+
+<a href="Main.dc.html" style="width: 100%; display: flex; align-items: center; justify-content: center; height: 56px; border-radius: 14px; background: #111111; color: #FFFFFF; font-size: 18px; font-weight: 600">دخول</a>
+<span style="font-size: 14px; color: #5F5B55">نسيت الرمز؟ احكي مع المدير</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { pin: '' }; }
+  renderVals() {
+    const pin = this.state.pin;
+    const dots = [0, 1, 2, 3].map((i) => ({
+      style: 'width: 18px; height: 18px; border-radius: 9px; border: 2px solid #111111; background: ' + (i < pin.length ? '#111111' : 'transparent')
+    }));
+    const labels = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'];
+    const keys = labels.map((l) => ({
+      label: l,
+      aria: l === '⌫' ? 'مسح' : (l === '' ? 'فارغ' : l),
+      bg: l === '' ? 'transparent' : '#FFFFFF',
+      press: () => {
+        if (l === '') return;
+        if (l === '⌫') { this.setState({ pin: this.state.pin.slice(0, -1) }); return; }
+        if (this.state.pin.length < 4) this.setState({ pin: this.state.pin + l });
+      }
+    }));
+    return { dots, keys, pinLabel: 'تم إدخال ' + pin.length + ' من 4' };
+  }
+}
+</script>
+</body>
+</html>
