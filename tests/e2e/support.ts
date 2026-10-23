@@ -204,3 +204,40 @@ export function randomTestPhone(): { local: string; e164: string } {
   const rest = String(Math.floor(Math.random() * 10_000_000)).padStart(7, "0");
   return { local: `079${rest}`, e164: `96279${rest}` };
 }
+
+type AppSettingsPatch = Database["public"]["Tables"]["app_settings"]["Update"];
+
+/** بيغيّر الإعدادات العامة، وبيرجع دالة بترجّع القيم القديمة. */
+export async function updateAppSettings(patch: AppSettingsPatch) {
+  const db = serviceClient();
+  const { data: before, error } = await db.from("app_settings").select("*").eq("id", true).single();
+  if (error) throw error;
+  const { error: updateError } = await db.from("app_settings").update(patch).eq("id", true);
+  if (updateError) throw updateError;
+  const restore = Object.fromEntries(
+    Object.keys(patch).map((k) => [k, before[k as keyof typeof before]]),
+  ) as AppSettingsPatch;
+  return async () => {
+    await db.from("app_settings").update(restore).eq("id", true);
+  };
+}
+
+/** آخر إخراج لموقع، مع إذا في سطر طلع بتجاوز FEFO. */
+export async function latestDispatchTo(locationCode: string) {
+  const db = serviceClient();
+  const { data: loc } = await db.from("locations").select("id").eq("code", locationCode).single();
+  const { data, error } = await db
+    .from("dispatches")
+    .select(
+      "id, kind, status, dispatch_lines(dispatch_line_batches(is_fefo_override, override_confirmed_by))",
+    )
+    .eq("to_location_id", loc!.id)
+    .order("dispatched_at", { ascending: false })
+    .limit(1)
+    .single();
+  if (error) throw error;
+  const fefoOverride = data.dispatch_lines.some((l) =>
+    l.dispatch_line_batches.some((b) => b.is_fefo_override && b.override_confirmed_by),
+  );
+  return { id: data.id, kind: data.kind, status: data.status, fefoOverride };
+}

@@ -47,7 +47,7 @@ async function Receive({ params }: { params: Params }) {
           atFactory ? `استلام مرتجع من ${d.fromName}` : `استلام طلبية ${dayLabel(d.dispatchedAt, new Date())}`
         }
         subtitle={`عدّ اللي وصل وأكّد كل صنف · طلع من ${d.fromName} ${formatClock(new Date(d.dispatchedAt))}`}
-        backHref={atFactory ? "/factory/requests" : "/orders"}
+        backHref={atFactory ? "/factory/returns" : "/orders"}
       />
       <ReceiveForm
         dispatchId={d.id}
