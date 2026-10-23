@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { AdminLoading } from "@/components/ui/AdminLoading";
 import Link from "next/link";
 import { getCurrentStaff } from "@/features/auth/session";
 import { maskPhone } from "@/features/auth/phone";
@@ -7,7 +9,7 @@ import { ROLE_DESCRIPTIONS, ROLE_LABELS, ROLES } from "@/features/staff/roles";
 import { formatLastSeen } from "@/lib/time";
 
 // design/admin/AdminStaff.dc.html
-export default async function StaffPage() {
+async function Staff() {
   const [staff, me] = await Promise.all([listStaff(), getCurrentStaff()]);
   const now = new Date();
   const activeCount = (role: (typeof ROLES)[number]) =>
@@ -127,4 +129,12 @@ function StatusChip({ isActive, isLocked }: { isActive: boolean; isLocked: boole
       ? ["مقفول", "bg-warn-chip text-warn-text"]
       : ["نشط", "bg-ok-soft text-ok-text"];
   return <span className={`rounded-[10px] px-2.5 py-0.5 text-xs font-semibold ${tone}`}>{label}</span>;
+}
+
+export default function StaffPage() {
+  return (
+    <Suspense fallback={<AdminLoading />}>
+      <Staff />
+    </Suspense>
+  );
 }

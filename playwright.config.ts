@@ -34,6 +34,8 @@ export default defineConfig({
   ],
   webServer: {
     command: "npm run dev",
+    // قراءة الفورم بأرقام ثابتة بدل Claude (للتطوير بس، بتنتجاهل بالإنتاج)
+    env: { MEKASA_FAKE_OCR: "1" },
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

@@ -73,6 +73,7 @@ export async function getStaff(staffId: string): Promise<StaffRow | null> {
 
 /** المواقع اللي ممكن يشتغل فيها موظف (مش خانة المرتجعات). */
 export async function listWorkLocations(): Promise<LocationOption[]> {
+  await requireAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("locations")

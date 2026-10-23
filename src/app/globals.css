@@ -17,6 +17,12 @@
   --color-switch-off: #ada9a2;
   --color-line-dashed: #bdb9b2;
 
+  /* الفورم المطبوع: رمادي غامق مشان يبين بالتصوير */
+  --color-print-rule: #bbbbbb;
+  --color-print-text: #444444;
+  --color-print-muted: #666666;
+  --color-print-fill: #f2f2f2;
+
   /* ألوان المعنى بس */
   --color-ok: #2e7d4f;
   --color-ok-soft: #e3f2e8;

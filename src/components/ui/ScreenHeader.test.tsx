@@ -29,3 +29,11 @@ describe("StaffScreen", () => {
     expect(screen.getByRole("main")).toHaveTextContent("لحظة…");
   });
 });
+
+describe("AdminLoading", () => {
+  it("says to wait", async () => {
+    const { AdminLoading } = await import("./AdminLoading");
+    render(<AdminLoading />);
+    expect(screen.getByText("لحظة…")).toBeInTheDocument();
+  });
+});

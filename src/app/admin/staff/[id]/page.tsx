@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { AdminLoading } from "@/components/ui/AdminLoading";
 import { notFound } from "next/navigation";
 import { formatPhone } from "@/features/auth/phone";
 import { StaffForm } from "@/features/staff/components/StaffForm";
@@ -5,7 +7,7 @@ import { getStaff, listWorkLocations } from "@/features/staff/queries";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export default async function EditStaffPage({ params }: { params: Promise<{ id: string }> }) {
+async function EditStaff({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!UUID.test(id)) notFound();
 
@@ -26,5 +28,13 @@ export default async function EditStaffPage({ params }: { params: Promise<{ id: 
         }}
       />
     </>
+  );
+}
+
+export default function EditStaffPage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <Suspense fallback={<AdminLoading />}>
+      <EditStaff params={params} />
+    </Suspense>
   );
 }

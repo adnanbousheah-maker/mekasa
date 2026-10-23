@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { expect, type Page } from "@playwright/test";
+import type { Database } from "../../src/types/database";
 
 // موظفين scripts/seed-staff.ts (لازم `npm run db:seed-staff` قبل الاختبارات)
 export const ADMIN = { phone: "0790000001", pin: "246813", name: "عدنان" };
@@ -14,7 +15,7 @@ function serviceClient() {
   if (!url || !key) throw new Error("Supabase env is missing (.env.local)");
   if (!/^https?:\/\/(127\.0\.0\.1|localhost)[:/]/.test(url))
     throw new Error("E2E tests run against local Supabase only");
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  return createClient<Database>(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
 export async function signIn(page: Page, phone: string, pin: string) {
@@ -55,6 +56,24 @@ export async function lastWaste(locationCode: string) {
     .select("qty_pieces, reason, reason_note, photo_path, products(name_en)")
     .eq("location_id", loc!.id)
     .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/** آخر جرد مؤكد بموقع، مع أسطره. */
+export async function lastCount(locationCode: string) {
+  const db = serviceClient();
+  const { data: loc } = await db.from("locations").select("id").eq("code", locationCode).single();
+  const { data, error } = await db
+    .from("stock_counts")
+    .select(
+      "method, photo_path, form_version_id, stock_count_lines(whole_cakes, loose_pieces, ocr_whole_cakes, ocr_whole_confidence, products(name_en))",
+    )
+    .eq("location_id", loc!.id)
+    .eq("status", "confirmed")
+    .order("confirmed_at", { ascending: false })
     .limit(1)
     .single();
   if (error) throw error;

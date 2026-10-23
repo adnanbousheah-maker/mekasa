@@ -44,14 +44,14 @@ export function ScheduleCard({ locationId, name, note, times }: Props) {
     >
       <div className="flex items-center justify-between">
         <h2 className="text-[17px] font-bold">{name}</h2>
-        <button
-          type="button"
-          disabled
-          title="بتنبني بالخطوة 7"
-          className="h-9 rounded-lg border border-line-strong bg-surface px-3 text-[13px] text-muted"
+        <a
+          href={`/print/count-form/${locationId}`}
+          target="_blank"
+          rel="noopener"
+          className="flex h-9 items-center rounded-lg border border-line-strong bg-surface px-3 text-[13px]"
         >
-          اطبع الفورم · قريباً
-        </button>
+          اطبع الفورم
+        </a>
       </div>
       <span className="text-[13px] text-muted">مواعيد الجرد اليومية</span>
       <ul className="flex flex-wrap gap-2">
