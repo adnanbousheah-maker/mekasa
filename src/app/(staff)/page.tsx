@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { requireStaff } from "@/features/auth/session";
 import { StaffHome } from "@/features/home/components/StaffHome";
+import { getOpenSlot } from "@/features/reminders/queries";
 
 export default function HomePage() {
   // قراءة الجلسة لازم تكون جوا Suspense (cacheComponents)
@@ -15,7 +16,16 @@ export default function HomePage() {
 async function Home() {
   const staff = await requireStaff();
   if (staff.roles.includes("admin")) redirect("/admin");
-  return <StaffHome staff={staff} now={new Date()} />;
+  const counts = staff.roles.includes("branch_staff") || staff.roles.includes("storekeeper");
+  const slot = staff.location && counts ? await getOpenSlot(staff.location.id) : null;
+  return (
+    <StaffHome
+      staff={staff}
+      now={new Date()}
+      slot={slot}
+      vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null}
+    />
+  );
 }
 
 function HomeLoading() {

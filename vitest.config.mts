@@ -11,8 +11,13 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/lib/**", "src/components/**", "src/features/**/*.ts"],
-      // السيرفر وقاعدة البيانات (actions، queries، session، clients) مفحوصين بـ e2e وpgTAP
-      exclude: ["**/*.test.{ts,tsx}", "src/lib/supabase/**", "src/lib/*env.ts", "src/features/**/{actions,queries,session}.ts"],
+      // السيرفر وقاعدة البيانات والخدمات الخارجية (actions، queries، session، ocr، push، run، clients) مفحوصين بـ e2e وpgTAP
+      exclude: [
+        "**/*.test.{ts,tsx}",
+        "src/lib/supabase/**",
+        "src/lib/*env.ts",
+        "src/features/**/{actions,queries,session,ocr,push,run}.ts",
+      ],
       thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 },
     },
   },

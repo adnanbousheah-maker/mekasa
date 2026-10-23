@@ -4,7 +4,8 @@ import { publicEnv } from "@/lib/env";
 import { AUTH_COOKIE_OPTIONS } from "./cookie-options";
 import type { Database } from "@/types/database";
 
-const PUBLIC_PATHS = ["/login"];
+// الـ cron بيتأكد بـ CRON_SECRET، وملفات الـ PWA لازم توصل قبل الدخول
+const PUBLIC_PATHS = ["/login", "/api/cron", "/manifest.webmanifest", "/sw.js", "/icons"];
 
 /**
  * بيجدد جلسة Supabase بكل طلب ويكتب الكوكيز الجديدة على الرد.

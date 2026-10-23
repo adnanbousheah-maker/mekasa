@@ -1,0 +1,87 @@
+import "server-only";
+import { formatScheduleTime } from "@/features/settings/schemas";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { businessDate } from "@/lib/time";
+import { pendingAlerts } from "./slots";
+import { sendPushToStaff } from "./push";
+import { countReminderMessage } from "./subscription";
+
+export interface ReminderRun {
+  sent: { kind: string; scheduleId: string; recipients: number }[];
+}
+
+/**
+ * بيشتغل كل دقيقة (pg_cron ← /api/cron/reminders). تذكير قبل الموعد لموظفين الموقع،
+ * و"متأخر" لموظفين الموقع وللأدمن. notification_log فريد، فإذا اشتغل مرتين بنفس الوقت
+ * الثاني ما بيبعت شي.
+ */
+export async function runReminders(now = new Date()): Promise<ReminderRun> {
+  const db = createAdminClient();
+  const today = businessDate(now);
+
+  const [settings, schedules, counts, sent] = await Promise.all([
+    db.from("app_settings").select("count_reminder_minutes_before, count_late_after_minutes").single(),
+    db
+      .from("count_schedules")
+      .select("id, location_id, time_of_day, location:locations!inner(name, kind, is_active)")
+      .eq("is_active", true)
+      .eq("location.is_active", true),
+    db.from("stock_counts").select("schedule_id").eq("business_date", today).eq("status", "confirmed"),
+    db.from("notification_log").select("kind, schedule_id").eq("slot_date", today),
+  ]);
+  for (const r of [settings, schedules, counts, sent]) if (r.error) throw new Error(r.error.message);
+
+  const alerts = pendingAlerts(
+    schedules.data!.map((s) => ({ id: s.id, locationId: s.location_id, timeOfDay: s.time_of_day })),
+    today,
+    now,
+    new Set(counts.data!.map((c) => c.schedule_id).filter((id): id is string => id !== null)),
+    new Set(sent.data!.map((n) => `${n.kind}:${n.schedule_id}`)),
+    {
+      reminderMinutesBefore: settings.data!.count_reminder_minutes_before,
+      lateAfterMinutes: settings.data!.count_late_after_minutes,
+    },
+  );
+
+  const result: ReminderRun = { sent: [] };
+  for (const alert of alerts) {
+    // نحجز الإشعار أول: إذا انحجز قبل (cron ثاني)، ما بنبعت
+    const { data: logged, error } = await db
+      .from("notification_log")
+      .insert({
+        kind: alert.kind,
+        location_id: alert.schedule.locationId,
+        schedule_id: alert.schedule.id,
+        slot_date: today,
+      })
+      .select("id")
+      .maybeSingle();
+    if (error || !logged) continue;
+
+    const schedule = schedules.data!.find((s) => s.id === alert.schedule.id)!;
+    const role = schedule.location.kind === "factory" ? "storekeeper" : "branch_staff";
+    const { data: staff } = await db
+      .from("staff")
+      .select("id, staff_roles!staff_roles_staff_id_fkey!inner(role)")
+      .eq("is_active", true)
+      .eq("location_id", alert.schedule.locationId)
+      .eq("staff_roles.role", role);
+    const ids = (staff ?? []).map((s) => s.id);
+    if (alert.kind === "count_late") {
+      const { data: admins } = await db
+        .from("staff")
+        .select("id, staff_roles!staff_roles_staff_id_fkey!inner(role)")
+        .eq("is_active", true)
+        .eq("staff_roles.role", "admin");
+      ids.push(...(admins ?? []).map((a) => a.id));
+    }
+
+    const place =
+      schedule.location.kind === "branch" ? `فرع ${schedule.location.name}` : schedule.location.name;
+    const message = countReminderMessage(alert.kind, formatScheduleTime(alert.schedule.timeOfDay), place);
+    const recipients = await sendPushToStaff([...new Set(ids)], message);
+    await db.from("notification_log").update({ recipients }).eq("id", logged.id);
+    result.sent.push({ kind: alert.kind, scheduleId: alert.schedule.id, recipients });
+  }
+  return result;
+}

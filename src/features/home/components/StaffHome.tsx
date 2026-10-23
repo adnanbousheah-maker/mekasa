@@ -1,6 +1,9 @@
 import { DayBadge } from "@/components/ui/DayBadge";
 import { Logo } from "@/components/ui/Logo";
 import { LogoutButton } from "@/features/auth/components/LogoutButton";
+import { CountReminder } from "@/features/reminders/components/CountReminder";
+import { EnableNotifications } from "@/features/reminders/components/EnableNotifications";
+import type { OpenSlot } from "@/features/reminders/queries";
 import type { CurrentStaff } from "@/features/auth/session";
 import { ROLE_LABELS } from "@/features/staff/roles";
 import { dayNumberOf } from "@/lib/day-number";
@@ -11,13 +14,15 @@ import { TaskLink } from "./TaskLink";
 type Props = {
   staff: CurrentStaff;
   now: Date;
+  slot?: OpenSlot | null;
+  vapidPublicKey?: string | null;
 };
 
 /**
  * الرئيسية للفرع (design/branch/Main) وللمصنع (design/factory/FactoryHome).
  * بتعرض بس المهام اللي انبنت؛ الطلب والاستلام والإخراج والإنتاج والمواد بمراحلهم.
  */
-export function StaffHome({ staff, now }: Props) {
+export function StaffHome({ staff, now, slot = null, vapidPublicKey = null }: Props) {
   const today = businessDate(now);
   const day = dayNumberOf(today);
   const firstName = staff.fullName.split(" ")[0];
@@ -49,9 +54,12 @@ export function StaffHome({ staff, now }: Props) {
         )}
       </header>
 
+      {slot && <CountReminder slot={slot} now={now} />}
+
       {atFactory ? <FactoryTasks staff={staff} /> : <BranchTasks />}
 
       <div className="grow" />
+      <EnableNotifications vapidPublicKey={vapidPublicKey} />
       <LogoutButton className="self-center" />
     </main>
   );

@@ -80,6 +80,28 @@ export async function lastCount(locationCode: string) {
   return data;
 }
 
+/** موعد جرد مؤقت بموقع، بيرجع id ودالة تشيله (مع سجل إشعاراته). */
+export async function temporarySchedule(locationCode: string, timeOfDay: string) {
+  const db = serviceClient();
+  const { data: loc } = await db.from("locations").select("id").eq("code", locationCode).single();
+  const { data, error } = await db
+    .from("count_schedules")
+    .upsert(
+      { location_id: loc!.id, time_of_day: timeOfDay, is_active: true },
+      { onConflict: "location_id,time_of_day" },
+    )
+    .select("id")
+    .single();
+  if (error) throw error;
+  return {
+    id: data.id,
+    async remove() {
+      await db.from("notification_log").delete().eq("schedule_id", data.id);
+      await db.from("count_schedules").delete().eq("id", data.id);
+    },
+  };
+}
+
 // صورة PNG صغيرة (1×1) للاختبارات
 export const TINY_PNG = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",

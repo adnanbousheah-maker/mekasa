@@ -18,6 +18,9 @@ const jost = Jost({
 export const metadata: Metadata = {
   title: "ميكاسا",
   description: "نظام المخزون والجرد لميكاسا",
+  // آيفون: الأيقونة واسم التطبيق لما ينضاف للشاشة الرئيسية (Web Push بالآيفون بس هيك)
+  appleWebApp: { capable: true, title: "ميكاسا", statusBarStyle: "default" },
+  icons: { apple: "/icons/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {
