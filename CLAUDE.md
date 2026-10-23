@@ -157,6 +157,7 @@
 - **الصور:** بتنضغط بالجوال (`src/lib/image.ts`، أطول ضلع 2000px JPEG) وبتنرفع بـ server action (`uploadPhotoAction`) بجلسة الموظف لـ `{location_id}/{date}/{uuid}.jpg`. حد الـ server actions 4MB (`next.config.ts`). العرض بروابط مؤقتة (`signedPhotoUrl`).
 - **قراءة الفورم (`src/features/count-form`):** Claude بيرجع رمز النسخة وأسطر برقم السطر، والسطر n = الصنف n بنسخة الفورم. نسخة مش مقروءة أو لموقع ثاني = آخر نسخة لموقع الموظف. أصناف انضافت بعد الطباعة بتطلع صفر وبرتقالي. `MEKASA_FAKE_OCR=1` (مش بالإنتاج) بيرجع أرقام ثابتة، والـ e2e بيستعمله. بدون `ANTHROPIC_API_KEY` القراءة بتفشل والموظف بيدخل يدوي.
 - **بعد `db:reset` لازم `db:seed-staff`** (الـ reset بيمسح الموظفين).
+- **تقارير الأدمن (`src/features/reports`):** `count_breakdown(count_id)` (المتوقع = العد − التعديل، والباقي للشرح) و`v_count_list` (الاستهلاك بالقطع وبالكيكات حسب حجم كل صنف، والأرقام المستحيلة، وتصحيحات الموظف لقراءة الصورة). كل جدول إله تصدير بـ `/admin/export/{report}` (exceljs، RTL، `buildWorkbook` + `sheet()`).
 - **قراءة البيانات بالصفحة** جوا `<Suspense>` بالصفحة نفسها (مش بس بالـ layout)، وإلا Next بيشتكي "uncached data during a navigation" (cacheComponents).
 - **الألوان والخطوط** tokens بـ `src/app/globals.css` (مثلاً `bg-ink`، `text-muted`، `bg-warn-soft`). ما في ألوان hex جوا المكونات، إلا ألوان أرقام الأيام من `DAY_COLORS`.
 

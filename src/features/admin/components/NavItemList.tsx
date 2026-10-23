@@ -12,7 +12,7 @@ const ITEMS: { href: string; label: string; icon: string; ready: boolean }[] = [
     href: "/admin/stock",
     label: "الستوك والاستهلاك",
     icon: "M3 7l9-4 9 4-9 4zM3 12l9 4 9-4M3 17l9 4 9-4",
-    ready: false,
+    ready: true,
   },
   {
     href: "/admin/orders",
@@ -20,14 +20,14 @@ const ITEMS: { href: string; label: string; icon: string; ready: boolean }[] = [
     icon: "M3 7h11v9H3zM14 10h4l3 3v3h-7M7 18a2 2 0 1 0 0 .01M17 18a2 2 0 1 0 0 .01",
     ready: false,
   },
-  { href: "/admin/counts", label: "الجرودات", icon: "M6 4h12v17H6zM9 9h6M9 13h6M9 17h3", ready: false },
+  { href: "/admin/counts", label: "الجرودات", icon: "M6 4h12v17H6zM9 9h6M9 13h6M9 17h3", ready: true },
   { href: "/admin/factory", label: "المصنع والدفعات", icon: "M3 21V9l6 4V9l6 4V5h6v16z", ready: false },
   { href: "/admin/raw", label: "المواد الأولية", icon: "M6 8h12l-1 12H7zM9 8V5h6v3", ready: false },
   {
     href: "/admin/waste",
     label: "التالف",
     icon: "M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3",
-    ready: false,
+    ready: true,
   },
   {
     href: "/admin/staff",

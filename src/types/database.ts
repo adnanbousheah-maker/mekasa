@@ -136,6 +136,13 @@ export type Database = {
             foreignKeyName: "ai_usage_log_count_id_fkey";
             columns: ["count_id"];
             isOneToOne: false;
+            referencedRelation: "v_count_list";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ai_usage_log_count_id_fkey";
+            columns: ["count_id"];
+            isOneToOne: false;
             referencedRelation: "v_count_slots_today";
             referencedColumns: ["count_id"];
           },
@@ -1713,6 +1720,13 @@ export type Database = {
             foreignKeyName: "stock_count_lines_count_id_fkey";
             columns: ["count_id"];
             isOneToOne: false;
+            referencedRelation: "v_count_list";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_count_lines_count_id_fkey";
+            columns: ["count_id"];
+            isOneToOne: false;
             referencedRelation: "v_count_slots_today";
             referencedColumns: ["count_id"];
           },
@@ -2255,6 +2269,50 @@ export type Database = {
           },
         ];
       };
+      v_count_list: {
+        Row: {
+          business_date: string | null;
+          confirmed_at: string | null;
+          consumed_cakes: number | null;
+          consumed_loose_only: number | null;
+          consumed_pieces: number | null;
+          counted_by: string | null;
+          id: string | null;
+          impossible_lines: number | null;
+          is_opening: boolean | null;
+          line_count: number | null;
+          location_id: string | null;
+          method: Database["public"]["Enums"]["count_method"] | null;
+          photo_path: string | null;
+          schedule_time: string | null;
+          staff_corrected_lines: number | null;
+          started_at: string | null;
+        };
+        ComputedFields: never;
+        Relationships: [
+          {
+            foreignKeyName: "stock_counts_counted_by_fkey";
+            columns: ["counted_by"];
+            isOneToOne: false;
+            referencedRelation: "staff";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_counts_counted_by_fkey";
+            columns: ["counted_by"];
+            isOneToOne: false;
+            referencedRelation: "v_staff_names";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_counts_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       v_count_slots_today: {
         Row: {
           confirmed_at: string | null;
@@ -2538,6 +2596,29 @@ export type Database = {
           attempt_id: number;
           staff_id: string;
           status: string;
+        }[];
+      };
+      count_breakdown: {
+        Args: { p_count_id: string };
+        Returns: {
+          adjustment_qty: number;
+          batch_id: string;
+          counted_qty: number;
+          expected_qty: number;
+          in_qty: number;
+          line_id: string;
+          loose_pieces: number;
+          ocr_loose_pieces: number;
+          ocr_pieces_confidence: number;
+          ocr_whole_cakes: number;
+          ocr_whole_confidence: number;
+          other_qty: number;
+          out_qty: number;
+          pieces_per_cake: number;
+          prev_qty: number;
+          product_id: string;
+          waste_qty: number;
+          whole_cakes: number;
         }[];
       };
       day_number: { Args: { d: string }; Returns: number };

@@ -5,7 +5,7 @@ import { BRANCH_DBQ, FACTORY, signInAndWait, stockOf } from "./support";
 
 test("a branch employee counts by hand and the stock follows the count", async ({ page }) => {
   await signInAndWait(page, BRANCH_DBQ.phone, BRANCH_DBQ.pin);
-  await page.getByRole("link", { name: /جرد/ }).click();
+  await page.getByRole("navigation", { name: "المهام" }).getByRole("link", { name: /جرد/ }).click();
   await expect(page.getByText("كيف بدك تجرد؟")).toBeVisible();
   await page.getByRole("link", { name: /أدخل يدوي/ }).click();
 

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { AdminLoading } from "@/components/ui/AdminLoading";
 import Link from "next/link";
+import { ExportButton } from "@/features/admin/components/AdminBits";
 import { getCurrentStaff } from "@/features/auth/session";
 import { maskPhone } from "@/features/auth/phone";
 import { StaffRowActions } from "@/features/staff/components/StaffRowActions";
@@ -24,12 +25,15 @@ async function Staff() {
             الموظف ممكن ياخذ أكثر من دور، والدور ممكن يكون عند أكثر من موظف
           </span>
         </div>
-        <Link
-          href="/admin/staff/new"
-          className="inline-flex h-11 items-center rounded-[10px] bg-ink px-4 text-sm font-semibold text-white"
-        >
-          + موظف جديد
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <ExportButton href="/admin/export/staff" />
+          <Link
+            href="/admin/staff/new"
+            className="inline-flex h-11 items-center rounded-[10px] bg-ink px-4 text-sm font-semibold text-white"
+          >
+            + موظف جديد
+          </Link>
+        </div>
       </header>
 
       <div className="flex flex-wrap items-start gap-4">
