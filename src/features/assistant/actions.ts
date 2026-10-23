@@ -32,7 +32,13 @@ export async function askAssistantAction(input: z.input<typeof askSchema>): Prom
   let history: AssistantTurn[] = [];
 
   if (conversationId) {
-    // RLS: الأدمن بيقرأ محادثاته بس
+    // RLS: الأدمن بيقرأ محادثاته بس. لازم نتأكد قبل ما نكتب فيها بـ service role.
+    const { data: own } = await db
+      .from("ai_conversations")
+      .select("id")
+      .eq("id", conversationId)
+      .maybeSingle();
+    if (!own) return { status: "error", message: "المحادثة مش موجودة" };
     const { data, error } = await db
       .from("ai_messages")
       .select("role, content")

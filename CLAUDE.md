@@ -148,6 +148,8 @@
 - **الإيقاف:** بيحذف جلسات الموظف كلها (`auth.sessions`) وإشعاراته، وبعدين حظر بـ Supabase. التفعيل: فك الحظر أول. لازم يضل أدمن فعّال واحد على الأقل (بقاعدة البيانات). الأفضل يكون في أدمنين.
 - **موظف صار أدمن** بياخذ رمز جديد من 6 أرقام تلقائياً.
 - **طوارئ:** إذا الأدمن الوحيد انقفل: `npm run staff:reset-pin -- 07XXXXXXXX` (محلياً)، أو بنفس السكربت مع ملف مفاتيح السحابة. بيطبع رمز جديد وبيسجله بسجل التعديلات.
+- **النشر وأول أدمن:** الخطوات بـ `docs/deploy.md`. أول أدمن بقاعدة جديدة بـ `scripts/create-admin.ts` (بيرفض إذا في أدمن فعّال). قائمة الفحص اليدوي بـ `docs/manual-checklist.md`.
+- **تاريخ الدفعة** (trigger `batches_date_in_range`): مش بالمستقبل ومش أقدم من 60 يوم.
 - **Supabase السحابة لازم يطابق `config.toml`:** التسجيل الذاتي مسكّر، أقل طول لكلمة السر 40، `secure_password_change`، وحد الدخول `sign_in_sign_ups` (300، لأن كل الدخول من عناوين Vercel).
 - **التذكيرات (`src/features/reminders`):** pg_cron (`mekasa-reminders` كل دقيقة) بينادي `private.call_reminders()` اللي بتقرأ `mekasa_app_url` و`mekasa_cron_secret` من Supabase Vault وبتبعت POST لـ `/api/cron/reminders`. بدونهم ما بيصير شي. الحساب بـ `slots.ts` (نفس منطق `v_count_slots_today`، بس بـ service role). كل إشعار بينحجز بـ `notification_log` قبل ما ينبعت. `mekasa-login-attempts-cleanup` يومياً بيمسح محاولات الدخول الأقدم من 30 يوم.
 - **PWA:** `src/app/manifest.ts` والأيقونات بـ `public/icons` (من اللوجو)، و`public/sw.js` للإشعارات بس (ما بنخزن صفحات). بالآيفون الإشعارات بتشتغل بس بعد "أضف للشاشة الرئيسية".

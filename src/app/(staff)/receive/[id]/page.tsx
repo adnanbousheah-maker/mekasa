@@ -31,6 +31,10 @@ async function Receive({ params }: { params: Params }) {
     return <NotForYou title="استلام" text="هالطلبية انستلمت قبل." />;
   }
   const atFactory = staff.location?.kind === "factory";
+  // الاستلام للوجهة بس (والمرتجعات لأمين المستودع بالمصنع)
+  if (!(d.toLocationId === staff.location?.id || (atFactory && d.kind === "return"))) {
+    return <NotForYou title="استلام" text="هالطلبية مش لموقعك." />;
+  }
   const { requests } = d.requestId
     ? await loadDocuments({ requests: { ids: [d.requestId] }, sinceDays: 90 })
     : { requests: [] };
