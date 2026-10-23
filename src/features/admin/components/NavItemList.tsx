@@ -39,7 +39,7 @@ const ITEMS: { href: string; label: string; icon: string; ready: boolean }[] = [
     href: "/admin/settings",
     label: "الإعدادات",
     icon: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19 12h2M3 12h2M12 3v2M12 19v2M17 7l1.5-1.5M5.5 18.5L7 17M17 17l1.5 1.5M5.5 5.5L7 7",
-    ready: false,
+    ready: true,
   },
 ];
 

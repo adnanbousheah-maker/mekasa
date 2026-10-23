@@ -150,6 +150,8 @@
 - **طوارئ:** إذا الأدمن الوحيد انقفل: `npm run staff:reset-pin -- 07XXXXXXXX` (محلياً)، أو بنفس السكربت مع ملف مفاتيح السحابة. بيطبع رمز جديد وبيسجله بسجل التعديلات.
 - **Supabase السحابة لازم يطابق `config.toml`:** التسجيل الذاتي مسكّر، أقل طول لكلمة السر 40، `secure_password_change`، وحد الدخول `sign_in_sign_ups` (300، لأن كل الدخول من عناوين Vercel).
 - **لاحقاً (الخطوة 9):** pg_cron بيمسح `login_attempts` الأقدم من 30 يوم.
+- **الإعدادات** (`/admin/settings`، التبويب بـ `?tab=`): كل حقل بينحفظ لحاله لما تطلع منه أو تكبس Enter، والمفاتيح فوراً. الكتابة بجلسة الأدمن نفسه (RLS + triggers سجل التعديلات) عن طريق server actions بـ `src/features/settings/actions.ts`، والحدود بـ `schemas.ts` نفس CHECK قاعدة البيانات. مواعيد الجرد ما بتنحذف: الشيل بيوقفها (`is_active = false`)، ورجعة نفس الساعة بترجّع نفس الصف. فراغ "قطع بالكيكة" للصنف = الرقم العام.
+- **قراءة البيانات بالصفحة** جوا `<Suspense>` بالصفحة نفسها (مش بس بالـ layout)، وإلا Next بيشتكي "uncached data during a navigation" (cacheComponents).
 - **الألوان والخطوط** tokens بـ `src/app/globals.css` (مثلاً `bg-ink`، `text-muted`، `bg-warn-soft`). ما في ألوان hex جوا المكونات، إلا ألوان أرقام الأيام من `DAY_COLORS`.
 
 ## الأصناف (من المنيو)

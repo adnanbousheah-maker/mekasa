@@ -47,6 +47,25 @@ export async function removeStaff(e164: string) {
   await db.auth.admin.deleteUser(data.id);
 }
 
+/** بيرجع الإعدادات والأصناف والمواعيد اللي غيرها اختبار الإعدادات لقيم الـ seed. */
+export async function restoreSettings({
+  productName,
+  scheduleTime,
+}: {
+  productName: string;
+  scheduleTime: string;
+}) {
+  const db = serviceClient();
+  const results = await Promise.all([
+    db.from("app_settings").update({ unreceived_alert_hours: 3, returns_enabled: false }).eq("id", true),
+    db.from("products").update({ name_ar: null, pieces_per_cake: null }).eq("name_en", "Flan"),
+    db.from("products").update({ is_active: true }).eq("name_en", "Tiramisu"),
+    db.from("products").delete().eq("name_en", productName),
+    db.from("count_schedules").delete().eq("time_of_day", scheduleTime),
+  ]);
+  for (const { error } of results) if (error) throw error;
+}
+
 export function randomTestPhone(): { local: string; e164: string } {
   const rest = String(Math.floor(Math.random() * 10_000_000)).padStart(7, "0");
   return { local: `079${rest}`, e164: `96279${rest}` };
