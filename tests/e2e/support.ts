@@ -46,6 +46,27 @@ export async function stockOf(locationCode: string, productName: string): Promis
   return data.reduce((s, m) => s + m.qty_pieces, 0);
 }
 
+/** آخر تالف انسجل بموقع. */
+export async function lastWaste(locationCode: string) {
+  const db = serviceClient();
+  const { data: loc } = await db.from("locations").select("id").eq("code", locationCode).single();
+  const { data, error } = await db
+    .from("waste_records")
+    .select("qty_pieces, reason, reason_note, photo_path, products(name_en)")
+    .eq("location_id", loc!.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// صورة PNG صغيرة (1×1) للاختبارات
+export const TINY_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+  "base64",
+);
+
 export async function expectOnLogin(page: Page) {
   await expect(page).toHaveURL(/\/login$/);
   await expect(page.getByRole("heading", { name: "أهلاً فيك" })).toBeVisible();

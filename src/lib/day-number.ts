@@ -58,3 +58,9 @@ export function latestDateForDayNumber(day: DayNumber, todayIso: string): string
   const daysBack = (dayNumberOf(todayIso) - day + 7) % 7;
   return toIsoDate(new Date(today.getTime() - daysBack * MS_PER_DAY));
 }
+
+/** التواريخ من اليوم لورا: [اليوم، أمس، …]. للدفعات الممكنة بالمصنع (بمدة الحياة، أقصى 7). */
+export function recentDates(todayIso: string, days: number): string[] {
+  const today = parseIsoDate(todayIso).getTime();
+  return Array.from({ length: days }, (_, i) => toIsoDate(new Date(today - i * MS_PER_DAY)));
+}

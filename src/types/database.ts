@@ -2541,6 +2541,19 @@ export type Database = {
         }[];
       };
       day_number: { Args: { d: string }; Returns: number };
+      record_waste: {
+        Args: {
+          p_location_id: string;
+          p_note?: string;
+          p_photo_path?: string;
+          p_product_id: string;
+          p_production_date?: string;
+          p_qty: number;
+          p_reason: Database["public"]["Enums"]["waste_reason"];
+          p_unit: Database["public"]["Enums"]["entry_unit"];
+        };
+        Returns: string;
+      };
       submit_count: {
         Args: {
           p_form_version_id?: string;

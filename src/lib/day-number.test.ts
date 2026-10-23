@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DAY_COLORS, DAY_NAMES, dayNumberOf, latestDateForDayNumber } from "./day-number";
+import { DAY_COLORS, DAY_NAMES, dayNumberOf, latestDateForDayNumber, recentDates } from "./day-number";
 
 describe("dayNumberOf", () => {
   it.each([
@@ -52,5 +52,12 @@ describe("day labels", () => {
   it("names Saturday as 1 and Friday as 7", () => {
     expect(DAY_NAMES[1]).toBe("السبت");
     expect(DAY_NAMES[7]).toBe("الجمعة");
+  });
+});
+
+describe("recentDates", () => {
+  it("lists today and the days before it", () => {
+    expect(recentDates("2026-10-23", 3)).toEqual(["2026-10-23", "2026-10-22", "2026-10-21"]);
+    expect(recentDates("2026-03-01", 2)).toEqual(["2026-03-01", "2026-02-28"]);
   });
 });

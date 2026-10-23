@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { DayBadge } from "@/components/ui/DayBadge";
 import { ProductName } from "@/components/ui/ProductName";
-import { DAY_NAMES, dayNumberOf, parseIsoDate, type DayNumber } from "@/lib/day-number";
+import { DAY_NAMES, dayNumberOf, recentDates, type DayNumber } from "@/lib/day-number";
 import { submitCountAction } from "../actions";
 import type { CountProduct, FactoryBatch } from "../queries";
 
@@ -18,14 +18,6 @@ type Props = {
 };
 
 type BatchRow = { productId: string; productionDate: string; qty: number; isLastDay: boolean };
-
-const MS_PER_DAY = 86_400_000;
-
-/** التواريخ اللي ممكن يكون إلها دفعة بالمصنع: من اليوم لورا بمدة الحياة (أقصى 7، فالرقم ما بيتكرر). */
-function recentDates(today: string, days: number): string[] {
-  const base = parseIsoDate(today).getTime();
-  return Array.from({ length: days }, (_, i) => new Date(base - i * MS_PER_DAY).toISOString().slice(0, 10));
-}
 
 /** design/factory/FactoryCount: جرد أعمى حسب رقم الدفعة. ما بنعرض الكمية المتوقعة. */
 export function FactoryCountForm({ products, batches, today, shelfLifeDays, scheduleId, startedAt }: Props) {

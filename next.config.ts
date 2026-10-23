@@ -16,6 +16,10 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  experimental: {
+    // صور الجرد والتالف بتنضغط بالجوال قبل الرفع (أقل من 2MB عادة)
+    serverActions: { bodySizeLimit: "4mb" },
+  },
   turbopack: {
     rules: {
       "*.css": {
