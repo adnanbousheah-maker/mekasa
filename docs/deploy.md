@@ -56,7 +56,7 @@ npx web-push generate-vapid-keys   # NEXT_PUBLIC_VAPID_PUBLIC_KEY و VAPID_PRIVA
 ```bash
 node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file=.env.production.local scripts/create-admin.ts "الاسم" 07XXXXXXXX
 ```
-بيطبع رمز من 6 أرقام مرة وحدة. ادخل فيه، وضيف باقي الموظفين من **الموظفين** بلوحة الإدارة. السكربت بيرفض إذا في أدمن فعّال. الأفضل تعمل أدمن ثاني من اللوحة مشان إذا واحد انقفل.
+بيطبع رمز من 4 أرقام مرة وحدة. ادخل فيه، وضيف باقي الموظفين من **الموظفين** بلوحة الإدارة. السكربت بيرفض إذا في أدمن فعّال. الأفضل تعمل أدمن ثاني من اللوحة مشان إذا واحد انقفل.
 
 إذا الأدمن الوحيد انقفل: `scripts/reset-pin.ts` بنفس الملف:
 ```bash

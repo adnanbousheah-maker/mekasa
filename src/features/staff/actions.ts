@@ -14,7 +14,7 @@ import { ROLES, roleLocationProblem, type LocationKind, type Role } from "./role
 export type StaffFormState =
   | { status: "error"; message: string }
   | { status: "created"; fullName: string; pin: string }
-  // pin موجود لما الموظف صار أدمن: رمزه القديم (4 أرقام) ما بيكفي، فبياخذ رمز جديد (6)
+  // pin موجود لما الموظف صار أدمن: رمزه القديم ممكن حدا بيعرفه، فبياخذ رمز جديد
   | { status: "saved"; fullName: string; pin?: string }
   | undefined;
 

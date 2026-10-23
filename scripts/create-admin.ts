@@ -2,7 +2,7 @@
 //
 //   node --env-file=.env.production.local scripts/create-admin.ts "عدنان" 07XXXXXXXX
 //
-// بيرفض إذا في أدمن فعّال أصلاً. الرمز (6 أرقام) بيطلع بالـ terminal مرة وحدة وما بينحفظ.
+// بيرفض إذا في أدمن فعّال أصلاً. الرمز (4 أرقام) بيطلع بالـ terminal مرة وحدة وما بينحفظ.
 
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";

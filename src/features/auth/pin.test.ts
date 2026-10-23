@@ -8,8 +8,8 @@ describe("pinLengthFor", () => {
   it("gives staff 4 digits and admins 6", () => {
     expect(pinLengthFor(["branch_staff"])).toBe(4);
     expect(pinLengthFor(["dispatcher", "storekeeper"])).toBe(4);
-    expect(pinLengthFor(["admin"])).toBe(6);
-    expect(pinLengthFor(["storekeeper", "admin"])).toBe(6);
+    expect(pinLengthFor(["admin"])).toBe(4);
+    expect(pinLengthFor(["storekeeper", "admin"])).toBe(4);
   });
 });
 

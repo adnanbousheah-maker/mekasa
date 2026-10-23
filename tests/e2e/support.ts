@@ -3,7 +3,7 @@ import { expect, type Page } from "@playwright/test";
 import type { Database } from "../../src/types/database";
 
 // موظفين scripts/seed-staff.ts (لازم `npm run db:seed-staff` قبل الاختبارات)
-export const ADMIN = { phone: "0790000001", pin: "246813", name: "عدنان" };
+export const ADMIN = { phone: "0790000001", pin: "2468", name: "عدنان" };
 export const BRANCH = { phone: "0790000002", pin: "2580", name: "أحمد", e164: "962790000002" };
 export const BRANCH_JBH = { phone: "0790000003", pin: "1470", name: "رنا" };
 export const BRANCH_DBQ = { phone: "0790000004", pin: "3690", name: "خالد" };

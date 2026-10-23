@@ -25,7 +25,7 @@ export function StaffForm({ locations, existing }: Props) {
   const [locationId, setLocationId] = useState(existing?.locationId ?? "");
   const [roles, setRoles] = useState<Role[]>(existing?.roles ?? []);
 
-  // موظف جديد، أو موظف صار أدمن وأخذ رمز من 6 أرقام: الرمز بيبين مرة وحدة
+  // موظف جديد، أو موظف صار أدمن وأخذ رمز جديد: الرمز بيبين مرة وحدة
   const newPin = state?.status === "created" || state?.status === "saved" ? state.pin : undefined;
   if ((state?.status === "created" || state?.status === "saved") && newPin) {
     return (

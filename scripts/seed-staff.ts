@@ -19,7 +19,7 @@ interface TestStaff {
 
 // رموز تجريبية للجهاز المحلي بس. الرقم اللي بتكتبه بشاشة الدخول: 0790000001 …
 const TEST_STAFF: TestStaff[] = [
-  { fullName: "عدنان", phone: "962790000001", locationCode: null, roles: ["admin"], pin: "246813" },
+  { fullName: "عدنان", phone: "962790000001", locationCode: null, roles: ["admin"], pin: "2468" },
   { fullName: "أحمد", phone: "962790000002", locationCode: "SWF", roles: ["branch_staff"], pin: "2580" },
   { fullName: "رنا", phone: "962790000003", locationCode: "JBH", roles: ["branch_staff"], pin: "1470" },
   { fullName: "خالد", phone: "962790000004", locationCode: "DBQ", roles: ["branch_staff"], pin: "3690" },

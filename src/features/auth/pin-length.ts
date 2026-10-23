@@ -3,9 +3,10 @@
 export type PinRole = "admin" | "branch_staff" | "dispatcher" | "storekeeper";
 
 export const STAFF_PIN_LENGTH = 4;
-export const ADMIN_PIN_LENGTH = 6;
+// كان 6 للأدمن؛ صاحب المشروع طلب 4 للكل (24 أكتوبر 2026). القفل وحد الـ IP بيحموه.
+export const ADMIN_PIN_LENGTH = 4;
 
-/** الأدمن بيقدر يعدل كل شي، فرمزه أطول. */
+/** طول رمز الموظف حسب أدواره (هلا 4 للكل). */
 export function pinLengthFor(roles: readonly PinRole[]): number {
   return roles.includes("admin") ? ADMIN_PIN_LENGTH : STAFF_PIN_LENGTH;
 }
