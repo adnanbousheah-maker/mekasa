@@ -52,6 +52,7 @@ async function Dispatch({ searchParams }: { searchParams: SearchParams }) {
         backHref="/factory/requests"
       />
       <DispatchForm
+        key={new Date().toISOString()}
         products={products}
         destinations={destinations}
         initialDestination={request?.requestingLocationId ?? null}

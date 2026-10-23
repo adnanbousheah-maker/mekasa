@@ -64,3 +64,25 @@ insert into public.count_form_versions (location_id, version, product_ids)
 select l.id, 1, array(select p.id from public.products p where p.is_active order by p.sort_order)
 from public.locations l
 where l.kind in ('factory', 'branch');
+
+-- ─── المواد الأولية (أمثلة لحد ما الأدمن يعدلها) ─────────────────────
+
+insert into public.raw_materials (sort_order, name, base_unit, min_qty) values
+  (1, 'طحين', 'كيلو', 100),
+  (2, 'سكر', 'كيلو', 60),
+  (3, 'زبدة', 'كيلو', 15),
+  (4, 'بيض', 'حبة', 180),
+  (5, 'كريمة طبخ', 'لتر', 20),
+  (6, 'شوكولاتة داكنة', 'كيلو', 10);
+
+insert into public.raw_material_units (material_id, unit_name, factor_to_base)
+select m.id, u.unit_name, u.factor
+from public.raw_materials m
+join (values
+  ('طحين', 'كيس', 25),
+  ('سكر', 'كيس', 50),
+  ('زبدة', 'كرتونة', 10),
+  ('بيض', 'كرتونة', 30),
+  ('كريمة طبخ', 'كرتونة', 12),
+  ('شوكولاتة داكنة', 'كيس', 5)
+) as u(name, unit_name, factor) on u.name = m.name;

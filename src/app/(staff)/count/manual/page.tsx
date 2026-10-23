@@ -22,6 +22,7 @@ async function ManualCount() {
 
   const products = await listCountProducts();
   const { slot } = context;
+  const startedAt = new Date().toISOString();
   return (
     <StaffScreen>
       <ScreenHeader
@@ -30,9 +31,11 @@ async function ManualCount() {
         backHref="/count"
       />
       <BranchCountForm
+        // صفحة جديدة لكل زيارة: Next بيحفظ حالة الصفحات اللي انزارت
+        key={startedAt}
         products={products}
         scheduleId={slot?.scheduleId ?? null}
-        startedAt={new Date().toISOString()}
+        startedAt={startedAt}
       />
     </StaffScreen>
   );

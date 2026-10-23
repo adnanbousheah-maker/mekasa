@@ -244,11 +244,11 @@ select throws_ok(
 
 -- ─── جرد المواد الأولية المؤكد ───────────────────────────────────────
 
-insert into public.raw_materials (name, base_unit) values ('سكر', 'كيلو');
+insert into public.raw_materials (name, base_unit) values ('سكر الاختبار 003', 'كيلو');
 insert into public.raw_counts (location_id, counted_by)
 values (tests.location('FAC'), '22222222-0000-4000-8000-000000000004');
 insert into public.raw_count_lines (count_id, material_id, entered_qty, qty_base)
-select c.id, m.id, 50, 50 from public.raw_counts c, public.raw_materials m;
+select c.id, m.id, 50, 50 from public.raw_counts c, public.raw_materials m where m.name = 'سكر الاختبار 003';
 update public.raw_counts set status = 'confirmed', confirmed_at = now();
 
 select throws_ok(

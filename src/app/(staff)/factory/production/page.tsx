@@ -63,7 +63,7 @@ async function Production({ searchParams }: { searchParams: SearchParams }) {
           هون بينضاف عليه.
         </p>
       )}
-      <ProductionForm key={entries.length} products={products} dayNumber={day} />
+      <ProductionForm key={new Date().toISOString()} products={products} dayNumber={day} />
     </StaffScreen>
   );
 }

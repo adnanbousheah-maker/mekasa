@@ -22,7 +22,7 @@ const ITEMS: { href: string; label: string; icon: string; ready: boolean }[] = [
   },
   { href: "/admin/counts", label: "الجرودات", icon: "M6 4h12v17H6zM9 9h6M9 13h6M9 17h3", ready: true },
   { href: "/admin/factory", label: "المصنع والدفعات", icon: "M3 21V9l6 4V9l6 4V5h6v16z", ready: true },
-  { href: "/admin/raw", label: "المواد الأولية", icon: "M6 8h12l-1 12H7zM9 8V5h6v3", ready: false },
+  { href: "/admin/raw", label: "المواد الأولية", icon: "M6 8h12l-1 12H7zM9 8V5h6v3", ready: true },
   {
     href: "/admin/waste",
     label: "التالف",

@@ -117,16 +117,17 @@ select results_eq(
 
 -- ─── المواد الأولية: بيكفي كم يوم ────────────────────────────────────
 
-insert into public.raw_materials (name, base_unit, min_qty) values ('طحين', 'كيلو', 100);
+insert into public.raw_materials (name, base_unit, min_qty) values ('طحين الاختبار 004', 'كيلو', 100);
 insert into public.raw_movements (occurred_at, location_id, material_id, qty_base, movement_type, supplier_name)
-select now() - interval '10 days', tests.location('FAC'), id, 380, 'receipt', 'المطاحن' from public.raw_materials;
+select now() - interval '10 days', tests.location('FAC'), id, 380, 'receipt', 'المطاحن' from public.raw_materials where name = 'طحين الاختبار 004';
 -- صرف 14 × 20 كيلو = 280 بآخر 14 يوم → 20 باليوم، والموجود 100 → بيكفي 5 أيام
 insert into public.raw_movements (occurred_at, location_id, material_id, qty_base, movement_type)
 select now() - make_interval(days => d), tests.location('FAC'), m.id, -20, 'issue'
-from public.raw_materials m, generate_series(0, 13) as d;
+from public.raw_materials m, generate_series(0, 13) as d where m.name = 'طحين الاختبار 004';
 
 select results_eq(
-  $$ select qty_base::numeric, avg_daily_issue::numeric, days_left, below_min from public.v_raw_stock $$,
+  $$ select qty_base::numeric, avg_daily_issue::numeric, days_left, below_min from public.v_raw_stock
+     where material_id = (select id from public.raw_materials where name = 'طحين الاختبار 004') $$,
   $$ values (100::numeric, 20::numeric, 5, false) $$,
   'raw stock, daily usage over 14 days, and days left'
 );

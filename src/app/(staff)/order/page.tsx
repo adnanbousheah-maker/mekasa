@@ -24,7 +24,7 @@ async function Order() {
   return (
     <StaffScreen>
       <ScreenHeader title="طلب من المصنع" subtitle="الكميات مقترحة حسب الحد المطلوب، عدّلها براحتك" />
-      <OrderForm products={products} />
+      <OrderForm key={new Date().toISOString()} products={products} />
     </StaffScreen>
   );
 }

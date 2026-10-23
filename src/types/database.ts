@@ -2697,6 +2697,17 @@ export type Database = {
       };
       receive_dispatch: { Args: { p_dispatch_id: string; p_lines: Json }; Returns: string };
       record_production: { Args: { p_lines: Json; p_note?: string }; Returns: string };
+      record_raw_movement: {
+        Args: {
+          p_invoice_photo_path?: string;
+          p_kind: Database["public"]["Enums"]["raw_movement_type"];
+          p_material_id: string;
+          p_qty: number;
+          p_supplier_name?: string;
+          p_unit_id?: string;
+        };
+        Returns: number;
+      };
       record_waste: {
         Args: {
           p_location_id: string;
@@ -2722,6 +2733,7 @@ export type Database = {
         };
         Returns: string;
       };
+      submit_raw_count: { Args: { p_lines: Json; p_started_at?: string }; Returns: string };
     };
     Enums: {
       ai_feature: "count_ocr" | "assistant";

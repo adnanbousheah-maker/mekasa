@@ -34,6 +34,7 @@ async function Count() {
           ما بنعرض الكمية المتوقعة مشان العد يكون حقيقي. الفرق بيطلع للمدير بعد التأكيد.
         </p>
         <FactoryCountForm
+          key={now.toISOString()}
           products={products}
           batches={batches}
           today={businessDate(now)}

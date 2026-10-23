@@ -51,7 +51,7 @@ async function Waste() {
         title="تسجيل تالف"
         subtitle={location.kind === "factory" ? location.name : `فرع ${location.name}`}
       />
-      <WasteForm products={products} factory={factory} />
+      <WasteForm key={new Date().toISOString()} products={products} factory={factory} />
     </StaffScreen>
   );
 }

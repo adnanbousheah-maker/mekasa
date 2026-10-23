@@ -19,12 +19,14 @@ async function Photo() {
   if (!context) return <NotCounting />;
   if (context.location.kind !== "branch" || !context.photoCountEnabled) redirect("/count/manual");
   const { slot } = context;
+  const startedAt = new Date().toISOString();
   return (
     <StaffScreen>
       <PhotoCount
+        key={startedAt}
         title={slot ? countTitle(slot.timeOfDay) : "الجرد"}
         scheduleId={slot?.scheduleId ?? null}
-        startedAt={new Date().toISOString()}
+        startedAt={startedAt}
       />
     </StaffScreen>
   );

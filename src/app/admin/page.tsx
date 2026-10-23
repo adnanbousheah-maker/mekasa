@@ -16,6 +16,8 @@ import {
 } from "@/features/reports/queries";
 import { linesSummary } from "@/features/orders/logic";
 import { loadDocuments } from "@/features/orders/queries";
+import { amount } from "@/features/raw/logic";
+import { listRawMaterials } from "@/features/raw/queries";
 import { lateLabel } from "@/features/reminders/slots";
 import { formatScheduleTime } from "@/features/settings/schemas";
 import { businessDate, formatClock, formatLongDate, greetingFor } from "@/lib/time";
@@ -64,6 +66,7 @@ async function Overview() {
     weekUse,
     docs,
     alertHours,
+    raw,
   ] = await Promise.all([
     listReportLocations(),
     listReportProducts(),
@@ -76,6 +79,7 @@ async function Overview() {
     consumptionSince(addDays(today, -6)),
     loadDocuments({ requests: { statuses: ["pending_approval", "sent"] }, dispatches: {}, sinceDays: 14 }),
     unreceivedAlertHours(),
+    listRawMaterials(),
   ]);
   const productById = new Map(products.map((p) => [p.id, p]));
 
@@ -108,6 +112,19 @@ async function Overview() {
       sub: `${line.productName}: طلع ${formatQuantityCompact(line.qtyPieces, line.piecesPerCake)} ووصل ${formatQuantityCompact(line.received!.qtyPieces, line.piecesPerCake)}${line.received!.note ? ` · ${line.received!.note}` : ""}`,
       action: "شوف",
       href: `/admin/orders?filter=diff&id=${d.requestId ?? d.id}`,
+    });
+  }
+  const lowRaw = raw.filter((m) => m.belowMin);
+  if (lowRaw.length > 0) {
+    alerts.push({
+      tone: "warn",
+      title: `${lowRaw.length === 1 ? "مادة وحدة" : lowRaw.length === 2 ? "مادتين" : `${lowRaw.length} مواد`} تحت الحد الأدنى`,
+      sub: lowRaw
+        .slice(0, 3)
+        .map((m) => `${m.name} ${amount(m.qty, m.baseUnit)} من ${amount(m.minQty, m.baseUnit)}`)
+        .join(" · "),
+      action: "شوف",
+      href: "/admin/raw",
     });
   }
   for (const r of docs.requests.filter((r) => r.status === "pending_approval")) {

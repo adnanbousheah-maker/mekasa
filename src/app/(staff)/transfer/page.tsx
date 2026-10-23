@@ -27,6 +27,7 @@ async function Transfer() {
     <StaffScreen>
       <ScreenHeader title="تحويل أو إرجاع" subtitle="اختار الوجهة والكميات" backHref="/orders" />
       <DispatchForm
+        key={new Date().toISOString()}
         products={products}
         destinations={destinations}
         initialDestination={null}

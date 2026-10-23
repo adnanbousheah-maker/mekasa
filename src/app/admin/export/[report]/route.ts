@@ -12,6 +12,7 @@ import {
   stockByProduct,
 } from "@/features/reports/queries";
 import { loadDocuments } from "@/features/orders/queries";
+import { listRawMaterials, recentRawMoves } from "@/features/raw/queries";
 import { listStaff } from "@/features/staff/queries";
 import { ROLE_LABELS } from "@/features/staff/roles";
 import { WASTE_REASON_LABELS } from "@/features/waste/schemas";
@@ -217,6 +218,45 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
               header: `${d} (قطع)`,
               value: (r: (typeof matrix.rows)[number]) => r.byDate.get(d) ?? 0,
             })),
+          ],
+        }),
+      ];
+      break;
+    }
+    case "raw": {
+      const [materials, moves] = await Promise.all([listRawMaterials(true), recentRawMoves(1000)]);
+      sheets = [
+        sheet({
+          name: "المواد الأولية",
+          rows: materials,
+          columns: [
+            { header: "المادة", value: (m) => m.name, width: 22 },
+            { header: "الوحدة", value: (m) => m.baseUnit },
+            { header: "الموجود", value: (m) => m.qty },
+            { header: "الحد الأدنى", value: (m) => m.minQty },
+            { header: "صرف يومي", value: (m) => m.dailyIssue },
+            { header: "بيكفي (أيام)", value: (m) => m.daysLeft },
+            {
+              header: "التحويلات",
+              value: (m) => m.units.map((u) => `${u.name} = ${u.factor}`).join("، "),
+              width: 24,
+            },
+          ],
+        }),
+        sheet({
+          name: "الحركات",
+          rows: moves,
+          columns: [
+            { header: "الوقت", value: (m) => m.at },
+            { header: "النوع", value: (m) => m.kind },
+            { header: "المادة", value: (m) => m.materialName },
+            { header: "بالوحدة الأساسية", value: (m) => m.qtyBase },
+            {
+              header: "انكتب",
+              value: (m) => (m.enteredQty ? `${m.enteredQty} ${m.unitName ?? m.baseUnit}` : ""),
+            },
+            { header: "المورد", value: (m) => m.supplierName ?? "" },
+            { header: "مين", value: (m) => m.by },
           ],
         }),
       ];
