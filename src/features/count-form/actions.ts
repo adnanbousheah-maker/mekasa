@@ -6,7 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/types/database";
 import { mapOcrRows, parseFormCode, type ReadLine } from "./labels";
-import { readCountFormImage } from "./ocr";
+import { OCR_MODEL, readCountFormImage } from "./ocr";
 
 export type ReadFormResult =
   | { status: "error"; message: string }
@@ -63,7 +63,7 @@ export async function readCountFormAction(photoPath: string): Promise<ReadFormRe
     await log.from("ai_usage_log").insert({
       feature: "count_ocr",
       staff_id: staff.id,
-      model: "claude-opus-5-5",
+      model: OCR_MODEL,
       error: error instanceof Error ? error.message.slice(0, 500) : "unknown",
       duration_ms: Date.now() - started,
     });

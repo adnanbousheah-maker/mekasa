@@ -4,7 +4,8 @@ import type { createClient } from "@/lib/supabase/server";
 import { formatClock, formatLongDate, businessDate } from "@/lib/time";
 import { assistantTools } from "./tools";
 
-export const ASSISTANT_MODEL = "claude-opus-5-5";
+// Haiku 5.5: الأرخص (طلب صاحب المشروع). بدون fallbacks لأنه ما إله server-side fallback.
+export const ASSISTANT_MODEL = "claude-haiku-5-5";
 
 // ثابت (مشان الكاش): الوقت الحالي بيروح مع رسالة المستخدم، مش هون.
 const SYSTEM = `أنت مساعد ميكاسا: مصنع كيك بعمّان إله 3 فروع (الصويفية، الجبيهة، دابوق). بتساعد الأدمن بس.
@@ -45,8 +46,6 @@ export async function runAssistant(
   const runner = client.beta.messages.toolRunner({
     model: ASSISTANT_MODEL,
     max_tokens: 16000,
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
     output_config: { effort: "medium" },
     system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],
     tools: assistantTools(db, now),

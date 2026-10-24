@@ -4,7 +4,9 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import type { OcrRow } from "./labels";
 
-export const OCR_MODEL = "claude-opus-5-5";
+// Haiku 5.5: الأرخص (صاحب المشروع طلب موديل خفيف للتجربة). ما إله server-side fallback،
+// فما بنبعت betas/fallbacks، والرفض (stop_reason "refusal") بيرجع للإدخال اليدوي.
+export const OCR_MODEL = "claude-haiku-5-5";
 
 const resultSchema = z.object({
   form_code: z
@@ -58,8 +60,6 @@ export async function readCountFormImage(
   const response = await client.beta.messages.parse({
     model: OCR_MODEL,
     max_tokens: 16000,
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default",
     output_config: { effort: "high", format: betaZodOutputFormat(resultSchema) },
     system: SYSTEM,
     messages: [
