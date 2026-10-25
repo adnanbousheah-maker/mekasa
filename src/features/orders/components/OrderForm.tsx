@@ -7,17 +7,20 @@ import { ProductName } from "@/components/ui/ProductName";
 import { Stepper } from "@/components/ui/Stepper";
 import { formatQuantity } from "@/lib/units";
 import { createRequestAction } from "../actions";
-import { forgottenItems, linesSummary, suggestQuantity } from "../logic";
+import { forgottenItems, linesSummary, orderTarget, suggestQuantity } from "../logic";
 import type { OrderProduct } from "../queries";
 
 type Row = { wholeCakes: number; loosePieces: number; suggestedPieces: number };
 
-/** design/branch/Order: الكميات مقترحة (الحد − الموجود)، ومراجعة قبل الإرسال. */
-export function OrderForm({ products }: { products: OrderProduct[] }) {
+/** design/branch/Order: الكميات مقترحة (استهلاك بكرا − الموجود)، ومراجعة قبل الإرسال. */
+export function OrderForm({ products, tomorrowName }: { products: OrderProduct[]; tomorrowName: string }) {
   const router = useRouter();
   const [rows, setRows] = useState<Record<string, Row>>(() =>
     Object.fromEntries(
-      products.map((p) => [p.id, suggestQuantity(p.parPieces, p.stockPieces, p.piecesPerCake)]),
+      products.map((p) => [
+        p.id,
+        suggestQuantity(orderTarget(p.avgPieces, p.parPieces), p.stockPieces, p.piecesPerCake),
+      ]),
     ),
   );
   const [q, setQ] = useState("");
@@ -89,7 +92,9 @@ export function OrderForm({ products }: { products: OrderProduct[] }) {
                 <ProductName name={p.nameEn} className="text-[17px] font-semibold" />
                 <span className="text-[13px] text-muted">
                   عندك {formatQuantity(Math.max(0, p.stockPieces), p.piecesPerCake)}
-                  {p.parPieces !== undefined && ` · الحد ${formatQuantity(p.parPieces, p.piecesPerCake)}`}
+                  {p.avgPieces !== null
+                    ? ` · بيروح ${formatQuantity(p.avgPieces, p.piecesPerCake)} يوم ${tomorrowName}`
+                    : p.parPieces !== undefined && ` · الحد ${formatQuantity(p.parPieces, p.piecesPerCake)}`}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2.5">

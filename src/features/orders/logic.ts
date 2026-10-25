@@ -4,6 +4,14 @@ import { countWord } from "@/lib/units";
 // ─── الكمية المقترحة: الحد المطلوب − الموجود ─────────────────────────
 
 /** الاقتراح بكيكات كاملة (لفوق) للأصناف اللي إلها كيكة، وبالقطع للأصناف اللي قطع بس. */
+/** شو لازم يكون عند الفرع بكرا: معدل الاستهلاك إذا معروف، وإلا الحد المطلوب. */
+export function orderTarget(
+  avgPieces: number | null,
+  parPieces: number | null | undefined,
+): number | undefined {
+  return avgPieces ?? parPieces ?? undefined;
+}
+
 export function suggestQuantity(
   parPieces: number | undefined,
   stockPieces: number,

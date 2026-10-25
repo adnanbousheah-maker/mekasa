@@ -5,6 +5,8 @@ import { requireStaff } from "@/features/auth/session";
 import { NotForYou } from "@/features/orders/components/OrderBits";
 import { OrderForm } from "@/features/orders/components/OrderForm";
 import { productsForBranch } from "@/features/orders/queries";
+import { DAY_NAMES, dayNumberOf, type DayNumber } from "@/lib/day-number";
+import { businessDate } from "@/lib/time";
 
 // design/branch/Order
 export default function OrderPage() {
@@ -21,10 +23,15 @@ async function Order() {
     return <NotForYou title="طلب من المصنع" text="الطلب من المصنع لموظفين الفروع." />;
   }
   const products = await productsForBranch(staff.location.id);
+  // الطلبية بتوصل بكرا الصبح
+  const tomorrowName = DAY_NAMES[((dayNumberOf(businessDate(new Date())) % 7) + 1) as DayNumber];
   return (
     <StaffScreen>
-      <ScreenHeader title="طلب من المصنع" subtitle="الكميات مقترحة حسب الحد المطلوب، عدّلها براحتك" />
-      <OrderForm key={new Date().toISOString()} products={products} />
+      <ScreenHeader
+        title="طلب من المصنع"
+        subtitle={`الكميات مقترحة حسب استهلاك يوم ${tomorrowName} بآخر 4 أسابيع، عدّلها براحتك`}
+      />
+      <OrderForm key={new Date().toISOString()} products={products} tomorrowName={tomorrowName} />
     </StaffScreen>
   );
 }

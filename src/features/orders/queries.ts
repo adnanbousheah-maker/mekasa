@@ -10,6 +10,8 @@ export interface OrderProduct {
   piecesPerCake: number | null;
   stockPieces: number;
   parPieces: number | undefined;
+  // معدل استهلاك آخر 4 أيام من نفس يوم بكرا (null = ما في جرد بهالأيام)
+  avgPieces: number | null;
 }
 
 type Db = Awaited<ReturnType<typeof createClient>>;
@@ -55,6 +57,7 @@ export async function productsForBranch(branchId: string): Promise<OrderProduct[
       piecesPerCake: p.piecesPerCake,
       stockPieces: byId.get(p.id)?.stock_pieces ?? 0,
       parPieces: byId.get(p.id)?.par_pieces ?? undefined,
+      avgPieces: byId.get(p.id)?.avg_pieces ?? null,
     }));
 }
 

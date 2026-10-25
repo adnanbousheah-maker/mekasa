@@ -9,7 +9,7 @@ import { Stepper } from "@/components/ui/Stepper";
 import type { DayNumber } from "@/lib/day-number";
 import { formatQuantity, formatQuantityCompact } from "@/lib/units";
 import { branchSuggestionsAction, createDispatchAction } from "../actions";
-import { fefoAllocate, linesSummary, requestVsDispatch, suggestQuantity } from "../logic";
+import { fefoAllocate, linesSummary, orderTarget, requestVsDispatch, suggestQuantity } from "../logic";
 import type { Destination, FactoryBatchStock } from "../queries";
 
 export interface DispatchProduct {
@@ -79,14 +79,18 @@ export function DispatchForm({
     startTransition(async () => {
       setDestination(id);
       if (requestId) return;
-      // بدون طلب: الكميات المقترحة حسب الحد المطلوب بالفرع
+      // بدون طلب: الكميات المقترحة حسب استهلاك الفرع (أو الحد المطلوب)
       const suggestions =
         destinations.find((d) => d.id === id)?.kind === "branch" ? await branchSuggestionsAction(id) : [];
       setLines(
         suggestions
           .map((s) => {
             const p = byId.get(s.productId);
-            const q = suggestQuantity(s.parPieces ?? undefined, s.stockPieces, p?.piecesPerCake ?? null);
+            const q = suggestQuantity(
+              orderTarget(s.avgPieces, s.parPieces),
+              s.stockPieces,
+              p?.piecesPerCake ?? null,
+            );
             return {
               productId: s.productId,
               requestLineId: null,

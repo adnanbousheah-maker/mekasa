@@ -4,6 +4,7 @@ import {
   createRequestSchema,
   fefoAllocate,
   forgottenItems,
+  orderTarget,
   linesSummary,
   receiptDifference,
   requestVsDispatch,
@@ -82,6 +83,15 @@ describe("comparisons", () => {
         { wholeCakes: 0, loosePieces: 0 },
       ]),
     ).toBe("2 صنف · 3 كيكات · 8 قطع");
+  });
+});
+
+describe("orderTarget", () => {
+  it("prefers the usual consumption, then par", () => {
+    expect(orderTarget(35, 20)).toBe(35);
+    expect(orderTarget(0, 20)).toBe(0);
+    expect(orderTarget(null, 20)).toBe(20);
+    expect(orderTarget(null, null)).toBeUndefined();
   });
 });
 

@@ -176,13 +176,18 @@ export async function resolveReceiptLineAction(
 /** الكمية المقترحة لفرع (للإخراج بدون طلب): الحد − الموجود لكل صنف. */
 export async function branchSuggestionsAction(
   branchId: string,
-): Promise<{ productId: string; stockPieces: number; parPieces: number | null }[]> {
+): Promise<{ productId: string; stockPieces: number; parPieces: number | null; avgPieces: number | null }[]> {
   await requireStaff();
   if (!z.uuid().safeParse(branchId).success) return [];
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("branch_suggestions", { p_branch_id: branchId });
   if (error) return [];
-  return data.map((s) => ({ productId: s.product_id, stockPieces: s.stock_pieces, parPieces: s.par_pieces }));
+  return data.map((s) => ({
+    productId: s.product_id,
+    stockPieces: s.stock_pieces,
+    parPieces: s.par_pieces,
+    avgPieces: s.avg_pieces,
+  }));
 }
 
 const returnSchema = z.object({

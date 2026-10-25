@@ -2768,6 +2768,8 @@ export type Database = {
       branch_suggestions: {
         Args: { p_branch_id: string };
         Returns: {
+          avg_pieces: number;
+          days_used: number;
           par_pieces: number;
           product_id: string;
           stock_pieces: number;
