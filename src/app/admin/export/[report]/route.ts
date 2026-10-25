@@ -12,6 +12,7 @@ import {
   stockByProduct,
 } from "@/features/reports/queries";
 import { loadDocuments } from "@/features/orders/queries";
+import { IMPORT_HEADERS, packagingLabel } from "@/features/raw/import";
 import { listRawMaterials, recentRawMoves } from "@/features/raw/queries";
 import { listStaff } from "@/features/staff/queries";
 import { ROLE_LABELS } from "@/features/staff/roles";
@@ -33,6 +34,23 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   let sheets: ExcelSheet<any>[];
 
   switch (report) {
+    case "raw-template": {
+      // قالب جرد المواد: كل المواد الفعّالة، والكمية فاضية (src/features/raw/import.ts)
+      const materials = (await listRawMaterials()).filter((m) => m.isActive);
+      sheets = [
+        sheet({
+          name: "جرد المواد",
+          rows: materials,
+          columns: [
+            { header: IMPORT_HEADERS[0], value: (m) => m.code ?? "", width: 14 },
+            { header: IMPORT_HEADERS[1], value: (m) => m.name, width: 26 },
+            { header: IMPORT_HEADERS[2], value: (m) => packagingLabel(m.baseUnit, m.units[0]), width: 20 },
+            { header: IMPORT_HEADERS[3], value: () => "", width: 12 },
+          ],
+        }),
+      ];
+      return excelResponse(await buildWorkbook(sheets), `mekasa-raw-count-template-${today}`);
+    }
     case "stock": {
       const use = search.get("view") === "use";
       const [locations, products, source] = await Promise.all([

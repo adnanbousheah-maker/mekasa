@@ -1171,6 +1171,7 @@ export type Database = {
       raw_materials: {
         Row: {
           base_unit: string;
+          code: string | null;
           created_at: string;
           id: string;
           is_active: boolean;
@@ -1182,6 +1183,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           base_unit: string;
+          code?: string | null;
           created_at?: string;
           id?: string;
           is_active?: boolean;
@@ -1192,6 +1194,7 @@ export type Database = {
         };
         Update: {
           base_unit?: string;
+          code?: string | null;
           created_at?: string;
           id?: string;
           is_active?: boolean;
@@ -2628,6 +2631,7 @@ export type Database = {
         Returns: undefined;
       };
       admin_decide_request: { Args: { p_approve: boolean; p_request_id: string }; Returns: undefined };
+      admin_import_raw_count: { Args: { p_rows: Json; p_started_at?: string }; Returns: string };
       admin_record_pin_reset: { Args: { p_staff_id: string }; Returns: undefined };
       admin_resolve_receipt_line: {
         Args: {

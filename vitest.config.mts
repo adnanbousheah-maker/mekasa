@@ -16,7 +16,7 @@ export default defineConfig({
         "**/*.test.{ts,tsx}",
         "src/lib/supabase/**",
         "src/lib/*env.ts",
-        "src/features/**/{actions,queries,session,ocr,push,run,tools}.ts",
+        "src/features/**/{actions,*-actions,queries,session,ocr,push,run,tools}.ts",
       ],
       thresholds: { lines: 80, functions: 80, branches: 80, statements: 80 },
     },

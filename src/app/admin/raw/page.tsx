@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { AdminLoading } from "@/components/ui/AdminLoading";
 import { ExportButton, PageHeader } from "@/features/admin/components/AdminBits";
 import { AddUnit, NewMaterialButton } from "@/features/raw/components/AdminRawControls";
+import { RawImportButton } from "@/features/raw/components/RawImport";
 import { amount, daysLeftLabel, daysTone } from "@/features/raw/logic";
 import { listRawMaterials, recentRawMoves } from "@/features/raw/queries";
 import { InlineField } from "@/features/settings/components/InlineField";
@@ -49,6 +50,7 @@ async function Raw() {
         actions={
           <>
             <ExportButton href="/admin/export/raw" />
+            <RawImportButton />
             <NewMaterialButton />
           </>
         }
@@ -83,6 +85,11 @@ async function Raw() {
                 >
                   <th scope="row" className="px-3 py-2.5 text-right font-semibold">
                     {m.name}
+                    {m.code && (
+                      <span dir="ltr" className="ms-2 text-xs font-normal text-muted">
+                        {m.code}
+                      </span>
+                    )}
                   </th>
                   <td className="px-3 py-2.5 text-center font-semibold tabular-nums">
                     {amount(m.qty, m.baseUnit)}

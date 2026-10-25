@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export interface RawMaterialRow {
   id: string;
+  code: string | null;
   name: string;
   baseUnit: string;
   minQty: number;
@@ -22,7 +23,9 @@ export async function listRawMaterials(includeInactive = false): Promise<RawMate
   const supabase = await createClient();
   let materials = supabase
     .from("raw_materials")
-    .select("id, name, base_unit, min_qty, is_active, raw_material_units(id, unit_name, factor_to_base)")
+    .select(
+      "id, code, name, base_unit, min_qty, is_active, raw_material_units(id, unit_name, factor_to_base)",
+    )
     .order("sort_order")
     .order("name");
   if (!includeInactive) materials = materials.eq("is_active", true);
@@ -43,6 +46,7 @@ export async function listRawMaterials(includeInactive = false): Promise<RawMate
     const last = (receipts ?? []).find((r) => r.material_id === m.id);
     return {
       id: m.id,
+      code: m.code,
       name: m.name,
       baseUnit: m.base_unit,
       minQty: Number(m.min_qty),
