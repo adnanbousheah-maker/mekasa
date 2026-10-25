@@ -78,7 +78,7 @@ export async function listWorkLocations(): Promise<LocationOption[]> {
   const { data, error } = await supabase
     .from("locations")
     .select("id, name, kind")
-    .in("kind", ["factory", "branch"])
+    .in("kind", ["factory", "branch", "packaging"])
     .eq("is_active", true)
     .order("sort_order");
   if (error) throw new Error(`Could not load locations: ${error.message}`);

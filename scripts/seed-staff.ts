@@ -7,7 +7,7 @@ import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { authEmailFor, derivePassword } from "../src/features/auth/pin.ts";
 
-type Role = "admin" | "branch_staff" | "dispatcher" | "storekeeper";
+type Role = "admin" | "branch_staff" | "dispatcher" | "storekeeper" | "packaging_keeper";
 
 interface TestStaff {
   fullName: string;
@@ -29,6 +29,13 @@ const TEST_STAFF: TestStaff[] = [
     locationCode: "FAC",
     roles: ["dispatcher", "storekeeper"],
     pin: "1593",
+  },
+  {
+    fullName: "مازن",
+    phone: "962790000006",
+    locationCode: "PKG",
+    roles: ["packaging_keeper"],
+    pin: "4826",
   },
 ];
 

@@ -1,6 +1,6 @@
 // طول الرمز. ملف لحاله بدون أي استيراد، مشان شاشة الدخول (عند المتصفح) تقدر تستعمله.
 
-export type PinRole = "admin" | "branch_staff" | "dispatcher" | "storekeeper";
+export type PinRole = "admin" | "branch_staff" | "dispatcher" | "storekeeper" | "packaging_keeper";
 
 export const STAFF_PIN_LENGTH = 4;
 // كان 6 للأدمن؛ صاحب المشروع طلب 4 للكل (24 أكتوبر 2026). القفل وحد الـ IP بيحموه.

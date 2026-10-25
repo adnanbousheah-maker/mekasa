@@ -108,7 +108,8 @@ export function linesSummary(lines: { wholeCakes: number; loosePieces: number }[
 
 // ─── المدخلات ────────────────────────────────────────────────────────
 
-const qty = z.number().int().min(0).max(999);
+// التغليف بينطلب بالمية (أكياس، علب)
+const qty = z.number().int().min(0).max(9999);
 
 export const requestLineSchema = z.object({
   productId: z.uuid(),

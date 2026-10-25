@@ -46,6 +46,7 @@ export async function listReportProducts(): Promise<ReportProduct[]> {
   const { data, error } = await supabase
     .from("v_products")
     .select("id, name_en, effective_pieces_per_cake, is_active")
+    .eq("kind", "cake")
     .order("sort_order");
   if (error) fail("products", error);
   return data.map((p) => ({

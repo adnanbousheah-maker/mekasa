@@ -108,12 +108,12 @@ select throws_ok(
 
 select results_eq(
   $$ select kind::text, count(*)::int from public.locations group by kind order by kind $$,
-  $$ values ('branch', 3), ('factory', 1), ('returns_bin', 1) $$,
-  'seed: one factory, three branches, one returns bin'
+  $$ values ('branch', 3), ('factory', 1), ('packaging', 1), ('returns_bin', 1) $$,
+  'seed: one factory, three branches, one returns bin, one packaging store'
 );
 
 select results_eq(
-  $$ select sell_mode::text, count(*)::int from public.products group by sell_mode order by sell_mode $$,
+  $$ select sell_mode::text, count(*)::int from public.products where kind = 'cake' group by sell_mode order by sell_mode $$,
   $$ values ('pieces_only', 3), ('whole_and_pieces', 17) $$,
   'seed: 20 menu products, 3 of them pieces only'
 );

@@ -31,12 +31,13 @@ export async function getSettings(): Promise<AppSettings> {
 }
 
 /** كل الأصناف، حتى الموقوفة، بترتيب المنيو. */
-export async function listProducts(): Promise<ProductRow[]> {
+export async function listProducts(kind: "cake" | "packaging" = "cake"): Promise<ProductRow[]> {
   await requireAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("products")
     .select("id, name_en, name_ar, sell_mode, pieces_per_cake, is_active")
+    .eq("kind", kind)
     .order("sort_order")
     .order("name_en");
   if (error) throw new Error(`Could not load products: ${error.message}`);

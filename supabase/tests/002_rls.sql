@@ -42,8 +42,8 @@ select id, tests.product('Flan'), 2, 10 from public.dispatches;
 
 select tests.authenticate_as('11111111-0000-4000-8000-000000000001');
 
-select is((select count(*)::int from public.locations), 5, 'branch staff read all locations');
-select is((select count(*)::int from public.products), 20, 'branch staff read the products');
+select is((select count(*)::int from public.locations), 6, 'branch staff read all locations');
+select is((select count(*)::int from public.products), 24, 'branch staff read the products (cakes and packaging)');
 select is((select count(*)::int from public.app_settings), 1, 'branch staff read the settings');
 
 select results_eq(

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { Dialog } from "@/components/ui/Dialog";
 import { ProductName } from "@/components/ui/ProductName";
+import { QuantityField } from "@/components/ui/QuantityField";
 import { Stepper } from "@/components/ui/Stepper";
 import { formatQuantity } from "@/lib/units";
 import { createRequestAction } from "../actions";
@@ -13,7 +14,16 @@ import type { OrderProduct } from "../queries";
 type Row = { wholeCakes: number; loosePieces: number; suggestedPieces: number };
 
 /** design/branch/Order: الكميات مقترحة (استهلاك بكرا − الموجود)، ومراجعة قبل الإرسال. */
-export function OrderForm({ products, tomorrowName }: { products: OrderProduct[]; tomorrowName: string }) {
+export function OrderForm({
+  products,
+  tomorrowName,
+  packaging = false,
+}: {
+  products: OrderProduct[];
+  tomorrowName: string;
+  // طلب تغليف: كميات بالحبة بخانة رقم، وما بنعرض ستوك الفرع (ما بينجرد لسا)
+  packaging?: boolean;
+}) {
   const router = useRouter();
   const [rows, setRows] = useState<Record<string, Row>>(() =>
     Object.fromEntries(
@@ -34,7 +44,9 @@ export function OrderForm({ products, tomorrowName }: { products: OrderProduct[]
   );
   const picked = products.filter((p) => rows[p.id].wholeCakes + rows[p.id].loosePieces > 0);
   const forgotten = forgottenItems(products, rows);
-  const summary = linesSummary(picked.map((p) => rows[p.id]));
+  const summary = packaging
+    ? `${picked.length} ${picked.length >= 3 && picked.length <= 10 ? "أصناف" : "صنف"} · ${picked.reduce((n, p) => n + rows[p.id].loosePieces, 0)} حبة`
+    : linesSummary(picked.map((p) => rows[p.id]));
   const update = (id: string, key: "wholeCakes" | "loosePieces", value: number) =>
     setRows((r) => ({ ...r, [id]: { ...r[id], [key]: value } }));
 
@@ -47,7 +59,7 @@ export function OrderForm({ products, tomorrowName }: { products: OrderProduct[]
       if (result.status === "error") {
         setError(result.message);
         setReview(false);
-      } else router.replace("/orders?sent=1");
+      } else router.replace(packaging ? "/orders?sent=packaging" : "/orders?sent=1");
     });
 
   return (
@@ -88,40 +100,55 @@ export function OrderForm({ products, tomorrowName }: { products: OrderProduct[]
               aria-label={p.nameEn}
               className={`flex flex-col gap-2.5 rounded-2xl bg-surface p-3 ${active ? "border-2 border-ink" : "border border-line"}`}
             >
-              <div className="flex flex-col">
-                <ProductName name={p.nameEn} className="text-[17px] font-semibold" />
-                <span className="text-[13px] text-muted">
-                  عندك {formatQuantity(Math.max(0, p.stockPieces), p.piecesPerCake)}
-                  {p.avgPieces !== null
-                    ? ` · بيروح ${formatQuantity(p.avgPieces, p.piecesPerCake)} يوم ${tomorrowName}`
-                    : p.parPieces !== undefined && ` · الحد ${formatQuantity(p.parPieces, p.piecesPerCake)}`}
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-2.5">
-                {p.piecesPerCake === null ? (
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[13px] text-muted">كيكات</span>
-                    <div className="flex h-12 items-center justify-center rounded-xl bg-quiet text-[13px] text-muted">
-                      قطع بس
-                    </div>
-                  </div>
-                ) : (
-                  <Stepper
-                    label="كيكات"
-                    value={row.wholeCakes}
-                    onChange={(v) => update(p.id, "wholeCakes", v)}
-                    incrementLabel={`زيد كيكة ${p.nameEn}`}
-                    decrementLabel={`نقّص كيكة ${p.nameEn}`}
+              {packaging ? (
+                <div className="flex items-center justify-between gap-3">
+                  <ProductName name={p.nameEn} className="text-[17px] font-semibold" />
+                  <QuantityField
+                    label={`عدد ${p.nameEn}`}
+                    value={row.loosePieces}
+                    max={9999}
+                    onChange={(v) => update(p.id, "loosePieces", v)}
                   />
-                )}
-                <Stepper
-                  label="قطع"
-                  value={row.loosePieces}
-                  onChange={(v) => update(p.id, "loosePieces", v)}
-                  incrementLabel={`زيد قطعة ${p.nameEn}`}
-                  decrementLabel={`نقّص قطعة ${p.nameEn}`}
-                />
-              </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex flex-col">
+                    <ProductName name={p.nameEn} className="text-[17px] font-semibold" />
+                    <span className="text-[13px] text-muted">
+                      عندك {formatQuantity(Math.max(0, p.stockPieces), p.piecesPerCake)}
+                      {p.avgPieces !== null
+                        ? ` · بيروح ${formatQuantity(p.avgPieces, p.piecesPerCake)} يوم ${tomorrowName}`
+                        : p.parPieces !== undefined &&
+                          ` · الحد ${formatQuantity(p.parPieces, p.piecesPerCake)}`}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {p.piecesPerCake === null ? (
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[13px] text-muted">كيكات</span>
+                        <div className="flex h-12 items-center justify-center rounded-xl bg-quiet text-[13px] text-muted">
+                          قطع بس
+                        </div>
+                      </div>
+                    ) : (
+                      <Stepper
+                        label="كيكات"
+                        value={row.wholeCakes}
+                        onChange={(v) => update(p.id, "wholeCakes", v)}
+                        incrementLabel={`زيد كيكة ${p.nameEn}`}
+                        decrementLabel={`نقّص كيكة ${p.nameEn}`}
+                      />
+                    )}
+                    <Stepper
+                      label="قطع"
+                      value={row.loosePieces}
+                      onChange={(v) => update(p.id, "loosePieces", v)}
+                      incrementLabel={`زيد قطعة ${p.nameEn}`}
+                      decrementLabel={`نقّص قطعة ${p.nameEn}`}
+                    />
+                  </div>
+                </>
+              )}
             </li>
           );
         })}
@@ -159,7 +186,7 @@ export function OrderForm({ products, tomorrowName }: { products: OrderProduct[]
                 <span className="text-muted">
                   {[
                     rows[p.id].wholeCakes ? `${rows[p.id].wholeCakes} كيكة` : "",
-                    rows[p.id].loosePieces ? `${rows[p.id].loosePieces} قطعة` : "",
+                    rows[p.id].loosePieces ? `${rows[p.id].loosePieces} ${packaging ? "حبة" : "قطعة"}` : "",
                   ]
                     .filter(Boolean)
                     .join(" + ")}
@@ -191,7 +218,7 @@ export function OrderForm({ products, tomorrowName }: { products: OrderProduct[]
             onClick={send}
             className="h-14 rounded-[14px] bg-ink text-lg font-semibold text-white disabled:opacity-40"
           >
-            {isSaving ? "لحظة…" : "إرسال الطلب للمصنع"}
+            {isSaving ? "لحظة…" : packaging ? "إرسال الطلب لمستودع التغليف" : "إرسال الطلب للمصنع"}
           </button>
           <button
             type="button"

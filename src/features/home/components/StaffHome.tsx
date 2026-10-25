@@ -30,6 +30,8 @@ type Props = {
   vapidPublicKey?: string | null;
   branch?: BranchHomeData | null;
   factory?: FactoryHomeData | null;
+  // أمين التغليف (بأي موقع)
+  packaging?: { storeName: string; pending: number } | null;
 };
 
 /** الرئيسية للفرع (design/branch/Main) وللمصنع (design/factory/FactoryHome). */
@@ -40,11 +42,13 @@ export function StaffHome({
   vapidPublicKey = null,
   branch = null,
   factory = null,
+  packaging = null,
 }: Props) {
   const today = businessDate(now);
   const day = dayNumberOf(today);
   const firstName = staff.fullName.split(" ")[0];
   const atFactory = staff.location?.kind === "factory";
+  const atBranch = staff.location?.kind === "branch" && staff.roles.includes("branch_staff");
   const factoryRoles = staff.roles.filter((r) => r === "dispatcher" || r === "storekeeper");
 
   return (
@@ -67,14 +71,18 @@ export function StaffHome({
               </li>
             ))}
           </ul>
-        ) : (
+        ) : staff.location?.kind === "branch" ? (
           <p className="text-base text-muted">فرع {staff.location?.name}</p>
+        ) : (
+          <p className="text-base text-muted">{staff.location?.name}</p>
         )}
       </header>
 
       {slot && <CountReminder slot={slot} now={now} />}
 
-      {atFactory ? <FactoryTasks staff={staff} data={factory} /> : <BranchTasks data={branch} />}
+      {atFactory && <FactoryTasks staff={staff} data={factory} />}
+      {atBranch && <BranchTasks data={branch} />}
+      {packaging && <PackagingTasks data={packaging} />}
 
       <div className="grow" />
       <EnableNotifications vapidPublicKey={vapidPublicKey} />
@@ -166,6 +174,12 @@ function BranchTasks({ data }: { data: BranchHomeData | null }) {
           aside={<Badge n={incoming} />}
         />
         <TaskLink href="/order" title="طلب" description="اطلب كيك من المصنع" icon={<CartIcon />} />
+        <TaskLink
+          href="/order/packaging"
+          title="تغليف"
+          description="علب وأكياس من مستودع التغليف"
+          icon={<BoxIcon />}
+        />
       </nav>
       <div className="grid grid-cols-2 gap-3">
         <Link
@@ -188,6 +202,29 @@ function BranchTasks({ data }: { data: BranchHomeData | null }) {
         </Link>
       </div>
     </>
+  );
+}
+
+function PackagingTasks({ data }: { data: { storeName: string; pending: number } }) {
+  return (
+    <section className="flex flex-col gap-2.5">
+      <h2 className="text-[15px] font-semibold text-muted">{data.storeName}</h2>
+      <div className="grid grid-cols-2 gap-2.5">
+        <TaskLink
+          variant="tile"
+          href="/packaging"
+          title="طلبات التغليف"
+          icon={<ListIcon size={24} />}
+          aside={<Badge n={data.pending} />}
+        />
+        <TaskLink
+          variant="tile"
+          href="/packaging/count"
+          title="جرد المستودع"
+          icon={<ClipboardIcon size={24} />}
+        />
+      </div>
+    </section>
   );
 }
 

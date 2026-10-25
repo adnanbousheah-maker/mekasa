@@ -27,6 +27,7 @@ export async function preparePrintableForm(locationId: string): Promise<Printabl
       .from("v_products")
       .select("id, name_en, name_ar, sell_mode")
       .eq("is_active", true)
+      .eq("kind", "cake")
       .order("sort_order"),
     supabase
       .from("count_form_versions")

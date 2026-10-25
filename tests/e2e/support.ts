@@ -8,6 +8,7 @@ export const BRANCH = { phone: "0790000002", pin: "2580", name: "أحمد", e164
 export const BRANCH_JBH = { phone: "0790000003", pin: "1470", name: "رنا" };
 export const BRANCH_DBQ = { phone: "0790000004", pin: "3690", name: "خالد" };
 export const FACTORY = { phone: "0790000005", pin: "1593", name: "سامر" };
+export const PACKAGING = { phone: "0790000006", pin: "4826", name: "مازن" };
 
 function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -259,4 +260,9 @@ export async function cancelRequestsSince(locationCode: string, sinceIso: string
     .eq("requesting_location_id", loc!.id)
     .gte("requested_at", sinceIso)
     .in("status", ["sent", "pending_approval"]);
+}
+
+/** بيوقف صنف (مشان أصناف الاختبار ما تتراكم بالقوائم). */
+export async function deactivateProduct(nameEn: string) {
+  await serviceClient().from("products").update({ is_active: false }).eq("name_en", nameEn);
 }

@@ -76,12 +76,12 @@ async function Orders({ searchParams }: { searchParams: SearchParams }) {
   return (
     <StaffScreen>
       <ScreenHeader title="طلبياتي" />
-      {params.sent === "1" && (
+      {(params.sent === "1" || params.sent === "packaging") && (
         <div
           role="status"
           className="rounded-xl border border-ok bg-ok-soft px-4 py-3 text-[15px] font-semibold text-ok-text"
         >
-          انبعت طلبك للمصنع
+          {params.sent === "packaging" ? "انبعت طلبك لمستودع التغليف" : "انبعت طلبك للمصنع"}
         </div>
       )}
       {params.received === "1" && (
@@ -102,7 +102,9 @@ async function Orders({ searchParams }: { searchParams: SearchParams }) {
             return (
               <li key={r.id} className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-4">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[17px] font-bold">طلبية {dayLabel(r.requestedAt, now)}</span>
+                  <span className="text-[17px] font-bold">
+                    {r.isPackaging ? "طلب تغليف" : "طلبية"} {dayLabel(r.requestedAt, now)}
+                  </span>
                   <span
                     className={`rounded-[10px] px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONES[r.status]}`}
                   >
@@ -146,7 +148,7 @@ async function Orders({ searchParams }: { searchParams: SearchParams }) {
             e.kind === "incoming"
               ? d.kind === "transfer"
                 ? `تحويل من ${d.fromName} · ${dayLabel(d.dispatchedAt, now)}`
-                : `من المصنع بدون طلب · ${dayLabel(d.dispatchedAt, now)}`
+                : `من ${d.fromName} بدون طلب · ${dayLabel(d.dispatchedAt, now)}`
               : d.kind === "return"
                 ? `إرجاع للمصنع · ${dayLabel(d.dispatchedAt, now)}`
                 : `تحويل لـ ${d.toName} · ${dayLabel(d.dispatchedAt, now)}`;

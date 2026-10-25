@@ -1,15 +1,18 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { GeneralTab } from "@/features/settings/components/GeneralTab";
+import { PackagingTab } from "@/features/settings/components/PackagingTab";
 import { ParTab } from "@/features/settings/components/ParTab";
 import { ProductsTab } from "@/features/settings/components/ProductsTab";
 import { listReportLocations, listReportProducts, minLevels, parLevels } from "@/features/reports/queries";
 import { ScheduleCard } from "@/features/settings/components/ScheduleCard";
+import { packagingStock, packagingStore } from "@/features/packaging/queries";
 import { getSettings, listProducts, listScheduleLocations } from "@/features/settings/queries";
 
 const TABS = [
   { id: "products", label: "الأصناف" },
   { id: "par", label: "الحد المطلوب بالفروع" },
+  { id: "packaging", label: "التغليف" },
   { id: "schedule", label: "مواعيد الجرد" },
   { id: "general", label: "عام" },
 ] as const;
@@ -99,6 +102,12 @@ async function TabContent({ tab }: { tab: TabId }) {
   }
 
   if (tab === "general") return <GeneralTab settings={await getSettings()} />;
+
+  if (tab === "packaging") {
+    const [items, store] = await Promise.all([listProducts("packaging"), packagingStore()]);
+    const stock = store ? await packagingStock(store.id) : new Map<string, number>();
+    return <PackagingTab items={items} stock={stock} storeName={store?.name ?? null} />;
+  }
 
   const [products, settings] = await Promise.all([listProducts(), getSettings()]);
   return <ProductsTab products={products} defaultPieces={settings.default_pieces_per_cake} />;

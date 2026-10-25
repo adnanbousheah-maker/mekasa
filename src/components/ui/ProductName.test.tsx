@@ -3,8 +3,8 @@ import { render, screen } from "@testing-library/react";
 import { ProductName } from "./ProductName";
 
 describe("ProductName", () => {
-  it("renders English names left-to-right", () => {
+  it("lets the text pick its direction (English cakes, Arabic packaging)", () => {
     render(<ProductName name="Black & White" />);
-    expect(screen.getByText("Black & White")).toHaveAttribute("dir", "ltr");
+    expect(screen.getByText("Black & White")).toHaveAttribute("dir", "auto");
   });
 });

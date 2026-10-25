@@ -34,6 +34,8 @@ type Props = {
   initialLines: DispatchLineInit[];
   // المصنع بس: الدفعات اللي إلها ستوك
   batches: FactoryBatchStock[] | null;
+  // اسم السائق: من المصنع ومن مستودع التغليف
+  withDriver?: boolean;
   doneHref: string;
 };
 
@@ -47,6 +49,7 @@ export function DispatchForm({
   requestId,
   initialLines,
   batches,
+  withDriver = batches !== null,
   doneHref,
 }: Props) {
   const router = useRouter();
@@ -166,7 +169,7 @@ export function DispatchForm({
           ))}
         </div>
       </fieldset>
-      {isFactory && (
+      {withDriver && (
         <label className="flex flex-col gap-1.5">
           <span className="text-sm font-semibold text-muted">اسم السائق</span>
           <input
@@ -318,7 +321,7 @@ export function DispatchForm({
             onClick={confirm}
             className="flex h-14 items-center justify-center rounded-[14px] bg-ink text-lg font-semibold text-white disabled:opacity-40"
           >
-            {isSaving ? "لحظة…" : isFactory ? "تأكيد الإخراج" : "تأكيد التحويل"}
+            {isSaving ? "لحظة…" : isFactory || withDriver ? "تأكيد الإخراج" : "تأكيد التحويل"}
           </button>
         </div>
       </div>

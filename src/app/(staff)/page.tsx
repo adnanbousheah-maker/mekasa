@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { requireStaff } from "@/features/auth/session";
 import { StaffHome } from "@/features/home/components/StaffHome";
 import { branchHomeData, factoryHomeData } from "@/features/home/queries";
+import { isPackagingKeeper, packagingStore, pendingPackagingRequests } from "@/features/packaging/queries";
 import { getOpenSlot } from "@/features/reminders/queries";
 
 export default function HomePage() {
@@ -19,10 +20,11 @@ async function Home() {
   if (staff.roles.includes("admin")) redirect("/admin");
   const counts = staff.roles.includes("branch_staff") || staff.roles.includes("storekeeper");
   const location = staff.location;
-  const [slot, branch, factory] = await Promise.all([
+  const [slot, branch, factory, packaging] = await Promise.all([
     location && counts ? getOpenSlot(location.id) : null,
     location?.kind === "branch" ? branchHomeData(location.id) : null,
     location?.kind === "factory" ? factoryHomeData(location.id) : null,
+    isPackagingKeeper(staff) ? packagingHome() : null,
   ]);
   return (
     <StaffHome
@@ -31,9 +33,15 @@ async function Home() {
       slot={slot}
       branch={branch}
       factory={factory}
+      packaging={packaging}
       vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null}
     />
   );
+}
+
+async function packagingHome() {
+  const store = await packagingStore();
+  return store ? { storeName: store.name, pending: await pendingPackagingRequests(store.id) } : null;
 }
 
 function HomeLoading() {

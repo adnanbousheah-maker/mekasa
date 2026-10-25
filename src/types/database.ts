@@ -965,6 +965,7 @@ export type Database = {
           id: string;
           image_path: string | null;
           is_active: boolean;
+          kind: Database["public"]["Enums"]["product_kind"];
           name_ar: string | null;
           name_en: string;
           pieces_per_cake: number | null;
@@ -978,6 +979,7 @@ export type Database = {
           id?: string;
           image_path?: string | null;
           is_active?: boolean;
+          kind?: Database["public"]["Enums"]["product_kind"];
           name_ar?: string | null;
           name_en: string;
           pieces_per_cake?: number | null;
@@ -990,6 +992,7 @@ export type Database = {
           id?: string;
           image_path?: string | null;
           is_active?: boolean;
+          kind?: Database["public"]["Enums"]["product_kind"];
           name_ar?: string | null;
           name_en?: string;
           pieces_per_cake?: number | null;
@@ -2536,6 +2539,7 @@ export type Database = {
           id: string | null;
           image_path: string | null;
           is_active: boolean | null;
+          kind: Database["public"]["Enums"]["product_kind"] | null;
           name_ar: string | null;
           name_en: string | null;
           pieces_per_cake: number | null;
@@ -2863,14 +2867,14 @@ export type Database = {
     };
     Enums: {
       ai_feature: "count_ocr" | "assistant";
-      app_role: "admin" | "branch_staff" | "dispatcher" | "storekeeper";
+      app_role: "admin" | "branch_staff" | "dispatcher" | "storekeeper" | "packaging_keeper";
       count_method: "manual" | "photo";
       count_status: "draft" | "confirmed";
       discrepancy_resolution: "waste" | "review" | "resolved";
       dispatch_kind: "replenishment" | "transfer" | "return";
       dispatch_status: "in_transit" | "received" | "cancelled";
       entry_unit: "cake" | "piece";
-      location_kind: "factory" | "branch" | "returns_bin";
+      location_kind: "factory" | "branch" | "returns_bin" | "packaging";
       movement_type:
         | "opening_balance"
         | "count_adjustment"
@@ -2882,6 +2886,7 @@ export type Database = {
         | "admin_correction";
       notification_kind:
         "count_reminder" | "count_late" | "dispatch_unreceived" | "below_min" | "order_missing_item";
+      product_kind: "cake" | "packaging";
       raw_movement_type: "opening_balance" | "receipt" | "issue" | "count_adjustment" | "admin_correction";
       request_status: "pending_approval" | "sent" | "dispatched" | "received" | "cancelled";
       sell_mode: "whole_and_pieces" | "pieces_only";
@@ -2997,14 +3002,14 @@ export const Constants = {
   public: {
     Enums: {
       ai_feature: ["count_ocr", "assistant"],
-      app_role: ["admin", "branch_staff", "dispatcher", "storekeeper"],
+      app_role: ["admin", "branch_staff", "dispatcher", "storekeeper", "packaging_keeper"],
       count_method: ["manual", "photo"],
       count_status: ["draft", "confirmed"],
       discrepancy_resolution: ["waste", "review", "resolved"],
       dispatch_kind: ["replenishment", "transfer", "return"],
       dispatch_status: ["in_transit", "received", "cancelled"],
       entry_unit: ["cake", "piece"],
-      location_kind: ["factory", "branch", "returns_bin"],
+      location_kind: ["factory", "branch", "returns_bin", "packaging"],
       movement_type: [
         "opening_balance",
         "count_adjustment",
@@ -3022,6 +3027,7 @@ export const Constants = {
         "below_min",
         "order_missing_item",
       ],
+      product_kind: ["cake", "packaging"],
       raw_movement_type: ["opening_balance", "receipt", "issue", "count_adjustment", "admin_correction"],
       request_status: ["pending_approval", "sent", "dispatched", "received", "cancelled"],
       sell_mode: ["whole_and_pieces", "pieces_only"],

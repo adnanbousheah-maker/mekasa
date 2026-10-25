@@ -152,8 +152,8 @@ function titleOf(m: Move): string {
   if (d?.kind === "transfer") return `تحويل: ${d.fromName} ← ${d.toName}`;
   if (d?.kind === "return") return `إرجاع: ${d.fromName} ← المصنع`;
   if (m.request)
-    return `${m.request.fromName} · طلب ${dayLabel(m.request.requestedAt, now)} ${formatClock(new Date(m.request.requestedAt))}`;
-  return `${d!.toName} · إخراج بدون طلب ${dayLabel(d!.dispatchedAt, now)}`;
+    return `${m.request.fromName} · ${m.request.isPackaging ? "طلب تغليف" : "طلب"} ${dayLabel(m.request.requestedAt, now)} ${formatClock(new Date(m.request.requestedAt))}`;
+  return `${d!.toName} · إخراج بدون طلب من ${d!.fromName} ${dayLabel(d!.dispatchedAt, now)}`;
 }
 
 function MoveDetail({ move }: { move: Move }) {

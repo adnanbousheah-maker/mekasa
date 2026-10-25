@@ -65,6 +65,14 @@ select l.id, 1, array(select p.id from public.products p where p.is_active order
 from public.locations l
 where l.kind in ('factory', 'branch');
 
+-- ─── مواد التغليف (أمثلة، بمستودع التغليف اللي انعمل بالـ migration) ───
+
+insert into public.products (sort_order, name_en, sell_mode, kind) values
+  (101, 'Cake Box', 'pieces_only', 'packaging'),
+  (102, 'Slice Box', 'pieces_only', 'packaging'),
+  (103, 'Paper Bag', 'pieces_only', 'packaging'),
+  (104, 'Candles', 'pieces_only', 'packaging');
+
 -- ─── المواد الأولية (أمثلة لحد ما الأدمن يعدلها) ─────────────────────
 
 insert into public.raw_materials (sort_order, name, base_unit, min_qty) values

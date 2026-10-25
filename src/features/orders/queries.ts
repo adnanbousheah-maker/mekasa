@@ -19,7 +19,7 @@ type Db = Awaited<ReturnType<typeof createClient>>;
 async function products(supabase: Db) {
   const { data, error } = await supabase
     .from("v_products")
-    .select("id, name_en, effective_pieces_per_cake, is_active")
+    .select("id, name_en, effective_pieces_per_cake, is_active, kind")
     .order("sort_order");
   if (error) throw new Error(`Could not load products: ${error.message}`);
   return data.map((p) => ({
@@ -27,6 +27,7 @@ async function products(supabase: Db) {
     nameEn: p.name_en!,
     piecesPerCake: p.effective_pieces_per_cake,
     isActive: p.is_active!,
+    kind: p.kind!,
   }));
 }
 
@@ -40,7 +41,10 @@ async function namesOf(supabase: Db, ids: string[]): Promise<Map<string, string>
 }
 
 /** الأصناف الفعّالة مع الموجود والحد المطلوب بفرع (للطلب وللإخراج). */
-export async function productsForBranch(branchId: string): Promise<OrderProduct[]> {
+export async function productsForBranch(
+  branchId: string,
+  kind: "cake" | "packaging" = "cake",
+): Promise<OrderProduct[]> {
   await requireStaff();
   const supabase = await createClient();
   const [all, { data, error }] = await Promise.all([
@@ -50,7 +54,7 @@ export async function productsForBranch(branchId: string): Promise<OrderProduct[
   if (error) throw new Error(`Could not load suggestions: ${error.message}`);
   const byId = new Map(data.map((s) => [s.product_id, s]));
   return all
-    .filter((p) => p.isActive)
+    .filter((p) => p.isActive && p.kind === kind)
     .map((p) => ({
       id: p.id,
       nameEn: p.nameEn,
@@ -78,6 +82,8 @@ export interface RequestDoc {
   fromName: string;
   toName: string;
   requestingLocationId: string;
+  // طلب من مستودع التغليف
+  isPackaging: boolean;
   lines: (DocLine & { lineId: string; suggestedPieces: number | null })[];
   // أصناف كانت مقترحة والفرع بعت بدونها
   missing: {
@@ -121,7 +127,7 @@ export interface DispatchDoc {
 }
 
 const REQUEST_COLUMNS =
-  "id, status, requested_at, requested_by, requesting_location_id, requesting:locations!stock_requests_requesting_location_id_fkey(name), supplying:locations!stock_requests_supplying_location_id_fkey(name), stock_request_lines(id, product_id, whole_cakes, loose_pieces, qty_pieces, pieces_per_cake_snapshot, suggested_pieces), stock_request_missing(product_id, suggested_pieces)";
+  "id, status, requested_at, requested_by, requesting_location_id, requesting:locations!stock_requests_requesting_location_id_fkey(name), supplying:locations!stock_requests_supplying_location_id_fkey(name, kind), stock_request_lines(id, product_id, whole_cakes, loose_pieces, qty_pieces, pieces_per_cake_snapshot, suggested_pieces), stock_request_missing(product_id, suggested_pieces)";
 
 const DISPATCH_COLUMNS =
   "id, kind, status, request_id, from_location_id, to_location_id, dispatched_at, dispatched_by, driver_name, from:locations!dispatches_from_location_id_fkey(name), to:locations!dispatches_to_location_id_fkey(name), dispatch_lines(id, product_id, request_line_id, whole_cakes, loose_pieces, qty_pieces, pieces_per_cake_snapshot, dispatch_line_batches(qty_pieces, is_fefo_override, batch:batches(production_date, day_number))), receipts(received_at, received_by, receipt_lines(id, dispatch_line_id, whole_cakes, loose_pieces, qty_pieces, note, resolution, damaged_pieces))";
@@ -194,6 +200,7 @@ export async function loadDocuments(filter: {
       fromName: r.requesting.name,
       toName: r.supplying.name,
       requestingLocationId: r.requesting_location_id,
+      isPackaging: r.supplying.kind === "packaging",
       lines: r.stock_request_lines.map((l) => ({
         lineId: l.id,
         productId: l.product_id,
@@ -296,10 +303,10 @@ export async function factoryBatchStock(factoryId: string): Promise<FactoryBatch
   }));
 }
 
-export async function allActiveProducts() {
+export async function allActiveProducts(kind: "cake" | "packaging" = "cake") {
   await requireStaff();
   const supabase = await createClient();
-  return (await products(supabase)).filter((p) => p.isActive);
+  return (await products(supabase)).filter((p) => p.isActive && p.kind === kind);
 }
 
 export interface Destination {
@@ -321,7 +328,7 @@ export async function destinationsFrom(location: { id: string; kind: string }): 
     supabase.from("app_settings").select("branch_transfers_enabled, returns_enabled").single(),
   ]);
   if (error) throw new Error(`Could not load locations: ${error.message}`);
-  if (location.kind === "factory") {
+  if (location.kind === "factory" || location.kind === "packaging") {
     return locations
       .filter((l) => l.kind === "branch")
       .map((l) => ({ id: l.id, name: l.name, kind: "branch" as const }));

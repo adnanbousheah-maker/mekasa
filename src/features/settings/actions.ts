@@ -155,6 +155,39 @@ export async function createProductAction(
 }
 
 /** موعد جديد، أو رجعة موعد انشال قبل (الصف نفسه بيرجع فعّال). */
+const packagingNameSchema = z.string().trim().min(1, "اكتب اسم المادة").max(80, "الاسم طويل كثير");
+
+/** مادة تغليف جديدة: بتنعد بالحبة، وبآخر قائمة التغليف. */
+export async function createPackagingItemAction(name: string): Promise<SaveResult> {
+  await requireAdmin();
+  const parsed = packagingNameSchema.safeParse(name);
+  if (!parsed.success) return fail(firstIssue(parsed.error));
+
+  const supabase = await createClient();
+  const { data: last, error: readError } = await supabase
+    .from("products")
+    .select("sort_order")
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (readError) {
+    console.error("createPackagingItem: sort order", readError);
+    return fail(SAVE_FAILED);
+  }
+  const { error } = await supabase.from("products").insert({
+    name_en: parsed.data,
+    sell_mode: "pieces_only",
+    kind: "packaging",
+    sort_order: (last?.sort_order ?? 0) + 1,
+  });
+  if (error) {
+    console.error("createPackagingItem", error);
+    return fail(error.code === "23505" ? "في صنف بنفس الاسم" : SAVE_FAILED);
+  }
+  refresh();
+  return done;
+}
+
 export async function addScheduleTimeAction(locationId: string, time: string): Promise<SaveResult> {
   await requireAdmin();
   if (!idSchema.safeParse(locationId).success) return fail("الموقع مش موجود");

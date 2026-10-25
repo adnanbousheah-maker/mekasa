@@ -66,12 +66,13 @@ export async function getCountContext(): Promise<CountContext | null> {
   };
 }
 
-export async function listCountProducts(): Promise<CountProduct[]> {
+export async function listCountProducts(kind: "cake" | "packaging" = "cake"): Promise<CountProduct[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_products")
     .select("id, name_en, name_ar, effective_pieces_per_cake")
     .eq("is_active", true)
+    .eq("kind", kind)
     .order("sort_order");
   if (error) throw new Error(`Could not load products: ${error.message}`);
   return data.map((p) => ({

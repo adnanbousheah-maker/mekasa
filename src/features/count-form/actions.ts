@@ -42,7 +42,8 @@ export async function readCountFormAction(photoPath: string): Promise<ReadFormRe
     supabase.from("locations").select("code").eq("id", location.id).single(),
     supabase
       .from("v_products")
-      .select("id, name_en, name_ar, sell_mode, is_active, effective_pieces_per_cake"),
+      .select("id, name_en, name_ar, sell_mode, is_active, effective_pieces_per_cake")
+      .eq("kind", "cake"),
   ]);
   if (fileError || !file) return { status: "error", message: "ما لقينا الصورة. صوّر كمان مرة." };
   if (versionError || !versions?.length)

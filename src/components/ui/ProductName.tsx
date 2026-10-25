@@ -3,10 +3,10 @@ type Props = {
   className?: string;
 };
 
-/** أسماء الأصناف إنجليزي حالياً: اتجاهها LTR بخط Jost، ومحاذاتها يمين جوا الواجهة العربية. */
+/** أسماء الكيك إنجليزي حالياً (LTR بخط Jost)، ومواد التغليف ممكن تكون عربي: الاتجاه حسب النص، والمحاذاة يمين. */
 export function ProductName({ name, className = "" }: Props) {
   return (
-    <span dir="ltr" className={`text-right ${className}`}>
+    <span dir="auto" className={`text-right ${className}`}>
       {name}
     </span>
   );

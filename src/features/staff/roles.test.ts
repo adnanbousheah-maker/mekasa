@@ -27,6 +27,13 @@ describe("roleLocationProblem", () => {
     expect(roleLocationProblem(["dispatcher"], null)).toBe("اختار الموقع");
   });
 
+  it("lets a packaging keeper work from any location, but still needs one", () => {
+    expect(roleLocationProblem(["branch_staff", "packaging_keeper"], "branch")).toBeNull();
+    expect(roleLocationProblem(["packaging_keeper"], "factory")).toBeNull();
+    expect(roleLocationProblem(["packaging_keeper"], "packaging")).toBeNull();
+    expect(roleLocationProblem(["packaging_keeper"], null)).toBe("اختار الموقع");
+  });
+
   it("needs at least one role", () => {
     expect(roleLocationProblem([], "branch")).toBe("اختار دور واحد على الأقل");
   });
