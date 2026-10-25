@@ -7,7 +7,7 @@ import { ProductName } from "@/components/ui/ProductName";
 import { Stepper } from "@/components/ui/Stepper";
 import { formatQuantity } from "@/lib/units";
 import { createRequestAction } from "../actions";
-import { linesSummary, suggestQuantity } from "../logic";
+import { forgottenItems, linesSummary, suggestQuantity } from "../logic";
 import type { OrderProduct } from "../queries";
 
 type Row = { wholeCakes: number; loosePieces: number; suggestedPieces: number };
@@ -30,6 +30,7 @@ export function OrderForm({ products }: { products: OrderProduct[] }) {
     [products, q],
   );
   const picked = products.filter((p) => rows[p.id].wholeCakes + rows[p.id].loosePieces > 0);
+  const forgotten = forgottenItems(products, rows);
   const summary = linesSummary(picked.map((p) => rows[p.id]));
   const update = (id: string, key: "wholeCakes" | "loosePieces", value: number) =>
     setRows((r) => ({ ...r, [id]: { ...r[id], [key]: value } }));
@@ -38,6 +39,7 @@ export function OrderForm({ products }: { products: OrderProduct[] }) {
     startTransition(async () => {
       const result = await createRequestAction({
         lines: picked.map((p) => ({ productId: p.id, ...rows[p.id] })),
+        missing: forgotten.map((p) => ({ productId: p.id, suggestedPieces: rows[p.id].suggestedPieces })),
       });
       if (result.status === "error") {
         setError(result.message);
@@ -160,6 +162,22 @@ export function OrderForm({ products }: { products: OrderProduct[] }) {
               </li>
             ))}
           </ul>
+        )}
+        {picked.length > 0 && forgotten.length > 0 && (
+          <div role="alert" className="mb-4 flex flex-col gap-1.5 rounded-xl bg-warn-soft p-3 text-warn-text">
+            <span className="font-semibold">
+              دير بالك: {forgotten.length === 1 ? "هالصنف انت ما طلبته" : "هالأصناف انت ما طلبتها"}
+            </span>
+            <ul className="flex flex-col gap-0.5 text-sm">
+              {forgotten.map((p) => (
+                <li key={p.id} className="flex justify-between gap-3">
+                  <ProductName name={p.nameEn} />
+                  <span>المقترح {formatQuantity(rows[p.id].suggestedPieces, p.piecesPerCake)}</span>
+                </li>
+              ))}
+            </ul>
+            <span className="text-[13px]">إذا بتبعت بدونهم، المدير رح يوصله إشعار.</span>
+          </div>
         )}
         <div className="flex flex-col gap-2">
           <button

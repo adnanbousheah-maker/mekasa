@@ -2100,6 +2100,47 @@ export type Database = {
           },
         ];
       };
+      stock_request_missing: {
+        Row: {
+          product_id: string;
+          request_id: string;
+          suggested_pieces: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          product_id: string;
+          request_id: string;
+          suggested_pieces: number;
+        };
+        Update: {
+          product_id?: string;
+          request_id?: string;
+          suggested_pieces?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "stock_request_missing_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_request_missing_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_request_missing_request_id_fkey";
+            columns: ["request_id"];
+            isOneToOne: false;
+            referencedRelation: "stock_requests";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       stock_requests: {
         Row: {
           approved_at: string | null;
@@ -2767,7 +2808,7 @@ export type Database = {
         };
         Returns: string;
       };
-      create_request: { Args: { p_lines: Json; p_note?: string }; Returns: string };
+      create_request: { Args: { p_lines: Json; p_missing?: Json; p_note?: string }; Returns: string };
       day_number: { Args: { d: string }; Returns: number };
       decide_return: {
         Args: {

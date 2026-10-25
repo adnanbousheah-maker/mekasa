@@ -1,6 +1,15 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
-import { ADMIN, BRANCH_DBQ, BRANCH_JBH, clearMinLevels, signInAndWait, temporarySchedule } from "./support";
+import {
+  ADMIN,
+  BRANCH_DBQ,
+  BRANCH_JBH,
+  cancelRequestsSince,
+  clearMinLevels,
+  setParLevels,
+  signInAndWait,
+  temporarySchedule,
+} from "./support";
 
 function cronSecret(): string {
   const line = readFileSync(".env.local", "utf8")
@@ -80,6 +89,47 @@ test("a minimum level alerts the branch home and the cron, once a day", async ({
     expect(second.sent.filter((s: { kind: string }) => s.kind === "below_min")).toEqual([]);
   } finally {
     await clearMinLevels();
+  }
+});
+
+test("a branch that leaves out a suggested item is warned, and the admin is told", async ({
+  browser,
+  request,
+}) => {
+  const since = new Date().toISOString();
+  const restorePar = await setParLevels("JBH", { Flan: 20, Latte: 20 });
+  try {
+    const branch = await browser.newPage();
+    await signInAndWait(branch, BRANCH_JBH.phone, BRANCH_JBH.pin);
+    await branch.goto("/order");
+    const latte = branch.getByRole("listitem", { name: "Latte" });
+    const cakes = latte.getByRole("status", { name: /^كيكات: / });
+    while ((await cakes.getAttribute("aria-label")) !== "كيكات: 0") {
+      await latte.getByRole("button", { name: "نقّص كيكة Latte" }).click();
+    }
+    await branch.getByRole("button", { name: "مراجعة الطلب" }).click();
+    const dialog = branch.getByRole("dialog", { name: "راجع طلبك قبل الإرسال" });
+    await expect(dialog.getByRole("alert")).toContainText("هالصنف انت ما طلبته");
+    await expect(dialog.getByRole("alert")).toContainText("Latte");
+    await branch.getByRole("button", { name: "إرسال الطلب للمصنع" }).click();
+    await expect(branch.getByText("انبعت طلبك للمصنع")).toBeVisible();
+    await branch.close();
+
+    const auth = { headers: { Authorization: `Bearer ${cronSecret()}` } };
+    const first = await (await request.post("/api/cron/reminders", auth)).json();
+    const missing = first.sent.filter((s: { kind: string }) => s.kind === "order_missing_item");
+    expect(missing).toHaveLength(1);
+    const second = await (await request.post("/api/cron/reminders", auth)).json();
+    expect(second.sent.filter((s: { kind: string }) => s.kind === "order_missing_item")).toEqual([]);
+
+    const admin = await browser.newPage({ viewport: { width: 1360, height: 900 } });
+    await signInAndWait(admin, ADMIN.phone, ADMIN.pin);
+    await admin.goto(`/admin/orders?id=${missing[0].scheduleId}`);
+    await expect(admin.getByRole("note")).toContainText("ما طلبوا أصناف مقترحة: Latte");
+    await admin.close();
+  } finally {
+    await cancelRequestsSince("JBH", since);
+    await restorePar();
   }
 });
 

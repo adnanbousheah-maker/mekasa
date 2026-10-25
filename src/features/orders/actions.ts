@@ -48,6 +48,10 @@ export async function createRequestAction(input: CreateRequestInput): Promise<Or
       suggested_pieces: l.suggestedPieces,
     })) as Json,
     p_note: parsed.data.note || undefined,
+    p_missing: parsed.data.missing.map((m) => ({
+      product_id: m.productId,
+      suggested_pieces: m.suggestedPieces,
+    })) as Json,
   });
   if (error) {
     console.error("createRequest", error);

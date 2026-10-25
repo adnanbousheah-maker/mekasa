@@ -293,6 +293,17 @@ function MoveDetail({ move }: { move: Move }) {
           وصل غير اللي طلع (مشكلة)
         </span>
       </div>
+      {r && r.missing.length > 0 && (
+        <p role="note" className="rounded-xl bg-warn-soft px-3 py-2.5 text-sm text-warn-text">
+          <span className="font-semibold">ما طلبوا أصناف مقترحة: </span>
+          {r.missing
+            .map(
+              (m) =>
+                `${m.productName} (المقترح ${formatQuantityCompact(m.suggestedPieces, m.piecesPerCake)})`,
+            )
+            .join("، ")}
+        </p>
+      )}
       {r?.status === "pending_approval" && <ApproveRequest requestId={r.id} />}
       {openDiffLines.length > 0 && (
         <ResolveDifference lineIds={openDiffLines.map((l) => l.received!.lineId)} />

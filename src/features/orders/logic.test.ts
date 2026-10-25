@@ -3,6 +3,7 @@ import {
   createDispatchSchema,
   createRequestSchema,
   fefoAllocate,
+  forgottenItems,
   linesSummary,
   receiptDifference,
   requestVsDispatch,
@@ -81,6 +82,18 @@ describe("comparisons", () => {
         { wholeCakes: 0, loosePieces: 0 },
       ]),
     ).toBe("2 صنف · 3 كيكات · 8 قطع");
+  });
+});
+
+describe("forgottenItems", () => {
+  it("lists suggested items left at zero", () => {
+    const products = [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "d" }];
+    const rows = {
+      a: { wholeCakes: 0, loosePieces: 0, suggestedPieces: 20 },
+      b: { wholeCakes: 1, loosePieces: 0, suggestedPieces: 20 },
+      c: { wholeCakes: 0, loosePieces: 0, suggestedPieces: 0 },
+    };
+    expect(forgottenItems(products, rows).map((p) => p.id)).toEqual(["a"]);
   });
 });
 

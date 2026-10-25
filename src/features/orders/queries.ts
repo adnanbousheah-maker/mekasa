@@ -76,6 +76,13 @@ export interface RequestDoc {
   toName: string;
   requestingLocationId: string;
   lines: (DocLine & { lineId: string; suggestedPieces: number | null })[];
+  // أصناف كانت مقترحة والفرع بعت بدونها
+  missing: {
+    productId: string;
+    productName: string;
+    piecesPerCake: number | null;
+    suggestedPieces: number;
+  }[];
 }
 
 export interface DispatchDoc {
@@ -111,7 +118,7 @@ export interface DispatchDoc {
 }
 
 const REQUEST_COLUMNS =
-  "id, status, requested_at, requested_by, requesting_location_id, requesting:locations!stock_requests_requesting_location_id_fkey(name), supplying:locations!stock_requests_supplying_location_id_fkey(name), stock_request_lines(id, product_id, whole_cakes, loose_pieces, qty_pieces, pieces_per_cake_snapshot, suggested_pieces)";
+  "id, status, requested_at, requested_by, requesting_location_id, requesting:locations!stock_requests_requesting_location_id_fkey(name), supplying:locations!stock_requests_supplying_location_id_fkey(name), stock_request_lines(id, product_id, whole_cakes, loose_pieces, qty_pieces, pieces_per_cake_snapshot, suggested_pieces), stock_request_missing(product_id, suggested_pieces)";
 
 const DISPATCH_COLUMNS =
   "id, kind, status, request_id, from_location_id, to_location_id, dispatched_at, dispatched_by, driver_name, from:locations!dispatches_from_location_id_fkey(name), to:locations!dispatches_to_location_id_fkey(name), dispatch_lines(id, product_id, request_line_id, whole_cakes, loose_pieces, qty_pieces, pieces_per_cake_snapshot, dispatch_line_batches(qty_pieces, is_fefo_override, batch:batches(production_date, day_number))), receipts(received_at, received_by, receipt_lines(id, dispatch_line_id, whole_cakes, loose_pieces, qty_pieces, note, resolution, damaged_pieces))";
@@ -168,6 +175,7 @@ export async function loadDocuments(filter: {
   if (requests.error) throw new Error(`Could not load requests: ${requests.error.message}`);
   if (dispatches.error) throw new Error(`Could not load dispatches: ${dispatches.error.message}`);
   const productNames = new Map(allProducts.map((p) => [p.id, p.nameEn]));
+  const productSizes = new Map(allProducts.map((p) => [p.id, p.piecesPerCake]));
   const names = await namesOf(supabase, [
     ...requests.data.map((r) => r.requested_by),
     ...dispatches.data.map((d) => d.dispatched_by),
@@ -192,6 +200,12 @@ export async function loadDocuments(filter: {
         loosePieces: l.loose_pieces,
         qtyPieces: l.qty_pieces ?? 0,
         suggestedPieces: l.suggested_pieces,
+      })),
+      missing: r.stock_request_missing.map((m) => ({
+        productId: m.product_id,
+        productName: productNames.get(m.product_id) ?? "",
+        piecesPerCake: productSizes.get(m.product_id) ?? null,
+        suggestedPieces: m.suggested_pieces,
       })),
     })),
     dispatches: dispatches.data.map((d) => {

@@ -85,6 +85,7 @@ export async function runReminders(now = new Date()): Promise<ReminderRun> {
   }
   await alertUnreceivedDispatches(db, result);
   await alertBelowMin(db, today, result);
+  await alertForgottenItems(db, now, result);
   return result;
 }
 
@@ -140,6 +141,38 @@ async function alertBelowMin(db: ReturnType<typeof createAdminClient>, today: st
       tag: `below-min-${locationId}-${today}`,
     });
     result.sent.push({ kind: "below_min", scheduleId: locationId, recipients });
+  }
+}
+
+/** طلب انبعت وفيه أصناف مقترحة ما انطلبت: إشعار للأدمن، مرة لكل طلب. */
+async function alertForgottenItems(db: ReturnType<typeof createAdminClient>, now: Date, result: ReminderRun) {
+  const { data: requests, error } = await db
+    .from("stock_requests")
+    .select(
+      "id, requesting_location_id, requesting:locations!stock_requests_requesting_location_id_fkey(name), stock_request_missing!inner(product:products!inner(name_en))",
+    )
+    .gte("requested_at", new Date(now.getTime() - 86_400_000).toISOString())
+    .neq("status", "cancelled");
+  if (error) throw new Error(error.message);
+  if (!requests?.length) return;
+
+  let admins: string[] | null = null;
+  for (const r of requests) {
+    const { data: logged } = await db
+      .from("notification_log")
+      .insert({ kind: "order_missing_item", location_id: r.requesting_location_id, request_id: r.id })
+      .select("id")
+      .maybeSingle();
+    if (!logged) continue;
+    admins ??= await activeAdmins(db);
+    const names = r.stock_request_missing.map((m) => m.product.name_en);
+    const recipients = await sendPushToStaff(admins, {
+      title: "صنف ما انطلب",
+      body: `فرع ${r.requesting.name} بعت طلب بدون: ${names.join("، ")}.`,
+      url: `/admin/orders?id=${r.id}`,
+      tag: `missing-${r.id}`,
+    });
+    result.sent.push({ kind: "order_missing_item", scheduleId: r.id, recipients });
   }
 }
 

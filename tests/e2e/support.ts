@@ -248,3 +248,15 @@ export async function clearMinLevels() {
   await db.from("par_levels").update({ min_pieces: null }).not("min_pieces", "is", null);
   await db.from("notification_log").delete().eq("kind", "below_min");
 }
+
+/** بيلغي طلبات فرع انعملت من وقت معين (مشان ما توصل لاختبارات الإخراج). */
+export async function cancelRequestsSince(locationCode: string, sinceIso: string) {
+  const db = serviceClient();
+  const { data: loc } = await db.from("locations").select("id").eq("code", locationCode).single();
+  await db
+    .from("stock_requests")
+    .update({ status: "cancelled" })
+    .eq("requesting_location_id", loc!.id)
+    .gte("requested_at", sinceIso)
+    .in("status", ["sent", "pending_approval"]);
+}

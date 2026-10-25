@@ -116,7 +116,23 @@ export const createRequestSchema = z.object({
     .transform((lines) => lines.filter((l) => l.wholeCakes + l.loosePieces > 0))
     .refine((lines) => lines.length > 0, "اختار صنف واحد على الأقل"),
   note: z.string().trim().max(500).default(""),
+  // أصناف كانت مقترحة والموظف شاف التنبيه وبعت بدونها
+  missing: z
+    .array(z.object({ productId: z.uuid(), suggestedPieces: z.number().int().min(1) }))
+    .max(200)
+    .default([]),
 });
+
+/** الأصناف اللي إلها كمية مقترحة والموظف خلاها صفر. */
+export function forgottenItems<T extends { id: string }>(
+  products: T[],
+  rows: Record<string, { wholeCakes: number; loosePieces: number; suggestedPieces: number }>,
+): T[] {
+  return products.filter((p) => {
+    const row = rows[p.id];
+    return row && row.suggestedPieces > 0 && row.wholeCakes + row.loosePieces === 0;
+  });
+}
 
 export const dispatchLineSchema = z.object({
   productId: z.uuid(),
