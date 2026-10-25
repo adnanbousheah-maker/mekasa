@@ -60,6 +60,12 @@ const ROWS: Row[] = [
   },
   {
     kind: "toggle",
+    key: "factory_loose_pieces_enabled",
+    title: "تطليع قطع من المصنع",
+    sub: "إذا موقوف، المصنع بيطلّع كيكات كاملة بس، وخانة «قطع» بتختفي من الطلب والإخراج (الأصناف اللي قطع بس بتضل متل ما هي)",
+  },
+  {
+    kind: "toggle",
     key: "branch_transfers_enabled",
     title: "التحويل بين الفروع",
     sub: "إخراج من فرع لفرع، مع استلام بالفرع الثاني",

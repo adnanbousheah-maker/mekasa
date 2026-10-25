@@ -8,6 +8,7 @@ import {
   allActiveProducts,
   destinationsFrom,
   factoryBatchStock,
+  factoryLoosePiecesEnabled,
   loadDocuments,
 } from "@/features/orders/queries";
 import { formatClock } from "@/lib/time";
@@ -31,10 +32,11 @@ async function Dispatch({ searchParams }: { searchParams: SearchParams }) {
     return <NotForYou title="إخراج" text="الإخراج لموظف الإخراج بالمصنع." />;
   }
   const requestId = typeof requestParam === "string" && UUID.test(requestParam) ? requestParam : null;
-  const [products, destinations, batches, docs] = await Promise.all([
+  const [products, destinations, batches, piecesEnabled, docs] = await Promise.all([
     allActiveProducts(),
     destinationsFrom(staff.location),
     factoryBatchStock(staff.location.id),
+    factoryLoosePiecesEnabled(),
     requestId ? loadDocuments({ requests: { ids: [requestId], statuses: ["sent"] }, sinceDays: 30 }) : null,
   ]);
   const request = docs?.requests[0] ?? null;
@@ -58,6 +60,7 @@ async function Dispatch({ searchParams }: { searchParams: SearchParams }) {
         initialDestination={request?.requestingLocationId ?? null}
         requestId={request?.id ?? null}
         batches={batches}
+        cakesOnly={!piecesEnabled}
         doneHref="/factory/requests"
         initialLines={(request?.lines ?? []).map((l) => ({
           productId: l.productId,

@@ -22,6 +22,7 @@ export const TOGGLE_SETTINGS = [
   "photo_count_enabled",
   "branch_transfers_enabled",
   "returns_enabled",
+  "factory_loose_pieces_enabled",
 ] as const;
 
 export type NumberSetting = keyof typeof NUMBER_SETTINGS;

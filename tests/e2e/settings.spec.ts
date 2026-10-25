@@ -31,6 +31,10 @@ test("general settings save on blur and on toggle, and survive a reload", async 
   await saveField(page, "تنبيه الإخراج اللي ما انستلم", "5");
   await expect(page.getByRole("status").filter({ hasText: "انحفظ" })).toBeVisible();
 
+  await expect(page.getByRole("switch", { name: "تطليع قطع من المصنع" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
   const returns = page.getByRole("switch", { name: "الإرجاع من الفروع للمصنع" });
   await expect(returns).toHaveAttribute("aria-checked", "false");
   await returns.click();

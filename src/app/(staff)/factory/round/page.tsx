@@ -5,7 +5,12 @@ import { StaffLoading, StaffScreen } from "@/components/ui/StaffScreen";
 import { requireStaff } from "@/features/auth/session";
 import { NotForYou } from "@/features/orders/components/OrderBits";
 import { RoundForm } from "@/features/orders/components/RoundForm";
-import { allActiveProducts, factoryBatchStock, loadDocuments } from "@/features/orders/queries";
+import {
+  allActiveProducts,
+  factoryBatchStock,
+  factoryLoosePiecesEnabled,
+  loadDocuments,
+} from "@/features/orders/queries";
 
 // توزيع اليوم: كل طلبات الفروع مرة وحدة، والقديم بالعدل
 export default function RoundPage() {
@@ -22,13 +27,14 @@ async function Round() {
     return <NotForYou title="توزيع اليوم" text="التوزيع لموظف الإخراج بالمصنع." />;
   }
   await connection();
-  const [{ requests }, batches, products] = await Promise.all([
+  const [{ requests }, batches, products, piecesEnabled] = await Promise.all([
     loadDocuments({
       requests: { supplyingLocationId: staff.location.id, statuses: ["sent"] },
       sinceDays: 14,
     }),
     factoryBatchStock(staff.location.id),
     allActiveProducts(),
+    factoryLoosePiecesEnabled(),
   ]);
   const sizes = Object.fromEntries(products.map((p) => [p.id, p.piecesPerCake]));
 
@@ -45,6 +51,7 @@ async function Round() {
           requests={[...requests].reverse()}
           batches={batches}
           sizes={sizes}
+          cakesOnly={!piecesEnabled}
         />
       )}
     </StaffScreen>

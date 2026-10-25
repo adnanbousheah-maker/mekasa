@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  asWholeCakes,
   createDispatchSchema,
   createRequestSchema,
   fairAllocate,
@@ -13,6 +14,18 @@ import {
 } from "./logic";
 
 const id = "11111111-1111-4111-8111-111111111111";
+
+describe("asWholeCakes", () => {
+  it("rounds loose pieces up to a whole cake", () => {
+    expect(asWholeCakes({ wholeCakes: 2, loosePieces: 3 }, 10)).toEqual({ wholeCakes: 3, loosePieces: 0 });
+    expect(asWholeCakes({ wholeCakes: 0, loosePieces: 25 }, 10)).toEqual({ wholeCakes: 3, loosePieces: 0 });
+  });
+
+  it("leaves whole cakes and pieces-only products alone", () => {
+    expect(asWholeCakes({ wholeCakes: 4, loosePieces: 0 }, 10)).toEqual({ wholeCakes: 4, loosePieces: 0 });
+    expect(asWholeCakes({ wholeCakes: 0, loosePieces: 6 }, null)).toEqual({ wholeCakes: 0, loosePieces: 6 });
+  });
+});
 
 describe("suggestQuantity", () => {
   it("rounds cakes up and keeps pieces for pieces-only products", () => {

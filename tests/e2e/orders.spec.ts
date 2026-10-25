@@ -8,6 +8,7 @@ import {
   setParLevels,
   signInAndWait,
   stockOf,
+  updateAppSettings,
 } from "./support";
 
 test.describe.configure({ mode: "serial" });
@@ -173,4 +174,19 @@ test.describe("admin", () => {
     await page.reload();
     await expect(page.getByRole("textbox", { name: "الحد المطلوب لـ Flan بـدابوق" })).toHaveValue("3");
   });
+});
+
+test("when the factory sends whole cakes only, the pieces box disappears", async ({ page }) => {
+  const restore = await updateAppSettings({ factory_loose_pieces_enabled: false });
+  try {
+    await signInAndWait(page, BRANCH_DBQ.phone, BRANCH_DBQ.pin);
+    await page.goto("/order");
+    const flan = page.getByRole("listitem", { name: "Flan" });
+    await expect(flan.getByRole("button", { name: "زيد كيكة Flan" })).toBeVisible();
+    await expect(flan.getByRole("button", { name: "زيد قطعة Flan" })).toHaveCount(0);
+    // الأصناف اللي قطع بس بتضل بالقطعة
+    await expect(page.getByRole("button", { name: "زيد قطعة Tiramisu" })).toBeVisible();
+  } finally {
+    await restore();
+  }
 });

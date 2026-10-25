@@ -23,6 +23,18 @@ export function suggestQuantity(
   return { wholeCakes: Math.ceil(missing / piecesPerCake), loosePieces: 0, suggestedPieces: missing };
 }
 
+/** المصنع بيطلّع كيكات كاملة بس: الكمية بتتقرّب لفوق لأقرب كيكة. الأصناف اللي قطع بس متل ما هي. */
+export function asWholeCakes(
+  q: { wholeCakes: number; loosePieces: number },
+  piecesPerCake: number | null,
+): { wholeCakes: number; loosePieces: number } {
+  if (piecesPerCake === null || q.loosePieces === 0) return q;
+  return {
+    wholeCakes: Math.ceil((q.wholeCakes * piecesPerCake + q.loosePieces) / piecesPerCake),
+    loosePieces: 0,
+  };
+}
+
 // ─── FEFO: من الأقدم أول ─────────────────────────────────────────────
 
 export interface BatchStock {

@@ -18,11 +18,14 @@ export function OrderForm({
   products,
   tomorrowName,
   packaging = false,
+  cakesOnly = false,
 }: {
   products: OrderProduct[];
   tomorrowName: string;
   // طلب تغليف: كميات بالحبة بخانة رقم، وما بنعرض ستوك الفرع (ما بينجرد لسا)
   packaging?: boolean;
+  // إعداد الأدمن: المصنع بيطلّع كيكات كاملة بس (بدون خانة قطع)
+  cakesOnly?: boolean;
 }) {
   const router = useRouter();
   const [rows, setRows] = useState<Record<string, Row>>(() =>
@@ -122,7 +125,9 @@ export function OrderForm({
                           ` · المطلوب ${formatQuantity(p.parPieces, p.piecesPerCake)}`}
                     </span>
                   </div>
-                  <div className={`grid gap-2.5 ${p.piecesPerCake === null ? "grid-cols-1" : "grid-cols-2"}`}>
+                  <div
+                    className={`grid gap-2.5 ${p.piecesPerCake === null || cakesOnly ? "grid-cols-1" : "grid-cols-2"}`}
+                  >
                     {p.piecesPerCake !== null && (
                       <Stepper
                         label="كيكات"
@@ -132,13 +137,15 @@ export function OrderForm({
                         decrementLabel={`نقّص كيكة ${p.nameEn}`}
                       />
                     )}
-                    <Stepper
-                      label={p.piecesPerCake === null ? "قطع (قطع بس)" : "قطع"}
-                      value={row.loosePieces}
-                      onChange={(v) => update(p.id, "loosePieces", v)}
-                      incrementLabel={`زيد قطعة ${p.nameEn}`}
-                      decrementLabel={`نقّص قطعة ${p.nameEn}`}
-                    />
+                    {(p.piecesPerCake === null || !cakesOnly) && (
+                      <Stepper
+                        label={p.piecesPerCake === null ? "قطع (قطع بس)" : "قطع"}
+                        value={row.loosePieces}
+                        onChange={(v) => update(p.id, "loosePieces", v)}
+                        incrementLabel={`زيد قطعة ${p.nameEn}`}
+                        decrementLabel={`نقّص قطعة ${p.nameEn}`}
+                      />
+                    )}
                   </div>
                 </>
               )}

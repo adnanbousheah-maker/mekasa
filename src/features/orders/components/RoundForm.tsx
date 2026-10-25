@@ -7,7 +7,7 @@ import { Stepper } from "@/components/ui/Stepper";
 import { batchLabel } from "@/lib/batch-label";
 import { formatQuantity, formatQuantityCompact } from "@/lib/units";
 import { dispatchRoundAction } from "../actions";
-import { fairAllocate } from "../logic";
+import { asWholeCakes, fairAllocate } from "../logic";
 import type { FactoryBatchStock, RequestDoc } from "../queries";
 
 type Qty = { wholeCakes: number; loosePieces: number };
@@ -18,9 +18,12 @@ export function RoundForm({
   requests,
   batches,
   sizes,
+  cakesOnly = false,
 }: {
   requests: RequestDoc[];
   batches: FactoryBatchStock[];
+  // إعداد الأدمن: المصنع بيطلّع كيكات كاملة بس (بدون خانة قطع)
+  cakesOnly?: boolean;
   // عدد القطع بالكيكة هلا (نفس اللي dispatch_round بتحسب فيه)، مش وقت الطلب
   sizes: Record<string, number | null>;
 }) {
@@ -30,7 +33,9 @@ export function RoundForm({
       requests.flatMap((r) =>
         r.lines.map((l) => [
           keyOf(r.id, l.productId),
-          { wholeCakes: l.wholeCakes, loosePieces: l.loosePieces },
+          cakesOnly
+            ? asWholeCakes(l, l.productId in sizes ? sizes[l.productId] : l.piecesPerCake)
+            : { wholeCakes: l.wholeCakes, loosePieces: l.loosePieces },
         ]),
       ),
     ),
@@ -121,7 +126,9 @@ export function RoundForm({
                       طلبوا {formatQuantity(l.qtyPieces, l.piecesPerCake)}
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2.5">
+                  <div
+                    className={`grid gap-2.5 ${l.piecesPerCake === null || cakesOnly ? "grid-cols-1" : "grid-cols-2"}`}
+                  >
                     {l.piecesPerCake !== null && (
                       <Stepper
                         label="كيكات"
@@ -131,13 +138,15 @@ export function RoundForm({
                         decrementLabel={`نقّص كيكة ${l.productName} لـ${r.fromName}`}
                       />
                     )}
-                    <Stepper
-                      label="قطع"
-                      value={q.loosePieces}
-                      onChange={(v) => set({ loosePieces: v })}
-                      incrementLabel={`زيد قطعة ${l.productName} لـ${r.fromName}`}
-                      decrementLabel={`نقّص قطعة ${l.productName} لـ${r.fromName}`}
-                    />
+                    {(l.piecesPerCake === null || !cakesOnly) && (
+                      <Stepper
+                        label="قطع"
+                        value={q.loosePieces}
+                        onChange={(v) => set({ loosePieces: v })}
+                        incrementLabel={`زيد قطعة ${l.productName} لـ${r.fromName}`}
+                        decrementLabel={`نقّص قطعة ${l.productName} لـ${r.fromName}`}
+                      />
+                    )}
                   </div>
                   {parts.length > 0 && (
                     <span

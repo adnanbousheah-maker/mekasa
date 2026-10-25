@@ -316,6 +316,14 @@ export async function allActiveProducts(kind: "cake" | "packaging" = "cake") {
   return (await products(supabase)).filter((p) => p.isActive && p.kind === kind);
 }
 
+/** إعداد الأدمن: المصنع بيطلّع قطع ولا كيكات كاملة بس. */
+export async function factoryLoosePiecesEnabled(): Promise<boolean> {
+  await requireStaff();
+  const supabase = await createClient();
+  const { data } = await supabase.from("app_settings").select("factory_loose_pieces_enabled").single();
+  return data?.factory_loose_pieces_enabled ?? true;
+}
+
 export interface Destination {
   id: string;
   name: string;

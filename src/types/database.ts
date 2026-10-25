@@ -243,6 +243,7 @@ export type Database = {
           count_late_after_minutes: number;
           count_reminder_minutes_before: number;
           default_pieces_per_cake: number;
+          factory_loose_pieces_enabled: boolean;
           factory_shelf_life_days: number;
           id: boolean;
           order_approval_required: boolean;
@@ -259,6 +260,7 @@ export type Database = {
           count_late_after_minutes?: number;
           count_reminder_minutes_before?: number;
           default_pieces_per_cake?: number;
+          factory_loose_pieces_enabled?: boolean;
           factory_shelf_life_days?: number;
           id?: boolean;
           order_approval_required?: boolean;
@@ -274,6 +276,7 @@ export type Database = {
           count_late_after_minutes?: number;
           count_reminder_minutes_before?: number;
           default_pieces_per_cake?: number;
+          factory_loose_pieces_enabled?: boolean;
           factory_shelf_life_days?: number;
           id?: boolean;
           order_approval_required?: boolean;

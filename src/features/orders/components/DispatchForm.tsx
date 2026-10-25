@@ -9,7 +9,14 @@ import { Stepper } from "@/components/ui/Stepper";
 import { batchLabel } from "@/lib/batch-label";
 import { formatQuantity, formatQuantityCompact } from "@/lib/units";
 import { branchSuggestionsAction, createDispatchAction } from "../actions";
-import { fefoAllocate, linesSummary, orderTarget, requestVsDispatch, suggestQuantity } from "../logic";
+import {
+  asWholeCakes,
+  fefoAllocate,
+  linesSummary,
+  orderTarget,
+  requestVsDispatch,
+  suggestQuantity,
+} from "../logic";
 import type { Destination, FactoryBatchStock } from "../queries";
 
 export interface DispatchProduct {
@@ -38,6 +45,8 @@ type Props = {
   withDriver?: boolean;
   // مواد التغليف بالحبة
   packaging?: boolean;
+  // إعداد الأدمن: المصنع بيطلّع كيكات كاملة بس (بدون خانة قطع)
+  cakesOnly?: boolean;
   doneHref: string;
 };
 
@@ -53,12 +62,15 @@ export function DispatchForm({
   batches,
   withDriver = batches !== null,
   packaging = false,
+  cakesOnly = false,
   doneHref,
 }: Props) {
   const router = useRouter();
   const byId = new Map(products.map((p) => [p.id, p]));
   const [destination, setDestination] = useState<string | null>(initialDestination);
-  const [lines, setLines] = useState<Line[]>(initialLines.map((l) => ({ ...l, firstDate: null })));
+  const whole = (l: DispatchLineInit) =>
+    cakesOnly ? { ...l, ...asWholeCakes(l, byId.get(l.productId)?.piecesPerCake ?? null) } : l;
+  const [lines, setLines] = useState<Line[]>(initialLines.map((l) => ({ ...whole(l), firstDate: null })));
   const [adding, setAdding] = useState(false);
   const [fefoAlert, setFefoAlert] = useState(false);
   const [driverName, setDriverName] = useState("");
@@ -101,11 +113,13 @@ export function DispatchForm({
               p?.piecesPerCake ?? null,
             );
             return {
-              productId: s.productId,
-              requestLineId: null,
-              requestedPieces: null,
-              wholeCakes: q.wholeCakes,
-              loosePieces: q.loosePieces,
+              ...whole({
+                productId: s.productId,
+                requestLineId: null,
+                requestedPieces: null,
+                wholeCakes: q.wholeCakes,
+                loosePieces: q.loosePieces,
+              }),
               firstDate: null,
             };
           })
@@ -226,7 +240,9 @@ export function DispatchForm({
                     : formatQuantity(l.requestedPieces, p.piecesPerCake)}
                 </span>
               )}
-              <div className={`grid gap-2.5 ${p.piecesPerCake === null ? "grid-cols-1" : "grid-cols-2"}`}>
+              <div
+                className={`grid gap-2.5 ${p.piecesPerCake === null || cakesOnly ? "grid-cols-1" : "grid-cols-2"}`}
+              >
                 {p.piecesPerCake !== null && (
                   <Stepper
                     label="كيكات"
@@ -236,14 +252,16 @@ export function DispatchForm({
                     decrementLabel={`نقّص كيكة ${p.nameEn}`}
                   />
                 )}
-                <Stepper
-                  label={packaging ? "حبات" : "قطع"}
-                  typed={packaging}
-                  value={l.loosePieces}
-                  onChange={(v) => update(l.productId, { loosePieces: v })}
-                  incrementLabel={`زيد قطعة ${p.nameEn}`}
-                  decrementLabel={`نقّص قطعة ${p.nameEn}`}
-                />
+                {(p.piecesPerCake === null || !cakesOnly) && (
+                  <Stepper
+                    label={packaging ? "حبات" : "قطع"}
+                    typed={packaging}
+                    value={l.loosePieces}
+                    onChange={(v) => update(l.productId, { loosePieces: v })}
+                    incrementLabel={`زيد قطعة ${p.nameEn}`}
+                    decrementLabel={`نقّص قطعة ${p.nameEn}`}
+                  />
+                )}
               </div>
               {isFactory &&
                 (stock.length === 0 ? (
