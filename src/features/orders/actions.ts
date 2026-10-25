@@ -9,9 +9,11 @@ import {
   createDispatchSchema,
   createRequestSchema,
   receiveSchema,
+  roundSchema,
   type CreateDispatchInput,
   type CreateRequestInput,
   type ReceiveInput,
+  type RoundInput,
 } from "./logic";
 
 export type OrderResult =
@@ -101,6 +103,37 @@ export async function createDispatchAction(input: CreateDispatchInput): Promise<
   }
   refresh();
   return { status: "done", id: data };
+}
+
+/** توزيع اليوم: كل الطلبات مرة وحدة، والقديم بيتوزع بالعدل (dispatch_round). */
+export async function dispatchRoundAction(
+  input: RoundInput,
+): Promise<{ status: "error"; message: string } | { status: "done"; count: number }> {
+  await requireStaff();
+  const parsed = roundSchema.safeParse(input);
+  if (!parsed.success)
+    return { status: "error", message: parsed.error.issues[0]?.message ?? "في معلومة ناقصة" };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("dispatch_round", {
+    p_round: parsed.data.map((e) => ({
+      request_id: e.requestId,
+      driver_name: e.driverName || null,
+      lines: e.lines.map((l) => ({
+        product_id: l.productId,
+        request_line_id: l.requestLineId,
+        whole_cakes: l.wholeCakes,
+        loose_pieces: l.loosePieces,
+      })),
+    })) as Json,
+  });
+  if (error) {
+    console.error("dispatchRound", error);
+    const result = messageFor(error);
+    return { status: "error", message: result.status === "error" ? result.message : SAVE_FAILED };
+  }
+  refresh();
+  return { status: "done", count: data.length };
 }
 
 export async function receiveDispatchAction(input: ReceiveInput): Promise<OrderResult> {

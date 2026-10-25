@@ -11,7 +11,14 @@ export interface BranchHomeData {
 
 export interface FactoryHomeData {
   pendingRequests: number;
-  lastDay: { productName: string; dayNumber: number; qty: number; piecesPerCake: number | null }[];
+  lastDay: {
+    productName: string;
+    dayNumber: number;
+    productionDate: string;
+    shelfLifeDays: number;
+    qty: number;
+    piecesPerCake: number | null;
+  }[];
   openReturns: number;
   returnsEnabled: boolean;
   rawBelowMin: string[];
@@ -60,7 +67,7 @@ export async function factoryHomeData(factoryId: string): Promise<FactoryHomeDat
       .eq("status", "sent"),
     supabase
       .from("v_factory_batches")
-      .select("product_id, day_number, qty_pieces")
+      .select("product_id, day_number, production_date, shelf_life_days, qty_pieces")
       .eq("location_id", factoryId)
       .eq("is_last_day", true)
       .gt("qty_pieces", 0),
@@ -102,6 +109,8 @@ export async function factoryHomeData(factoryId: string): Promise<FactoryHomeDat
     lastDay: (batches ?? []).map((b) => ({
       productName: names.get(b.product_id!)?.name ?? "",
       dayNumber: b.day_number!,
+      productionDate: b.production_date!,
+      shelfLifeDays: b.shelf_life_days ?? 7,
       qty: b.qty_pieces!,
       piecesPerCake: names.get(b.product_id!)?.ppc ?? null,
     })),

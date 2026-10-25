@@ -7,6 +7,7 @@ import {
   BRANCH_DBQ,
   BRANCH_JBH,
   FACTORY,
+  cancelRequestsSince,
   latestDispatchTo,
   setParLevels,
   signInAndWait,
@@ -191,4 +192,63 @@ test.describe("order approval", () => {
     await page.reload();
     await expect(page.getByText("مرسل").first()).toBeVisible();
   });
+});
+
+test("the daily round shares the old batch between branches", async ({ page }) => {
+  for (const code of ["SWF", "JBH", "DBQ"]) await cancelRequestsSince(code, "2000-01-01T00:00:00Z");
+  const today = businessDate(new Date());
+  const yesterday = recentDates(today, 2).find((d) => d !== today)!;
+
+  // المصنع: كيكتين من مبارح و4 من اليوم
+  await signInAndWait(page, FACTORY.phone, FACTORY.pin);
+  await page.getByRole("link", { name: "جرد المصنع" }).click();
+  await expect(page.getByRole("button", { name: "تأكيد جرد المصنع" })).toBeVisible();
+  const item = page.getByRole("listitem", { name: PRODUCT });
+  for (const [date, cakes] of [
+    [yesterday, 2],
+    [today, 4],
+  ] as const) {
+    const day = dayNumberOf(date);
+    const plus = item.getByRole("button", { name: `زيد ${PRODUCT} رقم ${day}` });
+    if ((await plus.count()) === 0) {
+      const picker = page.getByRole("group", { name: `اختار رقم ${PRODUCT}` });
+      if (!(await picker.isVisible()))
+        await item.getByRole("button", { name: `ضيف رقم لـ ${PRODUCT}` }).click();
+      await picker.getByRole("button", { name: `رقم ${day}`, exact: true }).click();
+    }
+    for (let i = 0; i < cakes; i++) await plus.click();
+    await expect(item.getByRole("status", { name: `${PRODUCT} رقم ${day}: ${cakes}` })).toBeVisible();
+  }
+  await page.getByRole("button", { name: "تأكيد جرد المصنع" }).click();
+  await expect(page.getByRole("heading", { name: "تم الجرد" })).toBeVisible();
+
+  // الصويفية بتطلب 4 والجبيهة 2
+  for (const [who, cakes] of [
+    [BRANCH, 4],
+    [BRANCH_JBH, 2],
+  ] as const) {
+    await page.context().clearCookies();
+    await signInAndWait(page, who.phone, who.pin);
+    await page.goto("/order");
+    const line = page.getByRole("listitem", { name: PRODUCT });
+    for (let i = 0; i < cakes; i++) await line.getByRole("button", { name: `زيد كيكة ${PRODUCT}` }).click();
+    await page.getByRole("button", { name: "مراجعة الطلب" }).click();
+    await page.getByRole("button", { name: "إرسال الطلب للمصنع" }).click();
+    await expect(page.getByText("انبعت طلبك للمصنع")).toBeVisible();
+  }
+
+  await page.context().clearCookies();
+  await signInAndWait(page, FACTORY.phone, FACTORY.pin);
+  await page.goto("/factory/requests");
+  await page.getByRole("link", { name: /توزيع اليوم/ }).click();
+  // القديم (كيكتين) بينقسم: وحدة لكل فرع، مش الثنتين لأول فرع
+  const old = `رقم ${dayNumberOf(yesterday)}: 1 كيكة`;
+  await expect(page.getByLabel(`دفعات ${PRODUCT} لـالصويفية`)).toContainText(old);
+  await expect(page.getByLabel(`دفعات ${PRODUCT} لـالجبيهة`)).toContainText(old);
+  await page.getByRole("textbox", { name: "اسم السائق لفرع الصويفية" }).fill("أبو محمد");
+  await page.getByRole("button", { name: "طلّع الـ2 طلبات" }).click();
+  await expect(page.getByRole("heading", { name: "طلبات الفروع" })).toBeVisible();
+
+  for (const code of ["SWF", "JBH"]) expect((await latestDispatchTo(code)).fefoOverride).toBe(false);
+  expect(await stockOf("FAC", PRODUCT)).toBe(0);
 });

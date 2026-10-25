@@ -12,6 +12,8 @@ export interface ProductRow {
   nameAr: string | null;
   sellMode: SellMode;
   piecesPerCake: number | null;
+  // null = مدة الحياة العامة
+  shelfLifeDays: number | null;
   isActive: boolean;
 }
 
@@ -36,7 +38,7 @@ export async function listProducts(kind: "cake" | "packaging" = "cake"): Promise
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("products")
-    .select("id, name_en, name_ar, sell_mode, pieces_per_cake, is_active")
+    .select("id, name_en, name_ar, sell_mode, pieces_per_cake, shelf_life_days, is_active")
     .eq("kind", kind)
     .order("sort_order")
     .order("name_en");
@@ -47,6 +49,7 @@ export async function listProducts(kind: "cake" | "packaging" = "cake"): Promise
     nameAr: p.name_ar,
     sellMode: p.sell_mode,
     piecesPerCake: p.pieces_per_cake,
+    shelfLifeDays: p.shelf_life_days,
     isActive: p.is_active,
   }));
 }

@@ -970,6 +970,7 @@ export type Database = {
           name_en: string;
           pieces_per_cake: number | null;
           sell_mode: Database["public"]["Enums"]["sell_mode"];
+          shelf_life_days: number | null;
           sort_order: number;
           updated_at: string;
         };
@@ -984,6 +985,7 @@ export type Database = {
           name_en: string;
           pieces_per_cake?: number | null;
           sell_mode?: Database["public"]["Enums"]["sell_mode"];
+          shelf_life_days?: number | null;
           sort_order?: number;
           updated_at?: string;
         };
@@ -997,6 +999,7 @@ export type Database = {
           name_en?: string;
           pieces_per_cake?: number | null;
           sell_mode?: Database["public"]["Enums"]["sell_mode"];
+          shelf_life_days?: number | null;
           sort_order?: number;
           updated_at?: string;
         };
@@ -2506,6 +2509,7 @@ export type Database = {
           product_id: string | null;
           production_date: string | null;
           qty_pieces: number | null;
+          shelf_life_days: number | null;
         };
         ComputedFields: never;
         Relationships: [
@@ -2536,6 +2540,7 @@ export type Database = {
         Row: {
           created_at: string | null;
           effective_pieces_per_cake: number | null;
+          effective_shelf_life_days: number | null;
           id: string | null;
           image_path: string | null;
           is_active: boolean | null;
@@ -2544,6 +2549,7 @@ export type Database = {
           name_en: string | null;
           pieces_per_cake: number | null;
           sell_mode: Database["public"]["Enums"]["sell_mode"] | null;
+          shelf_life_days: number | null;
           sort_order: number | null;
           updated_at: string | null;
         };
@@ -2825,6 +2831,7 @@ export type Database = {
         };
         Returns: string;
       };
+      dispatch_round: { Args: { p_round: Json }; Returns: string[] };
       receive_dispatch: { Args: { p_dispatch_id: string; p_lines: Json }; Returns: string };
       record_production: { Args: { p_lines: Json; p_note?: string }; Returns: string };
       record_raw_movement: {

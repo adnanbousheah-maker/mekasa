@@ -2,9 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { DayBadge } from "@/components/ui/DayBadge";
+import { BatchBadge } from "@/components/ui/BatchBadge";
 import { ProductName } from "@/components/ui/ProductName";
-import { DAY_NAMES, dayNumberOf, recentDates, type DayNumber } from "@/lib/day-number";
+import { batchLabel, usesDate } from "@/lib/batch-label";
+import { DAY_NAMES, dayNumberOf, recentDates } from "@/lib/day-number";
 import { submitCountAction } from "../actions";
 import type { CountProduct, FactoryBatch } from "../queries";
 
@@ -12,7 +13,6 @@ type Props = {
   products: CountProduct[];
   batches: FactoryBatch[];
   today: string;
-  shelfLifeDays: number;
   scheduleId: string | null;
   startedAt: string;
 };
@@ -20,7 +20,7 @@ type Props = {
 type BatchRow = { productId: string; productionDate: string; qty: number; isLastDay: boolean };
 
 /** design/factory/FactoryCount: جرد أعمى حسب رقم الدفعة. ما بنعرض الكمية المتوقعة. */
-export function FactoryCountForm({ products, batches, today, shelfLifeDays, scheduleId, startedAt }: Props) {
+export function FactoryCountForm({ products, batches, today, scheduleId, startedAt }: Props) {
   const router = useRouter();
   const [rows, setRows] = useState<BatchRow[]>(() =>
     batches.map((b) => ({
@@ -34,7 +34,6 @@ export function FactoryCountForm({ products, batches, today, shelfLifeDays, sche
   const [error, setError] = useState<string | null>(null);
   const [isSaving, startTransition] = useTransition();
 
-  const dates = recentDates(today, shelfLifeDays);
   // الأصناف اللي إلها دفعات أول
   const ordered = [...products].sort(
     (a, b) => Number(rows.some((r) => r.productId === b.id)) - Number(rows.some((r) => r.productId === a.id)),
@@ -79,7 +78,11 @@ export function FactoryCountForm({ products, batches, today, shelfLifeDays, sche
           const productRows = rows
             .filter((r) => r.productId === p.id)
             .sort((a, b) => a.productionDate.localeCompare(b.productionDate));
-          const free = dates.filter((d) => !productRows.some((r) => r.productionDate === d));
+          const byDate = usesDate(p.shelfLifeDays);
+          // الأيام الممكنة لهالصنف حسب مدة حياته
+          const free = recentDates(today, p.shelfLifeDays).filter(
+            (d) => !productRows.some((r) => r.productionDate === d),
+          );
           const total = productRows.reduce((s, r) => s + r.qty, 0);
           const unit = p.piecesPerCake === null ? "قطع" : "كيكات";
           return (
@@ -95,16 +98,16 @@ export function FactoryCountForm({ products, batches, today, shelfLifeDays, sche
                 </span>
               </div>
               {productRows.map((r) => {
-                const day = dayNumberOf(r.productionDate);
-                const label = `${DAY_NAMES[day]}${r.productionDate === today ? " (اليوم)" : ""}${r.isLastDay ? " · آخر يوم" : ""}`;
+                const day = batchLabel(r.productionDate, p.shelfLifeDays).text;
+                const label = `${byDate ? "تاريخ الإنتاج" : DAY_NAMES[dayNumberOf(r.productionDate)]}${r.productionDate === today ? " (اليوم)" : ""}${r.isLastDay ? " · آخر يوم" : ""}`;
                 return (
                   <div key={r.productionDate} className="flex items-center gap-2.5">
-                    <DayBadge day={day} />
+                    <BatchBadge productionDate={r.productionDate} shelfLifeDays={p.shelfLifeDays} />
                     <span className="grow text-sm text-muted">{label}</span>
                     <div className="flex h-12 w-[140px] items-center justify-between overflow-hidden rounded-xl border border-line-strong bg-surface">
                       <button
                         type="button"
-                        aria-label={`زيد ${p.nameEn} رقم ${day}`}
+                        aria-label={`زيد ${p.nameEn} ${day}`}
                         className="flex size-12 items-center justify-center bg-quiet text-[22px]"
                         onClick={() => setQty(p.id, r.productionDate, r.qty + 1)}
                       >
@@ -112,14 +115,14 @@ export function FactoryCountForm({ products, batches, today, shelfLifeDays, sche
                       </button>
                       <span
                         role="status"
-                        aria-label={`${p.nameEn} رقم ${day}: ${r.qty}`}
+                        aria-label={`${p.nameEn} ${day}: ${r.qty}`}
                         className="text-[19px] font-bold tabular-nums"
                       >
                         {r.qty}
                       </span>
                       <button
                         type="button"
-                        aria-label={`نقّص ${p.nameEn} رقم ${day}`}
+                        aria-label={`نقّص ${p.nameEn} ${day}`}
                         disabled={r.qty === 0}
                         className="flex size-12 items-center justify-center bg-quiet text-[22px] disabled:text-line-strong"
                         onClick={() => setQty(p.id, r.productionDate, r.qty - 1)}
@@ -134,22 +137,19 @@ export function FactoryCountForm({ products, batches, today, shelfLifeDays, sche
                 <div
                   className="flex flex-wrap items-center gap-2"
                   role="group"
-                  aria-label={`اختار رقم ${p.nameEn}`}
+                  aria-label={`اختار ${byDate ? "تاريخ" : "رقم"} ${p.nameEn}`}
                 >
-                  {free.map((d) => {
-                    const day = dayNumberOf(d) as DayNumber;
-                    return (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => addBatch(p.id, d)}
-                        aria-label={`رقم ${day}`}
-                        className="flex h-12 items-center rounded-full border border-line-strong px-1.5"
-                      >
-                        <DayBadge day={day} />
-                      </button>
-                    );
-                  })}
+                  {free.map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => addBatch(p.id, d)}
+                      aria-label={batchLabel(d, p.shelfLifeDays).text}
+                      className="flex h-12 items-center rounded-full border border-line-strong px-1.5"
+                    >
+                      <BatchBadge productionDate={d} shelfLifeDays={p.shelfLifeDays} />
+                    </button>
+                  ))}
                   <button
                     type="button"
                     onClick={() => setPicking(null)}
@@ -163,10 +163,16 @@ export function FactoryCountForm({ products, batches, today, shelfLifeDays, sche
                   <button
                     type="button"
                     onClick={() => setPicking(p.id)}
-                    aria-label={`ضيف رقم لـ ${p.nameEn}`}
+                    aria-label={`ضيف ${byDate ? "تاريخ" : "رقم"} لـ ${p.nameEn}`}
                     className="h-12 self-start rounded-full border border-dashed border-line-dashed px-4 text-sm text-muted"
                   >
-                    {productRows.length > 0 ? "+ رقم ثاني" : "+ رقم"}
+                    {byDate
+                      ? productRows.length > 0
+                        ? "+ تاريخ ثاني"
+                        : "+ تاريخ"
+                      : productRows.length > 0
+                        ? "+ رقم ثاني"
+                        : "+ رقم"}
                   </button>
                 )
               )}

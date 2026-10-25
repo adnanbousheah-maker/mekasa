@@ -3,6 +3,7 @@ import {
   setProductActiveAction,
   updateProductNameArAction,
   updateProductPiecesAction,
+  updateProductShelfLifeAction,
   updateSettingAction,
 } from "../actions";
 import type { ProductRow } from "../queries";
@@ -11,9 +12,9 @@ import { InlineField } from "./InlineField";
 import { NewProductDialog } from "./NewProductDialog";
 import { SavedSwitch } from "./SavedSwitch";
 
-type Props = { products: ProductRow[]; defaultPieces: number };
+type Props = { products: ProductRow[]; defaultPieces: number; defaultShelfLife: number };
 
-export function ProductsTab({ products, defaultPieces }: Props) {
+export function ProductsTab({ products, defaultPieces, defaultShelfLife }: Props) {
   return (
     <section className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -51,6 +52,9 @@ export function ProductsTab({ products, defaultPieces }: Props) {
               </th>
               <th scope="col" className="px-2 py-3 font-semibold">
                 قطع بالكيكة
+              </th>
+              <th scope="col" className="px-2 py-3 font-semibold">
+                مدة الحياة بالمصنع
               </th>
               <th scope="col" className="px-2 py-3 font-semibold">
                 فعّال
@@ -102,6 +106,21 @@ export function ProductsTab({ products, defaultPieces }: Props) {
                       </span>
                     </span>
                   )}
+                </td>
+                <td className="px-2 py-2 text-center">
+                  <span className="inline-flex flex-col items-center">
+                    <InlineField
+                      numeric
+                      label={`مدة الحياة لـ ${p.nameEn}`}
+                      initial={p.shelfLifeDays === null ? "" : String(p.shelfLifeDays)}
+                      placeholder={String(defaultShelfLife)}
+                      onSave={updateProductShelfLifeAction.bind(null, p.id)}
+                      className="w-14"
+                    />
+                    <span className="text-[11px] text-muted">
+                      {(p.shelfLifeDays ?? defaultShelfLife) > 7 ? "بالتاريخ" : "برقم اليوم"}
+                    </span>
+                  </span>
                 </td>
                 <td className="px-2 py-2 text-center">
                   <SavedSwitch

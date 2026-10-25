@@ -71,6 +71,64 @@ export function fefoAllocate(batches: BatchStock[], qty: number, firstDate?: str
   return { allocations, short: Math.max(0, left), override };
 }
 
+// ─── توزيع اليوم: القديم على الكل بالعدل ─────────────────────────────
+
+export interface RoundLine {
+  key: string;
+  qty: number;
+}
+
+/**
+ * لصنف واحد: المجموع من الأقدم (FEFO، بدون المنتهي)، وكل دفعة بتنقسم على الأسطر حسب اللي
+ * ضايل لكل سطر. الباقي واحد واحد للكسر الأكبر (وبعدين بالترتيب). إذا كل الأسطر كيكات كاملة
+ * والدفعات فيها كيكات كاملة بتكفي، القسمة بالكيكة. نفس dispatch_round بقاعدة البيانات.
+ */
+export function fairAllocate(
+  batches: BatchStock[],
+  lines: RoundLine[],
+  piecesPerCake: number | null = null,
+): { byLine: Map<string, { productionDate: string; qty: number }[]>; short: number } {
+  const usable = batches
+    .filter((b) => !b.expired && b.available > 0)
+    .sort((a, b) => a.productionDate.localeCompare(b.productionDate));
+  const total = lines.reduce((s, l) => s + Math.max(0, l.qty), 0);
+  const cake = piecesPerCake ?? 1;
+  const unit =
+    cake > 1 &&
+    lines.every((l) => l.qty % cake === 0) &&
+    usable.reduce((s, b) => s + Math.floor(b.available / cake) * cake, 0) >= total
+      ? cake
+      : 1;
+
+  const remaining = lines.map((l) => Math.max(0, l.qty) / unit);
+  const byLine = new Map(lines.map((l) => [l.key, [] as { productionDate: string; qty: number }[]]));
+  let remainingTotal = total / unit;
+
+  for (const b of usable) {
+    if (remainingTotal <= 0) break;
+    const take = Math.min(Math.floor(b.available / unit), remainingTotal);
+    if (take <= 0) continue;
+    const share = remaining.map((r) => (r > 0 ? Math.floor((take * r) / remainingTotal) : 0));
+    let leftover = take - share.reduce((s, x) => s + x, 0);
+    const order = remaining
+      .map((r, i) => ({ i, fraction: (take * r) % remainingTotal }))
+      .filter((x) => remaining[x.i] - share[x.i] > 0)
+      .sort((x, y) => y.fraction - x.fraction || x.i - y.i);
+    for (const { i } of order) {
+      if (leftover <= 0) break;
+      share[i] += 1;
+      leftover -= 1;
+    }
+    share.forEach((x, i) => {
+      if (x <= 0) return;
+      byLine.get(lines[i].key)!.push({ productionDate: b.productionDate, qty: x * unit });
+      remaining[i] -= x;
+      remainingTotal -= x;
+    });
+  }
+  return { byLine, short: remainingTotal * unit };
+}
+
 // ─── المقارنات ───────────────────────────────────────────────────────
 
 function unitOf(piecesPerCake: number | null): "cake" | "piece" {
@@ -189,6 +247,31 @@ export const receiveSchema = z.object({
   // الموظف لازم يأكد إنه فحص البضاعة قدام السائق
   checked: z.literal(true, "أكّد إنك فحصت البضاعة قدام السائق"),
 });
+
+// توزيع اليوم: كل طلب بإخراج، والدفعات بتختارها قاعدة البيانات (fairAllocate)
+export const roundSchema = z
+  .array(
+    z.object({
+      requestId: z.uuid(),
+      driverName: z.string().trim().max(60).default(""),
+      lines: z
+        .array(
+          z.object({
+            productId: z.uuid(),
+            requestLineId: z.uuid().nullable().default(null),
+            wholeCakes: qty,
+            loosePieces: qty,
+          }),
+        )
+        .max(200)
+        .transform((lines) => lines.filter((l) => l.wholeCakes + l.loosePieces > 0)),
+    }),
+  )
+  .max(50)
+  .transform((entries) => entries.filter((e) => e.lines.length > 0))
+  .refine((entries) => entries.length > 0, "ما في ولا طلب فيه كمية");
+
+export type RoundInput = z.input<typeof roundSchema>;
 
 export type CreateRequestInput = z.input<typeof createRequestSchema>;
 export type CreateDispatchInput = z.input<typeof createDispatchSchema>;

@@ -4,6 +4,8 @@ import { z } from "zod";
 
 export const PIECES_PER_CAKE_LIMITS = { min: 1, max: 50 } as const;
 export const PRODUCT_NAME_MAX = 80;
+// مدة حياة الصنف بالمصنع (نفس CHECK بقاعدة البيانات). أكثر من 7 = الدفعة بالتاريخ.
+export const SHELF_LIFE_LIMITS = { min: 1, max: 60 } as const;
 
 export const NUMBER_SETTINGS = {
   default_pieces_per_cake: PIECES_PER_CAKE_LIMITS,
@@ -57,6 +59,16 @@ export const piecesOverrideSchema = z.union([
     .length(0)
     .transform(() => null),
   wholeNumber(PIECES_PER_CAKE_LIMITS),
+]);
+
+/** فاضي = مدة الحياة العامة (null). */
+export const shelfLifeOverrideSchema = z.union([
+  z
+    .string()
+    .trim()
+    .length(0)
+    .transform(() => null),
+  wholeNumber(SHELF_LIFE_LIMITS),
 ]);
 
 /** فاضي = بدون اسم عربي (null)، والصنف بيطلع باسمه الإنجليزي. */

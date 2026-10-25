@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { ADMIN, restoreSettings, signIn } from "./support";
+import { ADMIN, FACTORY, restoreSettings, signIn } from "./support";
 
 // الأدمن على اللابتوب
 test.use({ viewport: { width: 1280, height: 800 }, isMobile: false, hasTouch: false });
@@ -104,4 +104,29 @@ test("count schedules: add a time to a branch and take it off again", async ({ p
   await page.reload();
   await expect(dabouq.getByText(scheduleTime)).toBeHidden();
   await expect(dabouq.getByText("9:00")).toBeVisible();
+});
+
+test("a product can live longer than a week, and then its batches go by date", async ({ page, browser }) => {
+  await openSettings(page, "products");
+  await saveField(page, "مدة الحياة لـ Pecan", "14");
+  await expect(page.getByRole("status").filter({ hasText: "انحفظ" })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("textbox", { name: "مدة الحياة لـ Pecan", exact: true })).toHaveValue("14");
+  await expect(page.getByRole("row", { name: /Pecan/ })).toContainText("بالتاريخ");
+  try {
+    // أمين المستودع بيختار تاريخ بدل رقم لهالصنف
+    const factory = await browser.newPage();
+    await signIn(factory, FACTORY.phone, FACTORY.pin);
+    await factory.waitForURL((url) => url.pathname !== "/login");
+    await factory.goto("/count");
+    const pecan = factory.getByRole("listitem", { name: "Pecan" });
+    await pecan.getByRole("button", { name: "ضيف تاريخ لـ Pecan" }).click();
+    await expect(factory.getByRole("group", { name: "اختار تاريخ Pecan" }).getByRole("button")).toHaveCount(
+      14 + 1,
+    );
+    await factory.close();
+  } finally {
+    await saveField(page, "مدة الحياة لـ Pecan", "");
+    await expect(page.getByRole("status").filter({ hasText: "انحفظ" })).toBeVisible();
+  }
 });

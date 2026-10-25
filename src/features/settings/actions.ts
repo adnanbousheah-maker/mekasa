@@ -12,6 +12,7 @@ import {
   newProductSchema,
   numberSettingSchema,
   piecesOverrideSchema,
+  shelfLifeOverrideSchema,
   scheduleTimeSchema,
   wholeNumber,
 } from "./schemas";
@@ -83,6 +84,15 @@ export async function updateProductPiecesAction(productId: string, value: string
   return updateProduct(productId, { pieces_per_cake: pieces.data });
 }
 
+export async function updateProductShelfLifeAction(productId: string, value: string): Promise<SaveResult> {
+  await requireAdmin();
+  if (!idSchema.safeParse(productId).success) return fail("الصنف مش موجود");
+  const days = shelfLifeOverrideSchema.safeParse(value);
+  if (!days.success) return fail(firstIssue(days.error));
+
+  return updateProduct(productId, { shelf_life_days: days.data });
+}
+
 export async function setProductActiveAction(productId: string, active: boolean): Promise<SaveResult> {
   await requireAdmin();
   if (!idSchema.safeParse(productId).success) return fail("الصنف مش موجود");
@@ -93,7 +103,12 @@ export async function setProductActiveAction(productId: string, active: boolean)
 
 async function updateProduct(
   productId: string,
-  changes: { name_ar?: string | null; pieces_per_cake?: number | null; is_active?: boolean },
+  changes: {
+    name_ar?: string | null;
+    pieces_per_cake?: number | null;
+    is_active?: boolean;
+    shelf_life_days?: number | null;
+  },
 ): Promise<SaveResult> {
   const supabase = await createClient();
   const { data, error } = await supabase

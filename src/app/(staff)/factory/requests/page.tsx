@@ -52,6 +52,15 @@ async function Requests() {
       <ScreenHeader title="طلبات الفروع" />
       <h2 className="text-[15px] font-semibold text-muted">جديدة · بانتظار الإخراج</h2>
       {requests.length === 0 && <p className="text-sm text-muted">ما في طلبات جديدة.</p>}
+      {isDispatcher && requests.length > 1 && (
+        <Link
+          href="/factory/round"
+          className="flex h-14 flex-col items-center justify-center rounded-xl border-2 border-ink bg-surface"
+        >
+          <span className="font-semibold">توزيع اليوم: طلّع كل الطلبات مع بعض</span>
+          <span className="text-[13px] text-muted">القديم بيتوزع على الفروع بالعدل</span>
+        </Link>
+      )}
       <ul className="flex flex-col gap-3">
         {[...requests].reverse().map((r) => (
           <li

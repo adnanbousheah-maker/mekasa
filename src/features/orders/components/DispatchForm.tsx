@@ -2,11 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { DayBadge } from "@/components/ui/DayBadge";
+import { BatchBadge } from "@/components/ui/BatchBadge";
 import { Dialog } from "@/components/ui/Dialog";
 import { ProductName } from "@/components/ui/ProductName";
 import { Stepper } from "@/components/ui/Stepper";
-import type { DayNumber } from "@/lib/day-number";
+import { batchLabel } from "@/lib/batch-label";
 import { formatQuantity, formatQuantityCompact } from "@/lib/units";
 import { branchSuggestionsAction, createDispatchAction } from "../actions";
 import { fefoAllocate, linesSummary, orderTarget, requestVsDispatch, suggestQuantity } from "../logic";
@@ -72,6 +72,9 @@ export function DispatchForm({
         available: b.available,
         expired: b.expired,
         dayNumber: b.dayNumber,
+        // رقم اليوم، أو التاريخ للأصناف اللي بتعيش أكثر من أسبوع
+        label: batchLabel(b.productionDate, b.shelfLifeDays).text,
+        shelfLifeDays: b.shelfLifeDays,
         lastDay: b.lastDay,
       }));
   const allocationOf = (l: Line) => fefoAllocate(batchesOf(l.productId), pieces(l), l.firstDate);
@@ -251,7 +254,7 @@ export function DispatchForm({
                             key={b.productionDate}
                             type="button"
                             aria-pressed={active}
-                            aria-label={`ابدأ من رقم ${b.dayNumber} (${formatQuantityCompact(b.available, p.piecesPerCake)})`}
+                            aria-label={`ابدأ من ${b.label} (${formatQuantityCompact(b.available, p.piecesPerCake)})`}
                             onClick={() =>
                               update(l.productId, {
                                 firstDate: b.productionDate === defaultFirst ? null : b.productionDate,
@@ -259,7 +262,7 @@ export function DispatchForm({
                             }
                             className={`flex h-12 items-center gap-1.5 rounded-full px-2 ${active ? "border-2 border-ink bg-quiet" : "border border-line-strong"}`}
                           >
-                            <DayBadge day={b.dayNumber as DayNumber} />
+                            <BatchBadge productionDate={b.productionDate} shelfLifeDays={b.shelfLifeDays} />
                             <span className="text-sm tabular-nums">
                               {formatQuantityCompact(b.available, p.piecesPerCake)}
                             </span>
@@ -274,7 +277,7 @@ export function DispatchForm({
                         {allocation.allocations
                           .map(
                             (a) =>
-                              `رقم ${batchesOf(l.productId).find((b) => b.productionDate === a.productionDate)?.dayNumber}: ${formatQuantityCompact(a.qty, p.piecesPerCake)}`,
+                              `${batchesOf(l.productId).find((b) => b.productionDate === a.productionDate)?.label}: ${formatQuantityCompact(a.qty, p.piecesPerCake)}`,
                           )
                           .join(" · ")}
                         {allocation.short > 0 &&
@@ -359,7 +362,7 @@ export function DispatchForm({
         <div role="alert" className="mb-5 flex flex-col gap-2 text-[15px]">
           <p>
             {overridden && overriddenOldest
-              ? `${byId.get(overridden.productId)?.nameEn}: في دفعة رقم ${batchesOf(overridden.productId).find((b) => b.productionDate === overriddenOldest.productionDate)?.dayNumber} أقدم ولسا فيها ستوك. لازم تطلع الأقدم أول.`
+              ? `${byId.get(overridden.productId)?.nameEn}: في دفعة ${batchesOf(overridden.productId).find((b) => b.productionDate === overriddenOldest.productionDate)?.label} أقدم ولسا فيها ستوك. لازم تطلع الأقدم أول.`
               : "في دفعة أقدم لسا فيها ستوك. لازم تطلع الأقدم أول."}
           </p>
           <p className="text-sm text-muted">إذا كمّلت من الأحدث، بينسجل إنك تجاوزت.</p>

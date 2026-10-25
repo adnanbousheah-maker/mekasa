@@ -110,5 +110,11 @@ async function TabContent({ tab }: { tab: TabId }) {
   }
 
   const [products, settings] = await Promise.all([listProducts(), getSettings()]);
-  return <ProductsTab products={products} defaultPieces={settings.default_pieces_per_cake} />;
+  return (
+    <ProductsTab
+      products={products}
+      defaultPieces={settings.default_pieces_per_cake}
+      defaultShelfLife={settings.factory_shelf_life_days}
+    />
+  );
 }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BatchBadge } from "@/components/ui/BatchBadge";
 import { DayBadge } from "@/components/ui/DayBadge";
 import { Logo } from "@/components/ui/Logo";
 import { LogoutButton } from "@/features/auth/components/LogoutButton";
@@ -7,7 +8,8 @@ import { CountReminder } from "@/features/reminders/components/CountReminder";
 import { EnableNotifications } from "@/features/reminders/components/EnableNotifications";
 import type { OpenSlot } from "@/features/reminders/queries";
 import { ROLE_LABELS } from "@/features/staff/roles";
-import { dayNumberOf, type DayNumber } from "@/lib/day-number";
+import { batchLabel } from "@/lib/batch-label";
+import { dayNumberOf } from "@/lib/day-number";
 import { businessDate, formatLongDate, greetingFor } from "@/lib/time";
 import { formatQuantity } from "@/lib/units";
 import type { BranchHomeData, FactoryHomeData } from "../queries";
@@ -239,13 +241,15 @@ function FactoryTasks({ staff, data }: { staff: CurrentStaff; data: FactoryHomeD
         <section aria-label="تنبيهات" className="flex flex-col gap-2">
           {lastDay.slice(0, 3).map((b) => (
             <Link
-              key={`${b.productName}-${b.dayNumber}`}
+              key={`${b.productName}-${b.productionDate}`}
               href={isDispatcher ? "/factory/requests" : "/count"}
               className="flex items-center gap-3 rounded-[14px] border border-danger-line bg-danger-soft px-3.5 py-2.5 text-danger-text"
             >
-              <DayBadge day={b.dayNumber as DayNumber} />
+              <BatchBadge productionDate={b.productionDate} shelfLifeDays={b.shelfLifeDays} />
               <span className="flex flex-col">
-                <strong className="text-[15px]">دفعة رقم {b.dayNumber} آخر يوم إلها</strong>
+                <strong className="text-[15px]">
+                  دفعة {batchLabel(b.productionDate, b.shelfLifeDays).text} آخر يوم إلها
+                </strong>
                 <span dir="auto" className="text-[13px]">
                   {b.productName}: {formatQuantity(b.qty, b.piecesPerCake)} لازم تطلع اليوم
                 </span>

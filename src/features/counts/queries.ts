@@ -9,6 +9,8 @@ export interface CountProduct {
   nameAr: string | null;
   // null = قطع بس
   piecesPerCake: number | null;
+  // مدة الحياة بالمصنع (أكثر من 7 = الدفعة بالتاريخ)
+  shelfLifeDays: number;
 }
 
 export interface CountSlot {
@@ -70,7 +72,7 @@ export async function listCountProducts(kind: "cake" | "packaging" = "cake"): Pr
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_products")
-    .select("id, name_en, name_ar, effective_pieces_per_cake")
+    .select("id, name_en, name_ar, effective_pieces_per_cake, effective_shelf_life_days")
     .eq("is_active", true)
     .eq("kind", kind)
     .order("sort_order");
@@ -80,6 +82,7 @@ export async function listCountProducts(kind: "cake" | "packaging" = "cake"): Pr
     nameEn: p.name_en!,
     nameAr: p.name_ar,
     piecesPerCake: p.effective_pieces_per_cake,
+    shelfLifeDays: p.effective_shelf_life_days ?? 7,
   }));
 }
 

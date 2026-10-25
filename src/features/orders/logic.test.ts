@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createDispatchSchema,
   createRequestSchema,
+  fairAllocate,
   fefoAllocate,
   forgottenItems,
   orderTarget,
@@ -83,6 +84,102 @@ describe("comparisons", () => {
         { wholeCakes: 0, loosePieces: 0 },
       ]),
     ).toBe("2 صنف · 3 كيكات · 8 قطع");
+  });
+});
+
+describe("fairAllocate", () => {
+  const batch = (productionDate: string, available: number, expired = false) => ({
+    productionDate,
+    available,
+    expired,
+  });
+
+  it("shares the old batch by need instead of giving it all to the first branch", () => {
+    const { byLine, short } = fairAllocate(
+      [batch("2026-10-22", 30), batch("2026-10-25", 100), batch("2026-10-18", 10, true)],
+      [
+        { key: "swf", qty: 40 },
+        { key: "jbh", qty: 20 },
+      ],
+    );
+    expect(short).toBe(0);
+    expect(byLine.get("swf")).toEqual([
+      { productionDate: "2026-10-22", qty: 20 },
+      { productionDate: "2026-10-25", qty: 20 },
+    ]);
+    expect(byLine.get("jbh")).toEqual([
+      { productionDate: "2026-10-22", qty: 10 },
+      { productionDate: "2026-10-25", qty: 10 },
+    ]);
+  });
+
+  it("gives leftover cakes to the largest fraction, so a small branch still gets its share", () => {
+    const { byLine } = fairAllocate(
+      [batch("2026-10-24", 20), batch("2026-10-25", 100)],
+      [
+        { key: "swf", qty: 40 },
+        { key: "jbh", qty: 20 },
+      ],
+      10,
+    );
+    // كيكتين قديمات: الصويفية 1.33 والجبيهة 0.67، فكل وحدة بتاخذ وحدة
+    expect(byLine.get("swf")![0]).toEqual({ productionDate: "2026-10-24", qty: 10 });
+    expect(byLine.get("jbh")![0]).toEqual({ productionDate: "2026-10-24", qty: 10 });
+  });
+
+  it("spreads leftover units evenly", () => {
+    const { byLine } = fairAllocate(
+      [batch("2026-10-22", 5), batch("2026-10-25", 10)],
+      [
+        { key: "a", qty: 3 },
+        { key: "b", qty: 3 },
+        { key: "c", qty: 3 },
+      ],
+    );
+    const old = ["a", "b", "c"].map(
+      (k) => byLine.get(k)!.find((x) => x.productionDate === "2026-10-22")?.qty ?? 0,
+    );
+    expect(old.reduce((s, x) => s + x, 0)).toBe(5);
+    expect(Math.max(...old) - Math.min(...old)).toBeLessThanOrEqual(1);
+    for (const k of ["a", "b", "c"]) expect(byLine.get(k)!.reduce((s, x) => s + x.qty, 0)).toBe(3);
+  });
+
+  it("splits whole cakes when every line is whole cakes", () => {
+    const { byLine } = fairAllocate(
+      [batch("2026-10-24", 20), batch("2026-10-25", 40)],
+      [
+        { key: "swf", qty: 40 },
+        { key: "jbh", qty: 20 },
+      ],
+      10,
+    );
+    // بالقطع كان رح يطلع 14 و6 من القديم؛ بالكيكة 1 و1
+    for (const parts of byLine.values()) for (const p of parts) expect(p.qty % 10).toBe(0);
+    expect(byLine.get("swf")!.reduce((s, x) => s + x.qty, 0)).toBe(40);
+    expect(byLine.get("jbh")!.reduce((s, x) => s + x.qty, 0)).toBe(20);
+  });
+
+  it("falls back to pieces when a batch holds a broken cake", () => {
+    const { short } = fairAllocate(
+      [batch("2026-10-24", 15), batch("2026-10-25", 5)],
+      [{ key: "a", qty: 20 }],
+      10,
+    );
+    expect(short).toBe(0);
+  });
+
+  it("reports what is short and skips empty lines", () => {
+    const { byLine, short } = fairAllocate(
+      [batch("2026-10-25", 10)],
+      [
+        { key: "a", qty: 8 },
+        { key: "b", qty: 0 },
+        { key: "c", qty: 8 },
+      ],
+    );
+    expect(short).toBe(6);
+    expect(byLine.get("b")).toEqual([]);
+    expect(byLine.get("a")![0].qty + byLine.get("c")![0].qty).toBe(10);
   });
 });
 

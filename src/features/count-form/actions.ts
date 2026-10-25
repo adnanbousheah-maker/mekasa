@@ -42,7 +42,9 @@ export async function readCountFormAction(photoPath: string): Promise<ReadFormRe
     supabase.from("locations").select("code").eq("id", location.id).single(),
     supabase
       .from("v_products")
-      .select("id, name_en, name_ar, sell_mode, is_active, effective_pieces_per_cake")
+      .select(
+        "id, name_en, name_ar, sell_mode, is_active, effective_pieces_per_cake, effective_shelf_life_days",
+      )
       .eq("kind", "cake"),
   ]);
   if (fileError || !file) return { status: "error", message: "ما لقينا الصورة. صوّر كمان مرة." };
@@ -107,7 +109,15 @@ export async function readCountFormAction(photoPath: string): Promise<ReadFormRe
   const formProducts: CountProduct[] = lines.flatMap((l) => {
     const p = byId.get(l.productId);
     return p
-      ? [{ id: p.id!, nameEn: p.name_en!, nameAr: p.name_ar, piecesPerCake: p.effective_pieces_per_cake }]
+      ? [
+          {
+            id: p.id!,
+            nameEn: p.name_en!,
+            nameAr: p.name_ar,
+            piecesPerCake: p.effective_pieces_per_cake,
+            shelfLifeDays: p.effective_shelf_life_days ?? 7,
+          },
+        ]
       : [];
   });
   return {

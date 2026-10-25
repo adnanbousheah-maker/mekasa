@@ -19,7 +19,7 @@ type Db = Awaited<ReturnType<typeof createClient>>;
 async function products(supabase: Db) {
   const { data, error } = await supabase
     .from("v_products")
-    .select("id, name_en, effective_pieces_per_cake, is_active, kind")
+    .select("id, name_en, effective_pieces_per_cake, is_active, kind, effective_shelf_life_days")
     .order("sort_order");
   if (error) throw new Error(`Could not load products: ${error.message}`);
   return data.map((p) => ({
@@ -28,6 +28,7 @@ async function products(supabase: Db) {
     piecesPerCake: p.effective_pieces_per_cake,
     isActive: p.is_active!,
     kind: p.kind!,
+    shelfLifeDays: p.effective_shelf_life_days ?? 7,
   }));
 }
 
@@ -280,6 +281,7 @@ export interface FactoryBatchStock {
   available: number;
   expired: boolean;
   lastDay: boolean;
+  shelfLifeDays: number;
 }
 
 /** ستوك المصنع بالدفعات (للإخراج: الكميات بتبين للإخراج، الجرد بس أعمى). */
@@ -288,7 +290,7 @@ export async function factoryBatchStock(factoryId: string): Promise<FactoryBatch
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_factory_batches")
-    .select("product_id, production_date, day_number, qty_pieces, is_expired, is_last_day")
+    .select("product_id, production_date, day_number, qty_pieces, is_expired, is_last_day, shelf_life_days")
     .eq("location_id", factoryId)
     .gt("qty_pieces", 0)
     .order("production_date");
@@ -300,6 +302,7 @@ export async function factoryBatchStock(factoryId: string): Promise<FactoryBatch
     available: b.qty_pieces!,
     expired: b.is_expired!,
     lastDay: b.is_last_day!,
+    shelfLifeDays: b.shelf_life_days ?? 7,
   }));
 }
 

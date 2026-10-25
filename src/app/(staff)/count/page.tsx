@@ -38,7 +38,6 @@ async function Count() {
           products={products}
           batches={batches}
           today={businessDate(now)}
-          shelfLifeDays={context.shelfLifeDays}
           scheduleId={slot?.scheduleId ?? null}
           startedAt={now.toISOString()}
         />

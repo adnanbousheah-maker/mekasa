@@ -8,6 +8,7 @@ import { NotForYou } from "@/features/orders/components/OrderBits";
 import { allActiveProducts, productionToday } from "@/features/orders/queries";
 import { ProductionForm } from "@/features/production/components/ProductionForm";
 import { productionTotals } from "@/features/production/logic";
+import { shortDate, usesDate } from "@/lib/batch-label";
 import { DAY_NAMES, dayNumberOf } from "@/lib/day-number";
 import { businessDate, formatClock } from "@/lib/time";
 import { countWord } from "@/lib/units";
@@ -30,9 +31,11 @@ async function Production({ searchParams }: { searchParams: SearchParams }) {
     return <NotForYou title="تسجيل الإنتاج" text="تسجيل الإنتاج لأمين المستودع." />;
   }
   await connection();
-  const day = dayNumberOf(businessDate(new Date()));
+  const today = businessDate(new Date());
+  const day = dayNumberOf(today);
   const [products, entries] = await Promise.all([allActiveProducts(), productionToday(staff.location.id)]);
   const totals = productionTotals(entries);
+  const byDate = products.filter((p) => usesDate(p.shelfLifeDays));
   const last = entries.at(-1);
 
   return (
@@ -55,6 +58,12 @@ async function Production({ searchParams }: { searchParams: SearchParams }) {
           <span className="text-sm text-muted">اكتب الرقم {day} على كل كيكة من إنتاج اليوم</span>
         </div>
       </div>
+      {byDate.length > 0 && (
+        <p className="rounded-xl bg-info-soft px-3 py-2.5 text-sm text-info-text">
+          <span dir="auto">{byDate.map((p) => p.nameEn).join("، ")}</span>: بتعيش أكثر من أسبوع، فاكتب عليها
+          التاريخ <strong>{shortDate(today)}</strong> بدل الرقم.
+        </p>
+      )}
       {last && (
         <p className="text-sm text-muted">
           سجلت اليوم {entries.length > 1 ? `${entries.length} مرات، آخرها` : ""} الساعة{" "}
