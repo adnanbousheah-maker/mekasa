@@ -29,7 +29,9 @@ create trigger stock_request_missing_no_truncate before truncate on public.stock
   for each statement execute function private.forbid_modification();
 
 -- p_missing: [{ "product_id", "suggested_pieces" }]، الأصناف المقترحة اللي الموظف شافها وما طلبها
-drop function public.create_request(jsonb, text);
+-- الحذف بيطلب موافقة بالسحابة، فالنسخة القديمة بتنحفظ باسم ثاني ومسكّرة على الكل
+alter function public.create_request(jsonb, text) rename to create_request_before_missing;
+revoke execute on function public.create_request_before_missing(jsonb, text) from public, anon, authenticated;
 
 create function public.create_request(p_lines jsonb, p_note text default null, p_missing jsonb default '[]')
 returns uuid

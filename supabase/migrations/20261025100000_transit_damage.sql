@@ -57,7 +57,9 @@ $$;
 
 -- ─── الإخراج مع اسم السائق ───────────────────────────────────────────
 
-drop function public.create_dispatch(uuid, jsonb, uuid, text, boolean);
+-- الحذف بيطلب موافقة بالسحابة، فالنسخة القديمة بتنحفظ باسم ثاني ومسكّرة على الكل
+alter function public.create_dispatch(uuid, jsonb, uuid, text, boolean) rename to create_dispatch_before_driver;
+revoke execute on function public.create_dispatch_before_driver(uuid, jsonb, uuid, text, boolean) from public, anon, authenticated;
 
 -- نفس الدالة السابقة (20261023101600)، بس مع p_driver_name
 create function public.create_dispatch(

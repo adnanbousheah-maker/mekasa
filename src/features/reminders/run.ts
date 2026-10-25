@@ -100,7 +100,7 @@ async function activeAdmins(db: ReturnType<typeof createAdminClient>): Promise<s
 
 /**
  * أصناف تحت الحد الأدنى بالفروع: إشعار وحد لكل فرع (فيه الأصناف الجديدة) لموظفين الفرع وللأدمن.
- * كل صنف بينبعت مرة باليوم بس (notification_log).
+ * كل صنف بينبعت مرة باليوم بس (alert_log).
  */
 async function alertBelowMin(db: ReturnType<typeof createAdminClient>, today: string, result: ReminderRun) {
   const { data: below, error } = await db
@@ -111,7 +111,7 @@ async function alertBelowMin(db: ReturnType<typeof createAdminClient>, today: st
   const fresh = new Map<string, { name: string; products: string[] }>();
   for (const row of below ?? []) {
     const { data: logged } = await db
-      .from("notification_log")
+      .from("alert_log")
       .insert({
         kind: "below_min",
         location_id: row.location_id,
@@ -159,7 +159,7 @@ async function alertForgottenItems(db: ReturnType<typeof createAdminClient>, now
   let admins: string[] | null = null;
   for (const r of requests) {
     const { data: logged } = await db
-      .from("notification_log")
+      .from("alert_log")
       .insert({ kind: "order_missing_item", location_id: r.requesting_location_id, request_id: r.id })
       .select("id")
       .maybeSingle();

@@ -247,7 +247,7 @@ export async function latestDispatchTo(locationCode: string) {
 export async function clearMinLevels() {
   const db = serviceClient();
   await db.from("par_levels").update({ min_pieces: null }).not("min_pieces", "is", null);
-  await db.from("notification_log").delete().eq("kind", "below_min");
+  await db.from("alert_log").delete().eq("kind", "below_min");
 }
 
 /** بيلغي طلبات فرع انعملت من وقت معين (مشان ما توصل لاختبارات الإخراج). */

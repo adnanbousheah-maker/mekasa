@@ -8,15 +8,22 @@ alter table public.par_levels
 alter type public.notification_kind add value if not exists 'below_min';
 alter type public.notification_kind add value if not exists 'order_missing_item';
 
--- الإشعار بيتحدد كمان بالصنف والطلب (تحت الحد الأدنى: مرة لكل فرع وصنف باليوم)
-alter table public.notification_log
-  add column product_id uuid references public.products (id),
-  add column request_id uuid references public.stock_requests (id);
-alter table public.notification_log
-  drop constraint notification_log_kind_schedule_id_slot_date_dispatch_id_key;
-alter table public.notification_log
-  add constraint notification_log_once unique nulls not distinct
-    (kind, schedule_id, slot_date, dispatch_id, location_id, product_id, request_id);
+-- إشعارات الصنف والطلب بسجل لحاله (السجل القديم فريد على (kind, schedule_id, slot_date, dispatch_id)
+-- بدون الصنف، وتغيير قيده بيحتاج حذف). كل إشعار بينحجز هون قبل ما ينبعت، مرة وحدة بس:
+-- تحت الحد الأدنى مرة لكل فرع وصنف باليوم، والصنف المنسي مرة لكل طلب. الكرون (service role) بس.
+create table public.alert_log (
+  id uuid primary key default gen_random_uuid(),
+  kind public.notification_kind not null,
+  location_id uuid references public.locations (id),
+  product_id uuid references public.products (id),
+  request_id uuid references public.stock_requests (id),
+  slot_date date,
+  sent_at timestamptz not null default now(),
+  constraint alert_log_once unique nulls not distinct (kind, location_id, product_id, request_id, slot_date)
+);
+
+alter table public.alert_log enable row level security;
+revoke all on public.alert_log from anon, authenticated;
 
 -- الأصناف اللي موجودها بالفرع تحت الحد الأدنى (الموجود = مجموع الحركات)
 create view public.v_below_min with (security_invoker = true) as

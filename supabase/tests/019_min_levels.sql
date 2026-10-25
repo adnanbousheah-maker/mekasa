@@ -41,11 +41,11 @@ select throws_ok(
 );
 
 -- الإشعار مرة لكل فرع وصنف باليوم، وصنفين بنفس اليوم مسموح
-insert into public.notification_log (kind, location_id, product_id, slot_date)
+insert into public.alert_log (kind, location_id, product_id, slot_date)
 values ('below_min', tests.location('SWF'), tests.product('Latte'), public.amman_today()),
        ('below_min', tests.location('SWF'), tests.product('Carrot'), public.amman_today());
 select throws_ok(
-  $$ insert into public.notification_log (kind, location_id, product_id, slot_date)
+  $$ insert into public.alert_log (kind, location_id, product_id, slot_date)
      values ('below_min', tests.location('SWF'), tests.product('Latte'), public.amman_today()) $$,
   '23505', null, 'the same item at the same branch is alerted once a day'
 );

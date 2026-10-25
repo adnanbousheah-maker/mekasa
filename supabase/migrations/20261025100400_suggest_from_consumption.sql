@@ -4,7 +4,9 @@
 -- استهلاك يوم = سالب تعديلات الجرد المؤكد بهاليوم (business_date). الأيام اللي ما انعمل فيها
 -- جرد ما بتدخل بالمعدل (مش صفر)، والجرد الافتتاحي ما بيدخل.
 
-drop function public.branch_suggestions(uuid);
+-- الحذف بيطلب موافقة بالسحابة، فالنسخة القديمة بتنحفظ باسم ثاني ومسكّرة على الكل
+alter function public.branch_suggestions(uuid) rename to branch_suggestions_before_consumption;
+revoke execute on function public.branch_suggestions_before_consumption(uuid) from public, anon, authenticated;
 
 create function public.branch_suggestions(p_branch_id uuid)
 returns table (product_id uuid, stock_pieces int, par_pieces int, avg_pieces int, days_used int)

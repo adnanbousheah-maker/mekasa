@@ -8,7 +8,9 @@ alter table public.products
   add column shelf_life_days smallint check (shelf_life_days between 1 and 60);
 
 -- p.* بينحسب وقت إنشاء الـ view، فلازم ينعمل من جديد مشان يبين shelf_life_days
-drop view public.v_products;
+-- الحذف بيطلب موافقة بالسحابة، فالنسخة القديمة بتنحفظ باسم ثاني ومسكّرة على الكل
+alter view public.v_products rename to v_products_before_shelf_life;
+revoke all on public.v_products_before_shelf_life from anon, authenticated;
 create view public.v_products with (security_invoker = true) as
 select
   p.*,

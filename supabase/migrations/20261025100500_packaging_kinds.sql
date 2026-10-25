@@ -13,7 +13,9 @@ alter table public.products
   add constraint packaging_is_counted_in_units check (kind = 'cake' or sell_mode = 'pieces_only');
 
 -- p.* بينحسب وقت إنشاء الـ view، فلازم ينعمل من جديد مشان يبين kind
-drop view public.v_products;
+-- الحذف بيطلب موافقة بالسحابة، فالنسخة القديمة بتنحفظ باسم ثاني ومسكّرة على الكل
+alter view public.v_products rename to v_products_before_kind;
+revoke all on public.v_products_before_kind from anon, authenticated;
 create view public.v_products with (security_invoker = true) as
 select
   p.*,

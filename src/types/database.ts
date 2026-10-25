@@ -162,6 +162,80 @@ export type Database = {
           },
         ];
       };
+      alert_log: {
+        Row: {
+          id: string;
+          kind: Database["public"]["Enums"]["notification_kind"];
+          location_id: string | null;
+          product_id: string | null;
+          request_id: string | null;
+          sent_at: string;
+          slot_date: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          id?: string;
+          kind: Database["public"]["Enums"]["notification_kind"];
+          location_id?: string | null;
+          product_id?: string | null;
+          request_id?: string | null;
+          sent_at?: string;
+          slot_date?: string | null;
+        };
+        Update: {
+          id?: string;
+          kind?: Database["public"]["Enums"]["notification_kind"];
+          location_id?: string | null;
+          product_id?: string | null;
+          request_id?: string | null;
+          sent_at?: string;
+          slot_date?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "alert_log_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "alert_log_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "alert_log_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "alert_log_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_kind";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "alert_log_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_shelf_life";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "alert_log_request_id_fkey";
+            columns: ["request_id"];
+            isOneToOne: false;
+            referencedRelation: "stock_requests";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       app_settings: {
         Row: {
           branch_shelf_life_days: number;
@@ -314,6 +388,20 @@ export type Database = {
             columns: ["product_id"];
             isOneToOne: false;
             referencedRelation: "v_products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "batches_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_kind";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "batches_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_shelf_life";
             referencedColumns: ["id"];
           },
         ];
@@ -527,6 +615,20 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "dispatch_lines_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_kind";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "dispatch_lines_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_shelf_life";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "dispatch_lines_request_line_id_fkey";
             columns: ["request_line_id"];
             isOneToOne: false;
@@ -684,9 +786,7 @@ export type Database = {
           id: number;
           kind: Database["public"]["Enums"]["notification_kind"];
           location_id: string | null;
-          product_id: string | null;
           recipients: number;
-          request_id: string | null;
           schedule_id: string | null;
           sent_at: string;
           slot_date: string | null;
@@ -697,9 +797,7 @@ export type Database = {
           id?: never;
           kind: Database["public"]["Enums"]["notification_kind"];
           location_id?: string | null;
-          product_id?: string | null;
           recipients?: number;
-          request_id?: string | null;
           schedule_id?: string | null;
           sent_at?: string;
           slot_date?: string | null;
@@ -709,9 +807,7 @@ export type Database = {
           id?: never;
           kind?: Database["public"]["Enums"]["notification_kind"];
           location_id?: string | null;
-          product_id?: string | null;
           recipients?: number;
-          request_id?: string | null;
           schedule_id?: string | null;
           sent_at?: string;
           slot_date?: string | null;
@@ -736,27 +832,6 @@ export type Database = {
             columns: ["location_id"];
             isOneToOne: false;
             referencedRelation: "locations";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "notification_log_product_id_fkey";
-            columns: ["product_id"];
-            isOneToOne: false;
-            referencedRelation: "products";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "notification_log_product_id_fkey";
-            columns: ["product_id"];
-            isOneToOne: false;
-            referencedRelation: "v_products";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "notification_log_request_id_fkey";
-            columns: ["request_id"];
-            isOneToOne: false;
-            referencedRelation: "stock_requests";
             referencedColumns: ["id"];
           },
           {
@@ -821,6 +896,20 @@ export type Database = {
             columns: ["product_id"];
             isOneToOne: false;
             referencedRelation: "v_products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "par_levels_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_kind";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "par_levels_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_shelf_life";
             referencedColumns: ["id"];
           },
           {
@@ -955,6 +1044,20 @@ export type Database = {
             columns: ["product_id"];
             isOneToOne: false;
             referencedRelation: "v_products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "production_lines_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_kind";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "production_lines_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_shelf_life";
             referencedColumns: ["id"];
           },
         ];
@@ -1799,6 +1902,20 @@ export type Database = {
             referencedRelation: "v_products";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "stock_count_lines_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_kind";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_count_lines_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_shelf_life";
+            referencedColumns: ["id"];
+          },
         ];
       };
       stock_counts: {
@@ -2021,6 +2138,20 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "stock_movements_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_kind";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_shelf_life";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "stock_movements_production_line_id_fkey";
             columns: ["production_line_id"];
             isOneToOne: false;
@@ -2098,6 +2229,20 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "stock_request_lines_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_kind";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_request_lines_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_shelf_life";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "stock_request_lines_request_id_fkey";
             columns: ["request_id"];
             isOneToOne: false;
@@ -2136,6 +2281,20 @@ export type Database = {
             columns: ["product_id"];
             isOneToOne: false;
             referencedRelation: "v_products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_request_missing_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_kind";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_request_missing_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_shelf_life";
             referencedColumns: ["id"];
           },
           {
@@ -2314,6 +2473,20 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "waste_records_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_kind";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "waste_records_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_shelf_life";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "waste_records_recorded_by_fkey";
             columns: ["recorded_by"];
             isOneToOne: false;
@@ -2361,6 +2534,20 @@ export type Database = {
             referencedRelation: "v_products";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "par_levels_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_kind";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "par_levels_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_shelf_life";
+            referencedColumns: ["id"];
+          },
         ];
       };
       v_branch_stock_age: {
@@ -2396,6 +2583,20 @@ export type Database = {
             referencedRelation: "v_products";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_kind";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_shelf_life";
+            referencedColumns: ["id"];
+          },
         ];
       };
       v_count_consumption: {
@@ -2421,6 +2622,20 @@ export type Database = {
             columns: ["product_id"];
             isOneToOne: false;
             referencedRelation: "v_products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_count_lines_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_kind";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_count_lines_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_shelf_life";
             referencedColumns: ["id"];
           },
           {
@@ -2528,6 +2743,20 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "batches_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_kind";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "batches_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_shelf_life";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "stock_movements_location_id_fkey";
             columns: ["location_id"];
             isOneToOne: false;
@@ -2550,6 +2779,41 @@ export type Database = {
           pieces_per_cake: number | null;
           sell_mode: Database["public"]["Enums"]["sell_mode"] | null;
           shelf_life_days: number | null;
+          sort_order: number | null;
+          updated_at: string | null;
+        };
+        ComputedFields: never;
+        Relationships: [];
+      };
+      v_products_before_kind: {
+        Row: {
+          created_at: string | null;
+          effective_pieces_per_cake: number | null;
+          id: string | null;
+          image_path: string | null;
+          is_active: boolean | null;
+          name_ar: string | null;
+          name_en: string | null;
+          pieces_per_cake: number | null;
+          sell_mode: Database["public"]["Enums"]["sell_mode"] | null;
+          sort_order: number | null;
+          updated_at: string | null;
+        };
+        ComputedFields: never;
+        Relationships: [];
+      };
+      v_products_before_shelf_life: {
+        Row: {
+          created_at: string | null;
+          effective_pieces_per_cake: number | null;
+          id: string | null;
+          image_path: string | null;
+          is_active: boolean | null;
+          kind: Database["public"]["Enums"]["product_kind"] | null;
+          name_ar: string | null;
+          name_en: string | null;
+          pieces_per_cake: number | null;
+          sell_mode: Database["public"]["Enums"]["sell_mode"] | null;
           sort_order: number | null;
           updated_at: string | null;
         };
@@ -2635,6 +2899,20 @@ export type Database = {
             referencedRelation: "v_products";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_kind";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_shelf_life";
+            referencedColumns: ["id"];
+          },
         ];
       };
       v_stock_current: {
@@ -2680,6 +2958,20 @@ export type Database = {
             columns: ["product_id"];
             isOneToOne: false;
             referencedRelation: "v_products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_kind";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_movements_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_shelf_life";
             referencedColumns: ["id"];
           },
         ];
@@ -2785,6 +3077,14 @@ export type Database = {
           stock_pieces: number;
         }[];
       };
+      branch_suggestions_before_consumption: {
+        Args: { p_branch_id: string };
+        Returns: {
+          par_pieces: number;
+          product_id: string;
+          stock_pieces: number;
+        }[];
+      };
       cancel_request: { Args: { p_request_id: string }; Returns: undefined };
       count_breakdown: {
         Args: { p_count_id: string };
@@ -2820,7 +3120,18 @@ export type Database = {
         };
         Returns: string;
       };
+      create_dispatch_before_driver: {
+        Args: {
+          p_confirm_fefo_override?: boolean;
+          p_lines: Json;
+          p_note?: string;
+          p_request_id?: string;
+          p_to_location_id: string;
+        };
+        Returns: string;
+      };
       create_request: { Args: { p_lines: Json; p_missing?: Json; p_note?: string }; Returns: string };
+      create_request_before_missing: { Args: { p_lines: Json; p_note?: string }; Returns: string };
       day_number: { Args: { d: string }; Returns: number };
       decide_return: {
         Args: {
