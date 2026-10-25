@@ -127,6 +127,29 @@ function BranchTasks({ data }: { data: BranchHomeData | null }) {
           </span>
         </Link>
       )}
+      {data && data.belowMin.length > 0 && (
+        <Link
+          href="/order"
+          className="flex items-center gap-3 rounded-[14px] border border-danger-line bg-danger-soft px-3.5 py-2.5"
+        >
+          <span className="shrink-0 text-danger">
+            <CartIcon size={24} />
+          </span>
+          <span className="flex grow flex-col text-danger-text">
+            <strong className="text-[15px]">
+              {data.belowMin.length}{" "}
+              {data.belowMin.length >= 3 && data.belowMin.length <= 10 ? "أصناف" : "صنف"} تحت الحد الأدنى
+            </strong>
+            <span dir="auto" className="text-[13px]">
+              {data.belowMin
+                .slice(0, 3)
+                .map((b) => `${b.name} ${formatQuantity(b.qty, b.piecesPerCake)}`)
+                .join("، ")}{" "}
+              · اطلب
+            </span>
+          </span>
+        </Link>
+      )}
       <nav aria-label="المهام" className="flex flex-col gap-3">
         <TaskLink href="/count" title="جرد" description="عدّ الكيك الموجود بالفرع" icon={<ClipboardIcon />} />
         <TaskLink

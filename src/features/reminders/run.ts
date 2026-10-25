@@ -84,7 +84,63 @@ export async function runReminders(now = new Date()): Promise<ReminderRun> {
     result.sent.push({ kind: alert.kind, scheduleId: alert.schedule.id, recipients });
   }
   await alertUnreceivedDispatches(db, result);
+  await alertBelowMin(db, today, result);
   return result;
+}
+
+async function activeAdmins(db: ReturnType<typeof createAdminClient>): Promise<string[]> {
+  const { data } = await db
+    .from("staff")
+    .select("id, staff_roles!staff_roles_staff_id_fkey!inner(role)")
+    .eq("is_active", true)
+    .eq("staff_roles.role", "admin");
+  return (data ?? []).map((a) => a.id);
+}
+
+/**
+ * أصناف تحت الحد الأدنى بالفروع: إشعار وحد لكل فرع (فيه الأصناف الجديدة) لموظفين الفرع وللأدمن.
+ * كل صنف بينبعت مرة باليوم بس (notification_log).
+ */
+async function alertBelowMin(db: ReturnType<typeof createAdminClient>, today: string, result: ReminderRun) {
+  const { data: below, error } = await db
+    .from("v_below_min")
+    .select("location_id, product_id, location:locations!inner(name), product:products!inner(name_en)");
+  if (error) throw new Error(error.message);
+
+  const fresh = new Map<string, { name: string; products: string[] }>();
+  for (const row of below ?? []) {
+    const { data: logged } = await db
+      .from("notification_log")
+      .insert({
+        kind: "below_min",
+        location_id: row.location_id,
+        product_id: row.product_id,
+        slot_date: today,
+      })
+      .select("id")
+      .maybeSingle();
+    if (!logged) continue;
+    const entry = fresh.get(row.location_id!) ?? { name: row.location.name, products: [] };
+    entry.products.push(row.product.name_en);
+    fresh.set(row.location_id!, entry);
+  }
+  if (fresh.size === 0) return;
+
+  const admins = await activeAdmins(db);
+  for (const [locationId, { name, products }] of fresh) {
+    const { data: staff } = await db
+      .from("staff")
+      .select("id")
+      .eq("is_active", true)
+      .eq("location_id", locationId);
+    const recipients = await sendPushToStaff([...new Set([...(staff ?? []).map((s) => s.id), ...admins])], {
+      title: "تحت الحد الأدنى",
+      body: `فرع ${name}: ${products.join("، ")} ${products.length === 1 ? "قلّ" : "قلّوا"} عن الحد الأدنى.`,
+      url: "/",
+      tag: `below-min-${locationId}-${today}`,
+    });
+    result.sent.push({ kind: "below_min", scheduleId: locationId, recipients });
+  }
 }
 
 /** إخراج ما انستلم بعد عدد الساعات المحدد: إشعار لموظفين الوجهة وللأدمن، مرة وحدة. */

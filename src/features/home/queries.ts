@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 export interface BranchHomeData {
   incoming: number;
   nearExpiry: string[];
+  // تحت الحد الأدنى: اسم الصنف والموجود والحد (بالقطع)
+  belowMin: { name: string; qty: number; min: number; piecesPerCake: number | null }[];
 }
 
 export interface FactoryHomeData {
@@ -23,7 +25,7 @@ async function productNames(supabase: Awaited<ReturnType<typeof createClient>>) 
 export async function branchHomeData(branchId: string): Promise<BranchHomeData> {
   await requireStaff();
   const supabase = await createClient();
-  const [{ count }, { data: ages }, names] = await Promise.all([
+  const [{ count }, { data: ages }, names, { data: below }] = await Promise.all([
     supabase
       .from("dispatches")
       .select("id", { count: "exact", head: true })
@@ -35,10 +37,15 @@ export async function branchHomeData(branchId: string): Promise<BranchHomeData> 
       .eq("location_id", branchId)
       .eq("near_expiry", true),
     productNames(supabase),
+    supabase.from("v_below_min").select("product_id, qty_pieces, min_pieces").eq("location_id", branchId),
   ]);
   return {
     incoming: count ?? 0,
     nearExpiry: (ages ?? []).map((a) => names.get(a.product_id!)?.name ?? "").filter(Boolean),
+    belowMin: (below ?? []).flatMap((b) => {
+      const p = names.get(b.product_id!);
+      return p ? [{ name: p.name, qty: b.qty_pieces!, min: b.min_pieces!, piecesPerCake: p.ppc }] : [];
+    }),
   };
 }
 

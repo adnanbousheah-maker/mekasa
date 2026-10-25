@@ -247,3 +247,54 @@ export async function setParLevelAction(
   refresh();
   return done;
 }
+
+/** الحد الأدنى لصنف بفرع (فاضي = ما في). تحته بيوصل تنبيه للفرع وللأدمن. نفس وحدة الحد المطلوب. */
+export async function setMinLevelAction(
+  locationId: string,
+  productId: string,
+  value: string,
+): Promise<SaveResult> {
+  const admin = await requireAdmin();
+  if (!parSchema.safeParse({ locationId, productId }).success) return fail("الصنف أو الفرع مش موجود");
+  let units: number | null = null;
+  if (value.trim() !== "") {
+    const amount = wholeNumber({ min: 0, max: 999 }).safeParse(value);
+    if (!amount.success) return fail(firstIssue(amount.error));
+    units = amount.data;
+  }
+
+  const supabase = await createClient();
+  const { data: product, error: readError } = await supabase
+    .from("v_products")
+    .select("effective_pieces_per_cake")
+    .eq("id", productId)
+    .maybeSingle();
+  if (readError || !product) return fail("الصنف مش موجود");
+  const minPieces = units === null ? null : units * (product.effective_pieces_per_cake ?? 1);
+
+  // الصف ممكن ما يكون موجود (صنف جديد): بينعمل بحد مطلوب صفر
+  const { data: updated, error } = await supabase
+    .from("par_levels")
+    .update({ min_pieces: minPieces, updated_by: admin.id })
+    .eq("location_id", locationId)
+    .eq("product_id", productId)
+    .select("location_id");
+  if (!error && updated.length === 0 && minPieces !== null) {
+    const { error: insertError } = await supabase.from("par_levels").insert({
+      location_id: locationId,
+      product_id: productId,
+      par_pieces: 0,
+      min_pieces: minPieces,
+      updated_by: admin.id,
+    });
+    if (insertError) {
+      console.error("setMinLevel insert", insertError);
+      return fail(SAVE_FAILED);
+    }
+  } else if (error) {
+    console.error("setMinLevel", error);
+    return fail(SAVE_FAILED);
+  }
+  refresh();
+  return done;
+}

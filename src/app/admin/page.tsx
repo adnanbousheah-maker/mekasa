@@ -10,6 +10,7 @@ import {
   lastCountByLocation,
   listReportLocations,
   listReportProducts,
+  minLevels,
   parLevels,
   slotsToday,
   stockByProduct,
@@ -67,6 +68,7 @@ async function Overview() {
     docs,
     alertHours,
     raw,
+    min,
   ] = await Promise.all([
     listReportLocations(),
     listReportProducts(),
@@ -80,6 +82,7 @@ async function Overview() {
     loadDocuments({ requests: { statuses: ["pending_approval", "sent"] }, dispatches: {}, sinceDays: 14 }),
     unreceivedAlertHours(),
     listRawMaterials(),
+    minLevels(),
   ]);
   const productById = new Map(products.map((p) => [p.id, p]));
 
@@ -168,6 +171,27 @@ async function Overview() {
         sub: "العد أكثر من المتوقع: يا غلط بالعد، يا استلام ما انسجل",
         action: "راجع",
         href: `/admin/counts/${c.id}`,
+      });
+    }
+  }
+  for (const loc of locations.filter((l) => l.kind === "branch")) {
+    const belowMin = products.filter((p) => {
+      const floor = min.get(p.id)?.get(loc.id);
+      return p.isActive && floor !== undefined && (stock.get(p.id)?.get(loc.id) ?? 0) < floor;
+    });
+    if (belowMin.length > 0) {
+      alerts.push({
+        tone: "danger",
+        title: `${belowMin.length} ${belowMin.length >= 3 && belowMin.length <= 10 ? "أصناف" : "صنف"} بـ${loc.name} تحت الحد الأدنى`,
+        sub: belowMin
+          .slice(0, 4)
+          .map((p) => {
+            const have = stock.get(p.id)?.get(loc.id) ?? 0;
+            return `${p.nameEn} ${formatQuantityCompact(have, p.piecesPerCake)}`;
+          })
+          .join(" · "),
+        action: "شوف",
+        href: "/admin/stock",
       });
     }
   }

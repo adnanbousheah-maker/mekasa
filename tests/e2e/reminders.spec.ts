@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
-import { BRANCH_DBQ, signInAndWait, temporarySchedule } from "./support";
+import { ADMIN, BRANCH_DBQ, BRANCH_JBH, clearMinLevels, signInAndWait, temporarySchedule } from "./support";
 
 function cronSecret(): string {
   const line = readFileSync(".env.local", "utf8")
@@ -48,6 +48,38 @@ test("a late count shows on the branch home, and the cron logs one late alert", 
     expect(second.sent.filter((s: { scheduleId: string }) => s.scheduleId === schedule.id)).toEqual([]);
   } finally {
     await schedule.remove();
+  }
+});
+
+test("a minimum level alerts the branch home and the cron, once a day", async ({ browser, request }) => {
+  await clearMinLevels();
+  try {
+    const admin = await browser.newPage({ viewport: { width: 1360, height: 900 } });
+    await signInAndWait(admin, ADMIN.phone, ADMIN.pin);
+    await admin.goto("/admin/settings?tab=par");
+    const field = admin.getByRole("textbox", { name: "الحد الأدنى لـ Pecan بـالجبيهة" });
+    await expect(field).toHaveValue("");
+    await field.fill("50");
+    await field.press("Enter");
+    await expect(admin.getByRole("status").filter({ hasText: "انحفظ" })).toBeVisible();
+    await admin.goto("/admin");
+    await expect(admin.getByText(/بـالجبيهة تحت الحد الأدنى/)).toBeVisible();
+    await admin.close();
+
+    const branch = await browser.newPage();
+    await signInAndWait(branch, BRANCH_JBH.phone, BRANCH_JBH.pin);
+    const banner = branch.getByRole("link", { name: /تحت الحد الأدنى/ });
+    await expect(banner).toContainText("Pecan");
+    await expect(banner).toHaveAttribute("href", "/order");
+    await branch.close();
+
+    const auth = { headers: { Authorization: `Bearer ${cronSecret()}` } };
+    const first = await (await request.post("/api/cron/reminders", auth)).json();
+    expect(first.sent.filter((s: { kind: string }) => s.kind === "below_min")).toHaveLength(1);
+    const second = await (await request.post("/api/cron/reminders", auth)).json();
+    expect(second.sent.filter((s: { kind: string }) => s.kind === "below_min")).toEqual([]);
+  } finally {
+    await clearMinLevels();
   }
 });
 

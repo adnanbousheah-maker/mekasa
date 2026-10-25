@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { GeneralTab } from "@/features/settings/components/GeneralTab";
 import { ParTab } from "@/features/settings/components/ParTab";
 import { ProductsTab } from "@/features/settings/components/ProductsTab";
-import { listReportLocations, listReportProducts, parLevels } from "@/features/reports/queries";
+import { listReportLocations, listReportProducts, minLevels, parLevels } from "@/features/reports/queries";
 import { ScheduleCard } from "@/features/settings/components/ScheduleCard";
 import { getSettings, listProducts, listScheduleLocations } from "@/features/settings/queries";
 
@@ -64,16 +64,18 @@ async function Settings({ searchParams }: { searchParams: SearchParams }) {
 
 async function TabContent({ tab }: { tab: TabId }) {
   if (tab === "par") {
-    const [locations, products, par] = await Promise.all([
+    const [locations, products, par, min] = await Promise.all([
       listReportLocations(),
       listReportProducts(),
       parLevels(),
+      minLevels(),
     ]);
     return (
       <ParTab
         branches={locations.filter((l) => l.kind === "branch")}
         products={products.filter((p) => p.isActive)}
         par={par}
+        min={min}
       />
     );
   }

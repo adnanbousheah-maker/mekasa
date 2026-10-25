@@ -684,7 +684,9 @@ export type Database = {
           id: number;
           kind: Database["public"]["Enums"]["notification_kind"];
           location_id: string | null;
+          product_id: string | null;
           recipients: number;
+          request_id: string | null;
           schedule_id: string | null;
           sent_at: string;
           slot_date: string | null;
@@ -695,7 +697,9 @@ export type Database = {
           id?: never;
           kind: Database["public"]["Enums"]["notification_kind"];
           location_id?: string | null;
+          product_id?: string | null;
           recipients?: number;
+          request_id?: string | null;
           schedule_id?: string | null;
           sent_at?: string;
           slot_date?: string | null;
@@ -705,7 +709,9 @@ export type Database = {
           id?: never;
           kind?: Database["public"]["Enums"]["notification_kind"];
           location_id?: string | null;
+          product_id?: string | null;
           recipients?: number;
+          request_id?: string | null;
           schedule_id?: string | null;
           sent_at?: string;
           slot_date?: string | null;
@@ -733,6 +739,27 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "notification_log_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notification_log_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notification_log_request_id_fkey";
+            columns: ["request_id"];
+            isOneToOne: false;
+            referencedRelation: "stock_requests";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "notification_log_schedule_id_fkey";
             columns: ["schedule_id"];
             isOneToOne: false;
@@ -751,6 +778,7 @@ export type Database = {
       par_levels: {
         Row: {
           location_id: string;
+          min_pieces: number | null;
           par_pieces: number;
           product_id: string;
           updated_at: string;
@@ -759,6 +787,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           location_id: string;
+          min_pieces?: number | null;
           par_pieces: number;
           product_id: string;
           updated_at?: string;
@@ -766,6 +795,7 @@ export type Database = {
         };
         Update: {
           location_id?: string;
+          min_pieces?: number | null;
           par_pieces?: number;
           product_id?: string;
           updated_at?: string;
@@ -2254,6 +2284,38 @@ export type Database = {
       };
     };
     Views: {
+      v_below_min: {
+        Row: {
+          location_id: string | null;
+          min_pieces: number | null;
+          product_id: string | null;
+          qty_pieces: number | null;
+        };
+        ComputedFields: never;
+        Relationships: [
+          {
+            foreignKeyName: "par_levels_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "par_levels_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "par_levels_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       v_branch_stock_age: {
         Row: {
           age_days: number | null;
@@ -2775,7 +2837,8 @@ export type Database = {
         | "receipt_in"
         | "return_to_stock"
         | "admin_correction";
-      notification_kind: "count_reminder" | "count_late" | "dispatch_unreceived";
+      notification_kind:
+        "count_reminder" | "count_late" | "dispatch_unreceived" | "below_min" | "order_missing_item";
       raw_movement_type: "opening_balance" | "receipt" | "issue" | "count_adjustment" | "admin_correction";
       request_status: "pending_approval" | "sent" | "dispatched" | "received" | "cancelled";
       sell_mode: "whole_and_pieces" | "pieces_only";
@@ -2909,7 +2972,13 @@ export const Constants = {
         "return_to_stock",
         "admin_correction",
       ],
-      notification_kind: ["count_reminder", "count_late", "dispatch_unreceived"],
+      notification_kind: [
+        "count_reminder",
+        "count_late",
+        "dispatch_unreceived",
+        "below_min",
+        "order_missing_item",
+      ],
       raw_movement_type: ["opening_balance", "receipt", "issue", "count_adjustment", "admin_correction"],
       request_status: ["pending_approval", "sent", "dispatched", "received", "cancelled"],
       sell_mode: ["whole_and_pieces", "pieces_only"],

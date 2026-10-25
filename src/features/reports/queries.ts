@@ -88,6 +88,23 @@ export async function parLevels(): Promise<Map<string, Map<string, number>>> {
   return map;
 }
 
+/** الحد الأدنى بالقطع (بس اللي محدد إله): [صنف][فرع]. */
+export async function minLevels(): Promise<Map<string, Map<string, number>>> {
+  const supabase = await db();
+  const { data, error } = await supabase
+    .from("par_levels")
+    .select("location_id, product_id, min_pieces")
+    .not("min_pieces", "is", null);
+  if (error) fail("min levels", error);
+  const map = new Map<string, Map<string, number>>();
+  for (const row of data) {
+    const byLocation = map.get(row.product_id) ?? new Map<string, number>();
+    byLocation.set(row.location_id, row.min_pieces!);
+    map.set(row.product_id, byLocation);
+  }
+  return map;
+}
+
 /** الاستهلاك بالقطع بين يومين (مع الطرفين، والنهاية افتراضياً اليوم): [صنف][فرع]. */
 export async function consumptionSince(
   fromIso: string,

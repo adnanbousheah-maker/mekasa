@@ -241,3 +241,10 @@ export async function latestDispatchTo(locationCode: string) {
   );
   return { id: data.id, kind: data.kind, status: data.status, fefoOverride };
 }
+
+/** بيشيل كل الحدود الدنيا وإشعاراتها (بعد اختبار الحد الأدنى). */
+export async function clearMinLevels() {
+  const db = serviceClient();
+  await db.from("par_levels").update({ min_pieces: null }).not("min_pieces", "is", null);
+  await db.from("notification_log").delete().eq("kind", "below_min");
+}
