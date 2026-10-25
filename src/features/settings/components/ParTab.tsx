@@ -1,81 +1,129 @@
+import Link from "next/link";
 import { ProductName } from "@/components/ui/ProductName";
+import { formatQuantity } from "@/lib/units";
 import { setMinLevelAction, setParLevelAction } from "../actions";
 import { InlineField } from "./InlineField";
 
+type Location = { id: string; name: string; kind: string };
+type Product = { id: string; nameEn: string; piecesPerCake: number | null };
+
 type Props = {
-  branches: { id: string; name: string }[];
-  products: { id: string; nameEn: string; piecesPerCake: number | null }[];
+  locations: Location[];
+  current: Location;
+  products: Product[];
   par: Map<string, Map<string, number>>;
   min: Map<string, Map<string, number>>;
+  stock: Map<string, Map<string, number>>;
 };
 
-/** design/admin/AdminSettings (الحد المطلوب بالفروع): بالكيكات، والأصناف اللي قطع بس بالقطع. */
-export function ParTab({ branches, products, par, min }: Props) {
+const KIND_NOTES: Record<string, string> = {
+  branch:
+    "المطلوب = كم بدك يكون بالفرع بعد الاستلام (التطبيق بيقترح الفرق). الأدنى = إذا الموجود نزل تحته بعد الجرد، بيوصل تنبيه للفرع وإلك.",
+  factory: "الأدنى = إذا ستوك المصنع من هالصنف نزل تحته بعد الجرد، بيوصل تنبيه للمصنع وإلك.",
+  packaging: "الأدنى بالحبة = إذا الموجود بالمستودع نزل تحته، بيوصل تنبيه لأمين التغليف وإلك.",
+};
+
+/** الحد المطلوب والأدنى، موقع موقع: كل فرع لحاله، والمصنع، ومستودع التغليف. */
+export function ParTab({ locations, current, products, par, min, stock }: Props) {
+  const isBranch = current.kind === "branch";
+  const isPackaging = current.kind === "packaging";
+
   return (
     <section className="flex flex-col gap-3">
-      <span className="text-sm leading-relaxed text-muted">
-        الحد المطلوب = كم بدك يكون موجود من كل صنف بالفرع بعد الاستلام. التطبيق بيقترح على الفرع يطلب الفرق،
-        وبيقترح على المصنع يطلّعه. الحد الأدنى (اختياري): إذا الموجود نزل تحته بعد الجرد أو الاستلام أو
-        التالف، بيوصل تنبيه للفرع وإلك.
-      </span>
-      <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
-        <table className="w-full min-w-[560px] border-collapse text-sm">
+      <nav aria-label="الموقع" className="flex flex-wrap gap-2">
+        {locations.map((l) => (
+          <Link
+            key={l.id}
+            href={`/admin/settings?tab=par&loc=${l.id}`}
+            aria-current={l.id === current.id ? "page" : undefined}
+            className={`flex h-11 items-center rounded-xl px-4 text-[15px] ${l.id === current.id ? "bg-ink font-semibold text-white" : "border border-line-strong bg-surface"}`}
+          >
+            {l.kind === "branch" ? `فرع ${l.name}` : l.name}
+          </Link>
+        ))}
+      </nav>
+      <span className="text-sm leading-relaxed text-muted">{KIND_NOTES[current.kind]}</span>
+
+      {/* مفتاح الموقع: الخانات بتحفظ قيمتها الأولى، فلازم تنعمل من جديد لما يتغير الموقع */}
+      <div key={current.id} className="overflow-x-auto rounded-2xl border border-line bg-surface">
+        <table className="w-full min-w-[420px] border-collapse text-sm">
           <thead>
             <tr className="bg-table-head text-table-head-text">
               <th scope="col" className="px-4 py-3 text-right font-semibold">
                 الصنف
               </th>
-              {branches.map((b) => (
-                <th key={b.id} scope="col" className="px-3 py-3 font-semibold">
-                  {b.name}
-                  <span className="block text-xs font-normal">المطلوب · الأدنى</span>
+              <th scope="col" className="px-3 py-3 font-semibold">
+                الموجود
+              </th>
+              {isBranch && (
+                <th scope="col" className="px-3 py-3 font-semibold">
+                  المطلوب
                 </th>
-              ))}
+              )}
+              <th scope="col" className="px-3 py-3 font-semibold">
+                الأدنى
+              </th>
             </tr>
           </thead>
           <tbody>
-            {products.map((p) => (
-              <tr key={p.id} className="border-t border-line-soft">
-                <th scope="row" className="px-4 py-2 text-right font-semibold">
-                  <ProductName name={p.nameEn} />
-                  <span className="block text-xs font-normal text-muted">
-                    {p.piecesPerCake === null ? "بالقطع" : "بالكيكات"}
-                  </span>
-                </th>
-                {branches.map((b) => {
-                  const toUnits = (pieces: number) =>
-                    p.piecesPerCake ? Math.round(pieces / p.piecesPerCake) : pieces;
-                  const minPieces = min.get(p.id)?.get(b.id);
-                  return (
-                    <td key={b.id} className="px-3 py-1.5">
-                      <div className="flex items-center justify-center gap-2">
-                        <InlineField
-                          numeric
-                          label={`الحد المطلوب لـ ${p.nameEn} بـ${b.name}`}
-                          initial={String(toUnits(par.get(p.id)?.get(b.id) ?? 0))}
-                          onSave={setParLevelAction.bind(null, b.id, p.id)}
-                          className="w-16"
-                        />
-                        <InlineField
-                          numeric
-                          label={`الحد الأدنى لـ ${p.nameEn} بـ${b.name}`}
-                          initial={minPieces === undefined ? "" : String(toUnits(minPieces))}
-                          placeholder="—"
-                          onSave={setMinLevelAction.bind(null, b.id, p.id)}
-                          className="w-14 bg-warn-soft"
-                        />
-                      </div>
-                    </td>
-                  );
-                })}
+            {products.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-4 py-4 text-center text-muted">
+                  {isPackaging ? "ما في مواد تغليف لسا. ضيفها من تبويب التغليف." : "ما في أصناف."}
+                </td>
               </tr>
-            ))}
+            )}
+            {products.map((p) => {
+              const toUnits = (pieces: number) =>
+                p.piecesPerCake ? Math.round(pieces / p.piecesPerCake) : pieces;
+              const have = stock.get(p.id)?.get(current.id) ?? 0;
+              const floor = min.get(p.id)?.get(current.id);
+              const low = floor !== undefined && have < floor;
+              return (
+                <tr key={p.id} className={`border-t border-line-soft ${low ? "bg-danger-soft" : ""}`}>
+                  <th scope="row" className="px-4 py-2 text-right font-semibold">
+                    <ProductName name={p.nameEn} />
+                    <span className="block text-xs font-normal text-muted">
+                      {isPackaging ? "بالحبة" : p.piecesPerCake === null ? "بالقطع" : "بالكيكات"}
+                    </span>
+                  </th>
+                  <td
+                    className={`px-3 py-2 text-center tabular-nums ${low ? "font-semibold text-danger-text" : ""}`}
+                  >
+                    {isPackaging ? `${have} حبة` : formatQuantity(Math.max(0, have), p.piecesPerCake)}
+                  </td>
+                  {isBranch && (
+                    <td className="px-3 py-1.5 text-center">
+                      <InlineField
+                        numeric
+                        label={`الحد المطلوب لـ ${p.nameEn} بـ${current.name}`}
+                        initial={String(toUnits(par.get(p.id)?.get(current.id) ?? 0))}
+                        onSave={setParLevelAction.bind(null, current.id, p.id)}
+                        className="w-16"
+                      />
+                    </td>
+                  )}
+                  <td className="px-3 py-1.5 text-center">
+                    <InlineField
+                      numeric
+                      label={`الحد الأدنى لـ ${p.nameEn} بـ${current.name}`}
+                      initial={floor === undefined ? "" : String(toUnits(floor))}
+                      placeholder="—"
+                      onSave={setMinLevelAction.bind(null, current.id, p.id)}
+                      className={`${isPackaging ? "w-20" : "w-16"} bg-warn-soft`}
+                    />
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
-      <span className="text-[13px] text-info-text">
-        نصيحة: بعد أسبوعين من الجرد، شوف الاستهلاك الحقيقي بصفحة الستوك وعدّل الحد عليه.
-      </span>
+      {isBranch && (
+        <span className="text-[13px] text-info-text">
+          نصيحة: بعد أسبوعين من الجرد، شوف الاستهلاك الحقيقي بصفحة الستوك وعدّل الحد عليه.
+        </span>
+      )}
     </section>
   );
 }

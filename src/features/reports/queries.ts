@@ -106,6 +106,52 @@ export async function minLevels(): Promise<Map<string, Map<string, number>>> {
   return map;
 }
 
+/** كل اللي تحت الحد الأدنى بكل المواقع (فروع، مصنع، مستودع تغليف)، مجمّع حسب الموقع. */
+export async function belowMinByLocation(): Promise<
+  {
+    locationId: string;
+    locationName: string;
+    kind: string;
+    items: { name: string; qty: number; ppc: number | null }[];
+  }[]
+> {
+  const supabase = await db();
+  const { data, error } = await supabase
+    .from("v_below_min")
+    .select(
+      "location_id, qty_pieces, location:locations!inner(name, kind), product:products!inner(name_en, sell_mode, pieces_per_cake)",
+    );
+  if (error) fail("below min", error);
+  const { data: settings } = await supabase.from("app_settings").select("default_pieces_per_cake").single();
+  const out = new Map<
+    string,
+    {
+      locationId: string;
+      locationName: string;
+      kind: string;
+      items: { name: string; qty: number; ppc: number | null }[];
+    }
+  >();
+  for (const row of data) {
+    const entry = out.get(row.location_id!) ?? {
+      locationId: row.location_id!,
+      locationName: row.location.name,
+      kind: row.location.kind,
+      items: [],
+    };
+    entry.items.push({
+      name: row.product.name_en,
+      qty: row.qty_pieces ?? 0,
+      ppc:
+        row.product.sell_mode === "pieces_only"
+          ? null
+          : (row.product.pieces_per_cake ?? settings?.default_pieces_per_cake ?? 10),
+    });
+    out.set(row.location_id!, entry);
+  }
+  return [...out.values()];
+}
+
 /** الاستهلاك بالقطع بين يومين (مع الطرفين، والنهاية افتراضياً اليوم): [صنف][فرع]. */
 export async function consumptionSince(
   fromIso: string,

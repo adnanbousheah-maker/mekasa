@@ -96,7 +96,17 @@ async function Orders({ searchParams }: { searchParams: SearchParams }) {
       <PageHeader
         title="الطلب والإخراج والاستلام"
         subtitle="كل حركة بين المواقع: طلبات الفروع، والإخراج، والتحويل، والإرجاع"
-        actions={<ExportButton href="/admin/export/orders" />}
+        actions={
+          <>
+            <Link
+              href="/admin/orders/today"
+              className="flex h-11 items-center rounded-xl bg-ink px-4 font-semibold text-white"
+            >
+              طلبيات اليوم (للإنتاج)
+            </Link>
+            <ExportButton href="/admin/export/orders" />
+          </>
+        }
       />
       <FilterLinks
         label="فلتر"

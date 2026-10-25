@@ -54,6 +54,21 @@ export async function listProducts(kind: "cake" | "packaging" = "cake"): Promise
   }));
 }
 
+/** المواقع اللي إلها حد أدنى: الفروع أول، وبعدين المصنع ومستودع التغليف. */
+export async function listMinLevelLocations(): Promise<{ id: string; name: string; kind: string }[]> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("locations")
+    .select("id, name, kind")
+    .in("kind", ["branch", "factory", "packaging"])
+    .eq("is_active", true)
+    .order("sort_order");
+  if (error) throw new Error(`Could not load locations: ${error.message}`);
+  const rank = { branch: 0, factory: 1, packaging: 2 } as Record<string, number>;
+  return [...data].sort((a, b) => rank[a.kind] - rank[b.kind]);
+}
+
 /** المصنع والفروع مع مواعيدهم الفعّالة (المواعيد ما بتنحذف، بتنوقف). */
 export async function listScheduleLocations(): Promise<ScheduleLocation[]> {
   await requireAdmin();

@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "لوحة الإدارة · ميكا�
 export default function AdminLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <div className="flex min-h-dvh flex-wrap">
-      <div className="flex w-full lg:w-60 lg:shrink-0">
+      <div className="flex w-full lg:w-60 lg:shrink-0 print:hidden">
         <AdminNav
           footer={
             <Suspense fallback={null}>

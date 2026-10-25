@@ -234,10 +234,13 @@ function FactoryTasks({ staff, data }: { staff: CurrentStaff; data: FactoryHomeD
   const isStorekeeper = staff.roles.includes("storekeeper");
   const isDispatcher = staff.roles.includes("dispatcher");
   const lastDay = data?.lastDay ?? [];
+  // المواد الأولية لأمين المستودع بس (الإخراج ما بيفتح صفحتها)
+  const rawBelowMin = isStorekeeper ? (data?.rawBelowMin ?? []) : [];
+  const belowMin = data?.belowMin ?? [];
 
   return (
     <>
-      {(lastDay.length > 0 || (data?.rawBelowMin.length ?? 0) > 0) && (
+      {(lastDay.length > 0 || rawBelowMin.length > 0 || belowMin.length > 0) && (
         <section aria-label="تنبيهات" className="flex flex-col gap-2">
           {lastDay.slice(0, 3).map((b) => (
             <Link
@@ -256,7 +259,24 @@ function FactoryTasks({ staff, data }: { staff: CurrentStaff; data: FactoryHomeD
               </span>
             </Link>
           ))}
-          {data && data.rawBelowMin.length > 0 && (
+          {belowMin.length > 0 && (
+            <div className="flex items-center gap-3 rounded-[14px] border border-danger-line bg-danger-soft px-3.5 py-2.5 text-danger-text">
+              <CartIcon size={24} />
+              <span className="flex flex-col">
+                <strong className="text-[15px]">
+                  {belowMin.length} {belowMin.length >= 3 && belowMin.length <= 10 ? "أصناف" : "صنف"} بالمصنع
+                  تحت الحد الأدنى
+                </strong>
+                <span dir="auto" className="text-[13px]">
+                  {belowMin
+                    .slice(0, 3)
+                    .map((b) => `${b.name} ${formatQuantity(b.qty, b.piecesPerCake)}`)
+                    .join("، ")}
+                </span>
+              </span>
+            </div>
+          )}
+          {rawBelowMin.length > 0 && (
             <Link
               href="/factory/raw"
               className="flex items-center gap-3 rounded-[14px] border border-warn-line bg-warn-soft px-3.5 py-2.5 text-warn-text"
@@ -264,14 +284,14 @@ function FactoryTasks({ staff, data }: { staff: CurrentStaff; data: FactoryHomeD
               <BoxIcon size={24} />
               <span className="flex flex-col">
                 <strong className="text-[15px]">
-                  {data.rawBelowMin.length === 1
+                  {rawBelowMin.length === 1
                     ? "مادة وحدة"
-                    : data.rawBelowMin.length === 2
+                    : rawBelowMin.length === 2
                       ? "مادتين"
-                      : `${data.rawBelowMin.length} مواد`}{" "}
+                      : `${rawBelowMin.length} مواد`}{" "}
                   تحت الحد الأدنى
                 </strong>
-                <span className="text-[13px]">{data.rawBelowMin.slice(0, 4).join("، ")}</span>
+                <span className="text-[13px]">{rawBelowMin.slice(0, 4).join("، ")}</span>
               </span>
             </Link>
           )}
@@ -294,6 +314,12 @@ function FactoryTasks({ staff, data }: { staff: CurrentStaff; data: FactoryHomeD
               title="إخراج جديد"
               icon={<TruckIcon size={24} />}
             />
+            <TaskLink
+              variant="tile"
+              href="/factory/today"
+              title="طلبيات اليوم"
+              icon={<ClipboardIcon size={24} />}
+            />
           </div>
         </section>
       )}
@@ -307,6 +333,14 @@ function FactoryTasks({ staff, data }: { staff: CurrentStaff; data: FactoryHomeD
               title="تسجيل إنتاج"
               icon={<OvenIcon size={24} />}
             />
+            {!isDispatcher && (
+              <TaskLink
+                variant="tile"
+                href="/factory/today"
+                title="طلبيات اليوم"
+                icon={<ClipboardIcon size={24} />}
+              />
+            )}
             <TaskLink variant="tile" href="/count" title="جرد المصنع" icon={<ClipboardIcon size={24} />} />
             <TaskLink
               variant="tile"

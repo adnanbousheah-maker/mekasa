@@ -7,7 +7,12 @@ import { StaffLoading, StaffScreen } from "@/components/ui/StaffScreen";
 import { requireStaff } from "@/features/auth/session";
 import { NotForYou, STATUS_TONES } from "@/features/orders/components/OrderBits";
 import { allActiveProducts, loadDocuments } from "@/features/orders/queries";
-import { isPackagingKeeper, packagingStock, packagingStore } from "@/features/packaging/queries";
+import {
+  isPackagingKeeper,
+  packagingBelowMin,
+  packagingStock,
+  packagingStore,
+} from "@/features/packaging/queries";
 import { formatClock } from "@/lib/time";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
@@ -33,11 +38,12 @@ async function Packaging({ searchParams }: { searchParams: SearchParams }) {
   await connection();
   const store = await packagingStore();
   if (!store) return <NotForYou title="مستودع التغليف" text="ما في مستودع تغليف فعّال." />;
-  const [{ requests }, { dispatches }, items, stock] = await Promise.all([
+  const [{ requests }, { dispatches }, items, stock, low] = await Promise.all([
     loadDocuments({ requests: { supplyingLocationId: store.id, statuses: ["sent"] }, sinceDays: 14 }),
     loadDocuments({ dispatches: { fromLocationId: store.id, statuses: ["in_transit"] }, sinceDays: 14 }),
     allActiveProducts("packaging"),
     packagingStock(store.id),
+    packagingBelowMin(store.id),
   ]);
 
   return (
@@ -46,6 +52,23 @@ async function Packaging({ searchParams }: { searchParams: SearchParams }) {
       {counted === "1" && (
         <p role="status" className="rounded-xl bg-ok-soft px-3 py-2.5 text-center text-ok-text">
           انحفظ جرد المستودع
+        </p>
+      )}
+
+      {low.size > 0 && (
+        <p
+          role="alert"
+          className="rounded-xl border border-danger-line bg-danger-soft px-3 py-2.5 text-danger-text"
+        >
+          <strong>
+            {low.size} {low.size >= 3 && low.size <= 10 ? "مواد" : "مادة"} تحت الحد الأدنى:
+          </strong>{" "}
+          <span dir="auto">
+            {items
+              .filter((i) => low.has(i.id))
+              .map((i) => i.nameEn)
+              .join("، ")}
+          </span>
         </p>
       )}
 
@@ -116,10 +139,13 @@ async function Packaging({ searchParams }: { searchParams: SearchParams }) {
           {items.map((i) => (
             <li
               key={i.id}
-              className="flex justify-between gap-3 border-b border-line-soft px-4 py-2.5 last:border-0"
+              className={`flex justify-between gap-3 border-b border-line-soft px-4 py-2.5 last:border-0 ${low.has(i.id) ? "bg-danger-soft text-danger-text" : ""}`}
             >
               <ProductName name={i.nameEn} />
-              <span className="font-semibold tabular-nums">{stock.get(i.id) ?? 0} حبة</span>
+              <span className="font-semibold tabular-nums">
+                {stock.get(i.id) ?? 0} حبة
+                {low.has(i.id) && <span className="text-xs font-normal"> (الأدنى {low.get(i.id)})</span>}
+              </span>
             </li>
           ))}
         </ul>

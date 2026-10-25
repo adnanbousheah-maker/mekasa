@@ -66,6 +66,11 @@ test("a minimum level alerts the branch home and the cron, once a day", async ({
     const admin = await browser.newPage({ viewport: { width: 1360, height: 900 } });
     await signInAndWait(admin, ADMIN.phone, ADMIN.pin);
     await admin.goto("/admin/settings?tab=par");
+    // كل موقع لحاله
+    await admin
+      .getByRole("navigation", { name: "الموقع" })
+      .getByRole("link", { name: "فرع الجبيهة" })
+      .click();
     const field = admin.getByRole("textbox", { name: "الحد الأدنى لـ Pecan بـالجبيهة" });
     await expect(field).toHaveValue("");
     await field.fill("50");

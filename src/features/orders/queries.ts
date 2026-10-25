@@ -3,6 +3,7 @@ import { requireStaff } from "@/features/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { recentDates } from "@/lib/day-number";
 import { businessDate } from "@/lib/time";
+import { shiftDate, summarizeDay, type DaySummary } from "./day-summary";
 
 export interface OrderProduct {
   id: string;
@@ -415,5 +416,41 @@ export async function listOpenReturns(factoryId: string): Promise<OpenReturn[]> 
           l.return_dispositions.reduce((s, d) => s + d.to_stock_pieces + d.to_waste_pieces, 0),
       }))
       .filter((l) => l.remaining > 0),
+  );
+}
+
+/**
+ * طلبيات يوم من المصنع (بتاريخ الطلب بتوقيت عمّان، بدون الملغية)، مجمّعة حسب الصنف.
+ * الأدمن بيشوف الكل، وموظفين المصنع طلبات مصنعهم (RLS).
+ */
+export async function ordersOfDay(date: string): Promise<DaySummary> {
+  await requireStaff();
+  const supabase = await createClient();
+  const [{ data, error }, all] = await Promise.all([
+    supabase
+      .from("stock_requests")
+      .select(
+        "id, requested_at, requesting_location_id, requesting:locations!stock_requests_requesting_location_id_fkey(name), supplying:locations!stock_requests_supplying_location_id_fkey(kind), stock_request_lines(product_id, qty_pieces)",
+      )
+      .gte("requested_at", `${shiftDate(date, -1)}T00:00:00Z`)
+      .lt("requested_at", `${shiftDate(date, 2)}T00:00:00Z`)
+      .neq("status", "cancelled"),
+    products(supabase),
+  ]);
+  if (error) throw new Error(`Could not load the day's requests: ${error.message}`);
+  const requests = data.filter(
+    (r) => r.supplying.kind === "factory" && businessDate(new Date(r.requested_at)) === date,
+  );
+  return summarizeDay(
+    requests.flatMap((r) =>
+      r.stock_request_lines.map((l) => ({
+        branchId: r.requesting_location_id,
+        branchName: r.requesting.name,
+        productId: l.product_id,
+        qtyPieces: l.qty_pieces ?? 0,
+      })),
+    ),
+    all.filter((p) => p.kind === "cake"),
+    requests.length,
   );
 }

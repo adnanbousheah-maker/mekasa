@@ -4,14 +4,19 @@ import { GeneralTab } from "@/features/settings/components/GeneralTab";
 import { PackagingTab } from "@/features/settings/components/PackagingTab";
 import { ParTab } from "@/features/settings/components/ParTab";
 import { ProductsTab } from "@/features/settings/components/ProductsTab";
-import { listReportLocations, listReportProducts, minLevels, parLevels } from "@/features/reports/queries";
+import { listReportProducts, minLevels, parLevels, stockByProduct } from "@/features/reports/queries";
 import { ScheduleCard } from "@/features/settings/components/ScheduleCard";
 import { packagingStock, packagingStore } from "@/features/packaging/queries";
-import { getSettings, listProducts, listScheduleLocations } from "@/features/settings/queries";
+import {
+  getSettings,
+  listMinLevelLocations,
+  listProducts,
+  listScheduleLocations,
+} from "@/features/settings/queries";
 
 const TABS = [
   { id: "products", label: "الأصناف" },
-  { id: "par", label: "الحد المطلوب بالفروع" },
+  { id: "par", label: "الحد المطلوب والأدنى" },
   { id: "packaging", label: "التغليف" },
   { id: "schedule", label: "مواعيد الجرد" },
   { id: "general", label: "عام" },
@@ -39,7 +44,9 @@ export default function SettingsPage({ searchParams }: { searchParams: SearchPar
 }
 
 async function Settings({ searchParams }: { searchParams: SearchParams }) {
-  const tab = pickTab((await searchParams).tab);
+  const params = await searchParams;
+  const tab = pickTab(params.tab);
+  const loc = typeof params.loc === "string" ? params.loc : null;
 
   return (
     <>
@@ -58,27 +65,35 @@ async function Settings({ searchParams }: { searchParams: SearchParams }) {
       </div>
       <div role="tabpanel" aria-label={TABS.find((t) => t.id === tab)?.label}>
         <Suspense key={tab} fallback={<span className="text-muted">لحظة…</span>}>
-          <TabContent tab={tab} />
+          <TabContent tab={tab} loc={loc} />
         </Suspense>
       </div>
     </>
   );
 }
 
-async function TabContent({ tab }: { tab: TabId }) {
+async function TabContent({ tab, loc }: { tab: TabId; loc: string | null }) {
   if (tab === "par") {
-    const [locations, products, par, min] = await Promise.all([
-      listReportLocations(),
+    const [locations, cakes, packaging, par, min, stock] = await Promise.all([
+      listMinLevelLocations(),
       listReportProducts(),
+      listProducts("packaging"),
       parLevels(),
       minLevels(),
+      stockByProduct(),
     ]);
+    const current = locations.find((l) => l.id === loc) ?? locations[0];
+    if (!current) return <span className="text-muted">ما في مواقع.</span>;
     return (
       <ParTab
-        branches={locations.filter((l) => l.kind === "branch")}
-        products={products.filter((p) => p.isActive)}
+        locations={locations}
+        current={current}
+        products={
+          current.kind === "packaging" ? packaging.filter((p) => p.isActive) : cakes.filter((p) => p.isActive)
+        }
         par={par}
         min={min}
+        stock={stock}
       />
     );
   }

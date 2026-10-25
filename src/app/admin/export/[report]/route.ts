@@ -11,7 +11,7 @@ import {
   listWaste,
   stockByProduct,
 } from "@/features/reports/queries";
-import { loadDocuments } from "@/features/orders/queries";
+import { loadDocuments, ordersOfDay } from "@/features/orders/queries";
 import { IMPORT_HEADERS, packagingLabel } from "@/features/raw/import";
 import { listRawMaterials, recentRawMoves } from "@/features/raw/queries";
 import { listStaff } from "@/features/staff/queries";
@@ -50,6 +50,38 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         }),
       ];
       return excelResponse(await buildWorkbook(sheets), `mekasa-raw-count-template-${today}`);
+    }
+    case "orders-day": {
+      // طلبيات يوم مجمّعة حسب الصنف (للإنتاج)، بالكيكات والقطع
+      const param = search.get("date");
+      const date = param && /^\d{4}-\d{2}-\d{2}$/.test(param) ? param : today;
+      const summary = await ordersOfDay(date);
+      const split = (pieces: number, ppc: number | null) =>
+        ppc ? { cakes: Math.floor(pieces / ppc), pieces: pieces % ppc } : { cakes: 0, pieces };
+      sheets = [
+        sheet({
+          name: `طلبيات ${date}`,
+          rows: summary.rows,
+          columns: [
+            { header: "الصنف", value: (r) => r.product.nameEn, width: 28 },
+            ...summary.branches.flatMap((b) => [
+              {
+                header: `${b.name} (كيكات)`,
+                value: (r: (typeof summary.rows)[number]) =>
+                  split(r.byBranch.get(b.id) ?? 0, r.product.piecesPerCake).cakes,
+              },
+              {
+                header: `${b.name} (قطع)`,
+                value: (r: (typeof summary.rows)[number]) =>
+                  split(r.byBranch.get(b.id) ?? 0, r.product.piecesPerCake).pieces,
+              },
+            ]),
+            { header: "المجموع (كيكات)", value: (r) => split(r.total, r.product.piecesPerCake).cakes },
+            { header: "المجموع (قطع)", value: (r) => split(r.total, r.product.piecesPerCake).pieces },
+          ],
+        }),
+      ];
+      return excelResponse(await buildWorkbook(sheets), `mekasa-orders-${date}`);
     }
     case "stock": {
       const use = search.get("view") === "use";

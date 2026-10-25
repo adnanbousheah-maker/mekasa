@@ -53,3 +53,15 @@ export async function pendingPackagingRequests(storeId: string): Promise<number>
   if (error) throw new Error(`Could not load packaging requests: ${error.message}`);
   return count ?? 0;
 }
+
+/** مواد المستودع اللي تحت الحد الأدنى: [مادة] → الحد بالحبة. */
+export async function packagingBelowMin(storeId: string): Promise<Map<string, number>> {
+  await requireStaff();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_below_min")
+    .select("product_id, min_pieces")
+    .eq("location_id", storeId);
+  if (error) throw new Error(`Could not load packaging minimums: ${error.message}`);
+  return new Map(data.map((b) => [b.product_id!, b.min_pieces!]));
+}

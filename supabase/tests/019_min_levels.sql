@@ -27,6 +27,19 @@ select results_eq(
   'only items under their minimum are listed, including items with no stock at all'
 );
 
+-- المصنع ومستودع التغليف كمان، كل واحد بأصنافه
+insert into public.par_levels (location_id, product_id, par_pieces, min_pieces)
+values (tests.location('FAC'), tests.product('Flan'), 0, 30),
+       (tests.location('PKG'), tests.product('Cake Box'), 0, 200),
+       (tests.location('PKG'), tests.product('Flan'), 0, 10);
+select results_eq(
+  $$ select l.code, p.name_en, b.min_pieces from public.v_below_min b
+     join public.locations l on l.id = b.location_id join public.products p on p.id = b.product_id
+     where l.kind <> 'branch' order by l.code $$,
+  $$ values ('FAC', 'Flan', 30), ('PKG', 'Cake Box', 200) $$,
+  'the factory and the packaging store have minimums too, each for its own kind of item'
+);
+
 select tests.authenticate_as('ffffffff-0000-4000-8000-000000000001');
 select results_eq(
   $$ select p.name_en from public.v_below_min b join public.products p on p.id = b.product_id $$,

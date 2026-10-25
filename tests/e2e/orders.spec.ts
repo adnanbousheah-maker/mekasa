@@ -126,9 +126,21 @@ test.describe("admin", () => {
     }
   });
 
+  test("today's orders add up every branch for production, and print", async ({ page }) => {
+    await signInAndWait(page, ADMIN.phone, ADMIN.pin);
+    await page.goto("/admin/orders");
+    await page.getByRole("link", { name: "طلبيات اليوم (للإنتاج)" }).click();
+    const table = page.getByRole("region", { name: "طلبيات اليوم" });
+    await expect(table.getByRole("heading", { name: /\(اليوم\)/ })).toBeVisible();
+    await expect(table.getByRole("columnheader", { name: "دابوق" })).toBeVisible();
+    await expect(table.getByRole("row", { name: /Flan/ })).toContainText("كيك");
+    expect((await page.request.get("/admin/export/orders-day")).status()).toBe(200);
+  });
+
   test("the admin edits par levels in settings", async ({ page }) => {
     await signInAndWait(page, ADMIN.phone, ADMIN.pin);
     await page.goto("/admin/settings?tab=par");
+    await page.getByRole("navigation", { name: "الموقع" }).getByRole("link", { name: "فرع دابوق" }).click();
     const field = page.getByRole("textbox", { name: "الحد المطلوب لـ Flan بـدابوق" });
     await expect(field).toHaveValue("2");
     await field.fill("3");

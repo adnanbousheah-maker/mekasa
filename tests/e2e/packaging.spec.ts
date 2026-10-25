@@ -1,5 +1,13 @@
 import { expect, test } from "@playwright/test";
-import { ADMIN, BRANCH_DBQ, PACKAGING, deactivateProduct, signInAndWait, stockOf } from "./support";
+import {
+  ADMIN,
+  BRANCH_DBQ,
+  PACKAGING,
+  clearMinLevels,
+  deactivateProduct,
+  signInAndWait,
+  stockOf,
+} from "./support";
 
 test.describe.configure({ mode: "serial" });
 
@@ -67,4 +75,34 @@ test("a branch orders packaging, the keeper sends it, and the branch receives it
   await page.getByRole("button", { name: "تأكيد الاستلام" }).click();
   await expect(page.getByText("انسجل الاستلام")).toBeVisible();
   expect(await stockOf("DBQ", "Cake Box")).toBe(branchBefore + 50);
+});
+
+test("the packaging store has its own minimum, and the keeper sees what is low", async ({ browser }) => {
+  try {
+    const admin = await browser.newPage({ viewport: { width: 1360, height: 900 } });
+    await signInAndWait(admin, ADMIN.phone, ADMIN.pin);
+    await admin.goto("/admin/settings?tab=par");
+    await admin
+      .getByRole("navigation", { name: "الموقع" })
+      .getByRole("link", { name: "مستودع التغليف" })
+      .click();
+    const field = admin.getByRole("textbox", { name: "الحد الأدنى لـ Cake Box بـمستودع التغليف" });
+    await field.fill("100000");
+    await field.press("Enter");
+    await expect(admin.getByRole("alert").filter({ hasText: /رقم بين/ })).toBeVisible();
+    await field.fill("5000");
+    await field.press("Enter");
+    await expect(admin.getByRole("status").filter({ hasText: "انحفظ" })).toBeVisible();
+    await admin.goto("/admin");
+    await expect(admin.getByText(/بـمستودع التغليف تحت الحد الأدنى/)).toBeVisible();
+    await admin.close();
+
+    const keeper = await browser.newPage();
+    await signInAndWait(keeper, PACKAGING.phone, PACKAGING.pin);
+    await keeper.goto("/packaging");
+    await expect(keeper.getByRole("alert").filter({ hasText: "تحت الحد الأدنى" })).toContainText("Cake Box");
+    await keeper.close();
+  } finally {
+    await clearMinLevels();
+  }
 });

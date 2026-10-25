@@ -296,7 +296,7 @@ export async function setParLevelAction(
   return done;
 }
 
-/** الحد الأدنى لصنف بفرع (فاضي = ما في). تحته بيوصل تنبيه للفرع وللأدمن. نفس وحدة الحد المطلوب. */
+/** الحد الأدنى لصنف بموقع (فرع، مصنع، مستودع تغليف؛ فاضي = ما في). تحته بيوصل تنبيه للموقع وللأدمن. */
 export async function setMinLevelAction(
   locationId: string,
   productId: string,
@@ -306,7 +306,8 @@ export async function setMinLevelAction(
   if (!parSchema.safeParse({ locationId, productId }).success) return fail("الصنف أو الفرع مش موجود");
   let units: number | null = null;
   if (value.trim() !== "") {
-    const amount = wholeNumber({ min: 0, max: 999 }).safeParse(value);
+    // التغليف بالحبة ممكن يكون بالآلاف
+    const amount = wholeNumber({ min: 0, max: 99_999 }).safeParse(value);
     if (!amount.success) return fail(firstIssue(amount.error));
     units = amount.data;
   }

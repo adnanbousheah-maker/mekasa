@@ -99,16 +99,17 @@ async function activeAdmins(db: ReturnType<typeof createAdminClient>): Promise<s
 }
 
 /**
- * أصناف تحت الحد الأدنى بالفروع: إشعار وحد لكل فرع (فيه الأصناف الجديدة) لموظفين الفرع وللأدمن.
+ * أصناف تحت الحد الأدنى (فروع، مصنع، مستودع تغليف): إشعار وحد لكل موقع (فيه الأصناف الجديدة)
+ * لموظفين الموقع (وأمناء التغليف للمستودع) وللأدمن.
  * كل صنف بينبعت مرة باليوم بس (alert_log).
  */
 async function alertBelowMin(db: ReturnType<typeof createAdminClient>, today: string, result: ReminderRun) {
   const { data: below, error } = await db
     .from("v_below_min")
-    .select("location_id, product_id, location:locations!inner(name), product:products!inner(name_en)");
+    .select("location_id, product_id, location:locations!inner(name, kind), product:products!inner(name_en)");
   if (error) throw new Error(error.message);
 
-  const fresh = new Map<string, { name: string; products: string[] }>();
+  const fresh = new Map<string, { name: string; kind: string; products: string[] }>();
   for (const row of below ?? []) {
     const { data: logged } = await db
       .from("alert_log")
@@ -121,23 +122,31 @@ async function alertBelowMin(db: ReturnType<typeof createAdminClient>, today: st
       .select("id")
       .maybeSingle();
     if (!logged) continue;
-    const entry = fresh.get(row.location_id!) ?? { name: row.location.name, products: [] };
+    const entry = fresh.get(row.location_id!) ?? {
+      name: row.location.name,
+      kind: row.location.kind,
+      products: [],
+    };
     entry.products.push(row.product.name_en);
     fresh.set(row.location_id!, entry);
   }
   if (fresh.size === 0) return;
 
   const admins = await activeAdmins(db);
-  for (const [locationId, { name, products }] of fresh) {
-    const { data: staff } = await db
-      .from("staff")
-      .select("id")
-      .eq("is_active", true)
-      .eq("location_id", locationId);
+  for (const [locationId, { name, kind, products }] of fresh) {
+    // مستودع التغليف: أمناء التغليف وين ما كانوا، والباقي: موظفين الموقع
+    const { data: staff } =
+      kind === "packaging"
+        ? await db
+            .from("staff")
+            .select("id, staff_roles!staff_roles_staff_id_fkey!inner(role)")
+            .eq("is_active", true)
+            .eq("staff_roles.role", "packaging_keeper")
+        : await db.from("staff").select("id").eq("is_active", true).eq("location_id", locationId);
     const recipients = await sendPushToStaff([...new Set([...(staff ?? []).map((s) => s.id), ...admins])], {
       title: "تحت الحد الأدنى",
-      body: `فرع ${name}: ${products.join("، ")} ${products.length === 1 ? "قلّ" : "قلّوا"} عن الحد الأدنى.`,
-      url: "/",
+      body: `${kind === "branch" ? `فرع ${name}` : name}: ${products.join("، ")} ${products.length === 1 ? "قلّ" : "قلّوا"} عن الحد الأدنى.`,
+      url: kind === "packaging" ? "/packaging" : "/",
       tag: `below-min-${locationId}-${today}`,
     });
     result.sent.push({ kind: "below_min", scheduleId: locationId, recipients });

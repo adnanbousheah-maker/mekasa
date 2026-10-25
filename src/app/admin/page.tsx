@@ -10,7 +10,7 @@ import {
   lastCountByLocation,
   listReportLocations,
   listReportProducts,
-  minLevels,
+  belowMinByLocation,
   parLevels,
   slotsToday,
   stockByProduct,
@@ -68,7 +68,7 @@ async function Overview() {
     docs,
     alertHours,
     raw,
-    min,
+    belowMin,
   ] = await Promise.all([
     listReportLocations(),
     listReportProducts(),
@@ -82,7 +82,7 @@ async function Overview() {
     loadDocuments({ requests: { statuses: ["pending_approval", "sent"] }, dispatches: {}, sinceDays: 14 }),
     unreceivedAlertHours(),
     listRawMaterials(),
-    minLevels(),
+    belowMinByLocation(),
   ]);
   const productById = new Map(products.map((p) => [p.id, p]));
 
@@ -174,26 +174,22 @@ async function Overview() {
       });
     }
   }
-  for (const loc of locations.filter((l) => l.kind === "branch")) {
-    const belowMin = products.filter((p) => {
-      const floor = min.get(p.id)?.get(loc.id);
-      return p.isActive && floor !== undefined && (stock.get(p.id)?.get(loc.id) ?? 0) < floor;
+  for (const loc of belowMin) {
+    const n = loc.items.length;
+    alerts.push({
+      tone: "danger",
+      title: `${n} ${n >= 3 && n <= 10 ? "أصناف" : "صنف"} بـ${loc.locationName} تحت الحد الأدنى`,
+      sub: loc.items
+        .slice(0, 4)
+        .map((i) =>
+          loc.kind === "packaging"
+            ? `${i.name} ${i.qty} حبة`
+            : `${i.name} ${formatQuantityCompact(i.qty, i.ppc)}`,
+        )
+        .join(" · "),
+      action: "شوف",
+      href: `/admin/settings?tab=par&loc=${loc.locationId}`,
     });
-    if (belowMin.length > 0) {
-      alerts.push({
-        tone: "danger",
-        title: `${belowMin.length} ${belowMin.length >= 3 && belowMin.length <= 10 ? "أصناف" : "صنف"} بـ${loc.name} تحت الحد الأدنى`,
-        sub: belowMin
-          .slice(0, 4)
-          .map((p) => {
-            const have = stock.get(p.id)?.get(loc.id) ?? 0;
-            return `${p.nameEn} ${formatQuantityCompact(have, p.piecesPerCake)}`;
-          })
-          .join(" · "),
-        action: "شوف",
-        href: "/admin/stock",
-      });
-    }
   }
   for (const loc of locations.filter((l) => l.kind === "branch")) {
     const low = products.filter((p) => {
