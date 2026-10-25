@@ -84,7 +84,7 @@ export function StaffHome({
 
       {atFactory && <FactoryTasks staff={staff} data={factory} />}
       {atBranch && <BranchTasks data={branch} />}
-      {packaging && <PackagingTasks data={packaging} />}
+      {packaging && <PackagingTasks data={packaging} showTitle={staff.location?.kind !== "packaging"} />}
 
       <div className="grow" />
       <EnableNotifications vapidPublicKey={vapidPublicKey} />
@@ -207,10 +207,17 @@ function BranchTasks({ data }: { data: BranchHomeData | null }) {
   );
 }
 
-function PackagingTasks({ data }: { data: { storeName: string; pending: number } }) {
+function PackagingTasks({
+  data,
+  showTitle,
+}: {
+  data: { storeName: string; pending: number };
+  // العنوان بس لموظف موقعه مش المستودع (فرع أو مصنع وعنده دور التغليف)
+  showTitle: boolean;
+}) {
   return (
-    <section className="flex flex-col gap-2.5">
-      <h2 className="text-[15px] font-semibold text-muted">{data.storeName}</h2>
+    <section aria-label={data.storeName} className="flex flex-col gap-2.5">
+      {showTitle && <h2 className="text-[15px] font-semibold text-muted">{data.storeName}</h2>}
       <div className="grid grid-cols-2 gap-2.5">
         <TaskLink
           variant="tile"

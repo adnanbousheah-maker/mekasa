@@ -30,7 +30,13 @@ function matches(name: string, query: string | undefined): boolean {
 
 async function lookups(db: Db) {
   const [{ data: locations }, { data: products }] = await Promise.all([
-    db.from("locations").select("id, name, kind").eq("is_active", true).order("sort_order"),
+    // خانة المرتجعات مش موقع بيسأل عنه الأدمن
+    db
+      .from("locations")
+      .select("id, name, kind")
+      .eq("is_active", true)
+      .neq("kind", "returns_bin")
+      .order("sort_order"),
     db
       .from("v_products")
       .select("id, name_en, name_ar, effective_pieces_per_cake, is_active")
