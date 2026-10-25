@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { ProductName } from "@/components/ui/ProductName";
-import { countWord } from "@/lib/units";
+import { countPhrase } from "@/lib/units";
 import { recordProductionAction } from "../actions";
 
 type Product = { id: string; nameEn: string; piecesPerCake: number | null };
@@ -89,8 +89,8 @@ export function ProductionForm({ products, dayNumber }: { products: Product[]; d
             </p>
           )}
           <span className="text-center text-sm text-muted">
-            {used.length} {used.length >= 3 && used.length <= 10 ? "أصناف" : "صنف"} · {cakes}{" "}
-            {countWord(cakes, "cake")} · {pieces} {countWord(pieces, "piece")} · كلها رقم {dayNumber}
+            {used.length} {used.length >= 3 && used.length <= 10 ? "أصناف" : "صنف"} ·{" "}
+            {countPhrase(cakes, "cake")} · {countPhrase(pieces, "piece")} · كلها رقم {dayNumber}
           </span>
           <button
             type="button"

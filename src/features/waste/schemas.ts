@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { countWord } from "@/lib/units";
+import { countPhrase } from "@/lib/units";
 
 export const WASTE_REASONS = ["expired", "broken", "other"] as const;
 export type WasteReason = (typeof WASTE_REASONS)[number];
@@ -31,10 +31,7 @@ export const wasteSchema = z
 
 export type WasteInput = z.input<typeof wasteSchema>;
 
-/** نص زر التسجيل: "سجّل 2 كيكة تالف". */
+/** نص زر التسجيل: "سجّل كيكتين تالفات". */
 export function wasteSubmitLabel(qty: number, unit: "cake" | "piece"): string {
-  // عربي طبيعي: كيكة / كيكتين / 3 كيكات
-  if (qty === 1) return unit === "cake" ? "سجّل كيكة تالفة" : "سجّل قطعة تالفة";
-  if (qty === 2) return unit === "cake" ? "سجّل كيكتين تالفات" : "سجّل قطعتين تالفات";
-  return `سجّل ${qty} ${countWord(qty, unit)} تالفة`;
+  return `سجّل ${countPhrase(qty, unit)} ${qty === 2 ? "تالفات" : "تالفة"}`;
 }

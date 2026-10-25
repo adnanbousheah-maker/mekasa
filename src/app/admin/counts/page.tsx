@@ -44,7 +44,56 @@ async function Counts({ searchParams }: { searchParams: SearchParams }) {
         hrefFor={(v) => (v ? `/admin/counts?location=${v}` : "/admin/counts")}
         options={[{ value: "", label: "الكل" }, ...locations.map((l) => ({ value: l.id, label: l.name }))]}
       />
-      <div className="scroll-hint overflow-x-auto rounded-2xl border border-line bg-surface">
+      {/* الجوال: كرت لكل جرد بيفتح تفاصيله */}
+      <ul aria-label="الجرودات" className="flex flex-col gap-2.5 md:hidden">
+        {counts.length === 0 && (
+          <li className="rounded-2xl border border-line bg-surface px-4 py-6 text-center text-muted">
+            ما في جرودات لسا.
+          </li>
+        )}
+        {counts.map((c) => (
+          <li key={c.id}>
+            <Link
+              href={`/admin/counts/${c.id}`}
+              className="flex flex-col gap-1 rounded-2xl border border-line bg-surface px-4 py-3"
+            >
+              <span className="flex items-baseline justify-between gap-3">
+                <strong className="font-semibold">{c.locationName}</strong>
+                <span className="text-sm text-muted">
+                  {formatLongDate(c.businessDate)} ·{" "}
+                  {c.scheduleTime ? formatScheduleTime(c.scheduleTime) : formatClock(new Date(c.startedAt))}
+                </span>
+              </span>
+              <span className="text-sm text-muted">
+                {c.countedBy} · {c.method === "photo" ? "بالصورة" : "يدوي"} ·{" "}
+                <span className="text-ink tabular-nums">
+                  {c.isOpening
+                    ? "افتتاحي"
+                    : c.consumedCakes < 0
+                      ? cakesLabel(c.consumedCakes)
+                      : `استهلاك ${cakesLabel(c.consumedCakes)}`}
+                </span>
+              </span>
+              {(c.impossibleLines > 0 || c.staffCorrectedLines > 0) && (
+                <span className="flex flex-wrap gap-1.5">
+                  {c.impossibleLines > 0 && (
+                    <span className="rounded-[10px] bg-danger-soft px-2.5 py-0.5 text-xs font-semibold text-danger-text">
+                      {c.impossibleLines} رقم مستحيل
+                    </span>
+                  )}
+                  {c.staffCorrectedLines > 0 && (
+                    <span className="rounded-[10px] bg-warn-chip px-2.5 py-0.5 text-xs text-warn-text">
+                      الموظف صحح {c.staffCorrectedLines}
+                    </span>
+                  )}
+                </span>
+              )}
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      <div className="hidden overflow-x-auto rounded-2xl border border-line bg-surface md:block">
         <table className={`${tableClass} min-w-[760px]`}>
           <thead>
             <tr className={theadRowClass}>

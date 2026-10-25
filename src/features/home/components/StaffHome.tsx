@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { BatchBadge } from "@/components/ui/BatchBadge";
 import { DayBadge } from "@/components/ui/DayBadge";
 import { Logo } from "@/components/ui/Logo";
@@ -90,6 +91,16 @@ export function StaffHome({
       <EnableNotifications vapidPublicKey={vapidPublicKey} />
       <LogoutButton className="self-center" />
     </main>
+  );
+}
+
+/** مجموعة مربعات بعنوان. إذا عددهم فردي، الأخير بياخذ السطر كله مشان ما يضل فراغ. */
+function TileGroup({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section aria-label={title} className="flex flex-col gap-2.5">
+      <h2 className="text-[15px] font-semibold text-muted">{title}</h2>
+      <div className="grid grid-cols-2 gap-2.5 [&>*:last-child:nth-child(odd)]:col-span-2">{children}</div>
+    </section>
   );
 }
 
@@ -305,62 +316,38 @@ function FactoryTasks({ staff, data }: { staff: CurrentStaff; data: FactoryHomeD
         </section>
       )}
       {isDispatcher && (
-        <section className="flex flex-col gap-2.5">
-          <h2 className="text-[15px] font-semibold text-muted">الإخراج</h2>
-          <div className="grid grid-cols-2 gap-2.5">
-            <TaskLink
-              variant="tile"
-              href="/factory/requests"
-              title="طلبات الفروع"
-              icon={<ListIcon size={24} />}
-              aside={<Badge n={data?.pendingRequests ?? 0} />}
-            />
-            <TaskLink
-              variant="tile"
-              href="/factory/dispatch"
-              title="إخراج جديد"
-              icon={<TruckIcon size={24} />}
-            />
-            <TaskLink
-              variant="tile"
-              href="/factory/today"
-              title="مجموع طلبات اليوم"
-              icon={<ClipboardIcon size={24} />}
-            />
-          </div>
-        </section>
+        <TileGroup title="الإخراج للفروع">
+          <TaskLink
+            variant="tile"
+            href="/factory/requests"
+            title="طلبات الفروع"
+            icon={<ListIcon size={24} />}
+            aside={<Badge n={data?.pendingRequests ?? 0} />}
+          />
+          <TaskLink
+            variant="tile"
+            href="/factory/dispatch"
+            title="إخراج جديد"
+            icon={<TruckIcon size={24} />}
+          />
+          <TaskLink
+            variant="tile"
+            href="/factory/today"
+            title="مجموع طلبات اليوم"
+            icon={<ClipboardIcon size={24} />}
+          />
+        </TileGroup>
       )}
       {isStorekeeper && (
-        <section className="flex flex-col gap-2.5">
-          <h2 className="text-[15px] font-semibold text-muted">المستودع</h2>
-          <div className="grid grid-cols-2 gap-2.5">
+        <>
+          <TileGroup title="الكيك بالمصنع">
             <TaskLink
               variant="tile"
               href="/factory/production"
               title="تسجيل إنتاج"
               icon={<OvenIcon size={24} />}
             />
-            {!isDispatcher && (
-              <TaskLink
-                variant="tile"
-                href="/factory/today"
-                title="مجموع طلبات اليوم"
-                icon={<ClipboardIcon size={24} />}
-              />
-            )}
             <TaskLink variant="tile" href="/count" title="جرد المصنع" icon={<ClipboardIcon size={24} />} />
-            <TaskLink
-              variant="tile"
-              href="/factory/raw"
-              title="المواد الأولية"
-              icon={<BoxIcon size={24} />}
-            />
-            <TaskLink
-              variant="tile"
-              href="/factory/raw/move"
-              title="استلام وصرف مواد"
-              icon={<TruckIcon size={24} />}
-            />
             <TaskLink
               variant="tile"
               href="/waste"
@@ -380,8 +367,30 @@ function FactoryTasks({ staff, data }: { staff: CurrentStaff; data: FactoryHomeD
                 aside={<Badge n={data.openReturns} />}
               />
             )}
-          </div>
-        </section>
+            {!isDispatcher && (
+              <TaskLink
+                variant="tile"
+                href="/factory/today"
+                title="مجموع طلبات اليوم"
+                icon={<ClipboardIcon size={24} />}
+              />
+            )}
+          </TileGroup>
+          <TileGroup title="المواد الأولية">
+            <TaskLink
+              variant="tile"
+              href="/factory/raw"
+              title="الموجود والجرد"
+              icon={<BoxIcon size={24} />}
+            />
+            <TaskLink
+              variant="tile"
+              href="/factory/raw/move"
+              title="استلام وصرف مواد"
+              icon={<TruckIcon size={24} />}
+            />
+          </TileGroup>
+        </>
       )}
     </>
   );

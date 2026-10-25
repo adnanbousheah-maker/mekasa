@@ -22,7 +22,7 @@ import { listStaff } from "@/features/staff/queries";
 import { ROLE_LABELS } from "@/features/staff/roles";
 import { WASTE_REASON_LABELS } from "@/features/waste/schemas";
 import { businessDate, formatClock, formatLongDate } from "@/lib/time";
-import { formatQuantity, formatQuantityCompact } from "@/lib/units";
+import { countWord, formatQuantity, formatQuantityCompact } from "@/lib/units";
 
 type Params = Promise<{ id: string }>;
 
@@ -277,7 +277,9 @@ async function Location({ params }: { params: Params }) {
                       </span>
                       <span className="text-[13px] text-muted">
                         {c.countedBy} · {c.method === "photo" ? "بالصورة" : "يدوي"}
-                        {isBranch && !c.isOpening ? ` · استهلاك ${c.consumedCakes} كيكة` : ""}
+                        {isBranch && !c.isOpening
+                          ? ` · استهلاك ${c.consumedCakes} ${countWord(c.consumedCakes, "cake")}`
+                          : ""}
                       </span>
                     </span>
                     {c.impossibleLines > 0 && (

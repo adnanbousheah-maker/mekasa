@@ -54,14 +54,23 @@ export function splitPieces(totalPieces: number, piecesPerCake: number): SplitQu
   };
 }
 
-/** صيغة العدد بالعربي: 3–10 جمع، والباقي مفرد ("11 كيكة"، "2 كيكة" متل التصميم). */
+/** كلمة الوحدة بعد رقم مكتوب لحاله: 3–10 جمع، والباقي مفرد ("11 كيكة"). للنص الكامل استعمل `countPhrase`. */
 export function countWord(n: number, unit: CountUnit): string {
   const lastTwo = Math.abs(n) % 100;
   const isPlural = n === 0 || (lastTwo >= 3 && lastTwo <= 10);
   return isPlural ? WORDS[unit].plural : WORDS[unit].singular;
 }
 
-function withWord(n: number, unit: CountUnit): string {
+const DUAL: Record<CountUnit, string> = { cake: "كيكتين", piece: "قطعتين" };
+
+/** العدد مع كلمته بعربي طبيعي: "كيكة"، "كيكتين"، "3 كيكات"، "11 كيكة". */
+export function countPhrase(n: number, unit: CountUnit): string {
+  if (n === 1) return WORDS[unit].singular;
+  if (n === 2) return DUAL[unit];
+  return `${n} ${countWord(n, unit)}`;
+}
+
+function withNumber(n: number, unit: CountUnit): string {
   return `${n} ${countWord(n, unit)}`;
 }
 
@@ -71,6 +80,8 @@ function withWord(n: number, unit: CountUnit): string {
 export function formatQuantity(totalPieces: number, piecesPerCake: number | null): string {
   const sign = totalPieces < 0 ? MINUS : "";
   const abs = Math.abs(totalPieces);
+  // مع إشارة السالب بنكتب الرقم دايماً ("−2 كيكة" مش "−كيكتين")
+  const withWord = sign ? withNumber : countPhrase;
 
   if (piecesPerCake === null) {
     return sign + withWord(abs, "piece");

@@ -11,7 +11,7 @@ import { productionTotals } from "@/features/production/logic";
 import { shortDate, usesDate } from "@/lib/batch-label";
 import { DAY_NAMES, dayNumberOf } from "@/lib/day-number";
 import { businessDate, formatClock } from "@/lib/time";
-import { countWord } from "@/lib/units";
+import { countPhrase } from "@/lib/units";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
@@ -67,9 +67,8 @@ async function Production({ searchParams }: { searchParams: SearchParams }) {
       {last && (
         <p className="text-sm text-muted">
           سجلت اليوم {entries.length > 1 ? `${entries.length} مرات، آخرها` : ""} الساعة{" "}
-          {formatClock(new Date(last.recorded_at))}: {totals.cakes} {countWord(totals.cakes, "cake")}
-          {totals.pieces > 0 ? ` و${totals.pieces} ${countWord(totals.pieces, "piece")}` : ""}. اللي بتدخله
-          هون بينضاف عليه.
+          {formatClock(new Date(last.recorded_at))}: {countPhrase(totals.cakes, "cake")}
+          {totals.pieces > 0 ? ` و${countPhrase(totals.pieces, "piece")}` : ""}. اللي بتدخله هون بينضاف عليه.
         </p>
       )}
       <ProductionForm key={new Date().toISOString()} products={products} dayNumber={day} />

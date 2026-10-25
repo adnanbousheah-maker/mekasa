@@ -94,7 +94,55 @@ async function Stock({ searchParams }: { searchParams: SearchParams }) {
         </span>
       </div>
 
-      <div className="scroll-hint overflow-x-auto rounded-2xl border border-line bg-surface">
+      {/* الجوال: كرت لكل صنف بدل الجدول العريض */}
+      <ul aria-label="الأصناف" className="flex flex-col gap-2.5 md:hidden">
+        {rows.length === 0 && (
+          <li className="rounded-2xl border border-line bg-surface px-4 py-6 text-center text-muted">
+            ما في أصناف.
+          </li>
+        )}
+        {rows.map((p) => {
+          const byLocation = source.get(p.id);
+          const total = columns.reduce((s, l) => s + (byLocation?.get(l.id) ?? 0), 0);
+          return (
+            <li key={p.id} className="rounded-2xl border border-line bg-surface px-4 py-3">
+              <div className="flex items-baseline justify-between gap-3">
+                <ProductName name={p.nameEn} className="font-semibold" />
+                <span className="text-sm font-semibold tabular-nums">
+                  {view === "use" ? "الأسبوع: " : "المجموع: "}
+                  {formatQuantityCompact(total, p.piecesPerCake)}
+                </span>
+              </div>
+              <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                {columns.map((l) => {
+                  const qty = byLocation?.get(l.id) ?? 0;
+                  const target = par.get(p.id)?.get(l.id);
+                  const low = view === "stock" && l.kind === "branch" && target !== undefined && qty < target;
+                  return (
+                    <div key={l.id} className="flex justify-between gap-2 border-t border-line-soft pt-1">
+                      <dt className="text-muted">{l.name}</dt>
+                      <dd
+                        className={`inline-flex items-center gap-1.5 tabular-nums ${qty < 0 ? "text-danger" : ""}`}
+                      >
+                        {low && (
+                          <span className="size-2 rounded-full bg-warn" aria-label="تحت الحد المطلوب" />
+                        )}
+                        {qty === 0 ? (
+                          <span className="text-line-strong">—</span>
+                        ) : (
+                          formatQuantityCompact(qty, p.piecesPerCake)
+                        )}
+                      </dd>
+                    </div>
+                  );
+                })}
+              </dl>
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="hidden overflow-x-auto rounded-2xl border border-line bg-surface md:block">
         <table className={`${tableClass} min-w-[720px]`}>
           <thead>
             <tr className={theadRowClass}>

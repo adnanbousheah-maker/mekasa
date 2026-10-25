@@ -45,7 +45,7 @@ test("the branch orders what is missing from par", async ({ page }) => {
     await flan.getByRole("button", { name: n > 2 ? "نقّص كيكة Flan" : "زيد كيكة Flan" }).click();
   }
   await page.getByRole("button", { name: "مراجعة الطلب" }).click();
-  await expect(page.getByRole("dialog", { name: "راجع طلبك قبل الإرسال" })).toContainText("2 كيكة");
+  await expect(page.getByRole("dialog", { name: "راجع طلبك قبل الإرسال" })).toContainText("كيكتين");
   await page.getByRole("button", { name: "إرسال الطلب للمصنع" }).click();
   await expect(page.getByText("انبعت طلبك للمصنع")).toBeVisible();
   await expect(page.getByText("مرسل").first()).toBeVisible();
@@ -61,7 +61,7 @@ test("the dispatcher sends it from the oldest batch, and the branch receives one
     .click();
   await expect(page.getByRole("radio", { name: "فرع دابوق" })).toHaveAttribute("aria-checked", "true");
   const flan = page.getByRole("listitem", { name: "Flan" });
-  await expect(flan.getByText("طلبوا: 2 كيكة")).toBeVisible();
+  await expect(flan.getByText("طلبوا: كيكتين")).toBeVisible();
   await page.getByRole("textbox", { name: "اسم السائق" }).fill("أبو محمد");
   await page.getByRole("button", { name: "تأكيد الإخراج" }).click();
   await expect(page.getByRole("heading", { name: "طلبات الفروع" })).toBeVisible();
@@ -76,9 +76,9 @@ test("the dispatcher sends it from the oldest batch, and the branch receives one
     .click();
   await page.getByRole("link", { name: "استلم الطلبية" }).first().click();
   const line = page.getByRole("listitem", { name: "Flan" });
-  await expect(line.getByText("طلع: 2 كيكة")).toBeVisible();
+  await expect(line.getByText("طلع: كيكتين")).toBeVisible();
   await line.getByRole("button", { name: "نقّص كيكة Flan" }).click();
-  await expect(line.getByText("ناقص 1 كيكة")).toBeVisible();
+  await expect(line.getByText("ناقص كيكة")).toBeVisible();
   await line.getByPlaceholder("مثلاً: وحدة وصلت مكسورة").fill("وحدة مكسورة");
   // من الكيكة اللي وصلت، قطعتين تالفات من التوصيل
   await line.getByRole("button", { name: "في تالف من التوصيل؟" }).click();

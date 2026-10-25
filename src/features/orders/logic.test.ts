@@ -72,7 +72,7 @@ describe("comparisons", () => {
 
   it("describes dispatch vs receipt as a problem", () => {
     expect(receiptDifference(3, 3, 10)).toBeNull();
-    expect(receiptDifference(3, 2, 10)).toBe("ناقص 1 كيكة");
+    expect(receiptDifference(3, 2, 10)).toBe("ناقص كيكة");
     expect(receiptDifference(10, 13, null)).toBe("زايد 3 قطع");
   });
 

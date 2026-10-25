@@ -26,6 +26,8 @@ type State =
 /** design/branch/CountCamera ← CountConfirm: صوّر، Claude بيقرأ، والموظف بيراجع ويأكد. */
 export function PhotoCount({ title, scheduleId, startedAt }: Props) {
   const input = useRef<HTMLInputElement>(null);
+  // صورة صوّرها قبل (مثلاً إذا الكاميرا بالتطبيق ما زبطت)
+  const gallery = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<State>({ step: "shoot" });
   const [preview, setPreview] = useState<string | null>(null);
   const [showPhoto, setShowPhoto] = useState(false);
@@ -174,9 +176,23 @@ export function PhotoCount({ title, scheduleId, startedAt }: Props) {
         capture="environment"
         className="sr-only"
         aria-label="صورة الفورم"
-        onChange={(e) => shoot(e.target.files?.[0])}
+        onChange={(e) => {
+          void shoot(e.target.files?.[0]);
+          e.target.value = "";
+        }}
       />
-      <div className="flex justify-center">
+      <input
+        ref={gallery}
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        aria-label="صورة من الألبوم"
+        onChange={(e) => {
+          void shoot(e.target.files?.[0]);
+          e.target.value = "";
+        }}
+      />
+      <div className="flex flex-col items-center gap-3">
         <button
           type="button"
           disabled={state.step === "reading"}
@@ -184,6 +200,14 @@ export function PhotoCount({ title, scheduleId, startedAt }: Props) {
           aria-label={state.step === "error" ? "صوّر كمان مرة" : "التقط الصورة"}
           className="size-20 rounded-full border-[5px] border-white/45 bg-white bg-clip-padding disabled:opacity-40"
         />
+        <button
+          type="button"
+          disabled={state.step === "reading"}
+          onClick={() => gallery.current?.click()}
+          className="h-12 rounded-xl px-4 text-[15px] text-white/85 underline underline-offset-4 disabled:opacity-40"
+        >
+          أو اختار صورة من الألبوم
+        </button>
       </div>
     </div>
   );

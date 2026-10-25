@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { Dialog } from "@/components/ui/Dialog";
 import { ProductName } from "@/components/ui/ProductName";
 import { Stepper } from "@/components/ui/Stepper";
+import { countPhrase } from "@/lib/units";
 import { submitCountAction } from "../actions";
 import type { CountProduct } from "../queries";
 import { countTotals, type CountLine } from "../schemas";
@@ -200,7 +201,7 @@ export function BranchCountForm({ products, scheduleId, startedAt, initial = {},
             <strong className={notCounted.length > 0 ? "text-warn-text" : "text-ok-text"}>
               عدّيت {products.length - notCounted.length} من {products.length}
             </strong>{" "}
-            · {totals.cakes} كيكة · {totals.pieces} قطعة
+            · {countPhrase(totals.cakes, "cake")} · {countPhrase(totals.pieces, "piece")}
           </span>
           <button
             type="button"

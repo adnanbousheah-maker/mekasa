@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  countPhrase,
   countWord,
   formatQuantity,
   formatQuantityCompact,
@@ -56,11 +57,29 @@ describe("resolvePiecesPerCake", () => {
   });
 });
 
+describe("countPhrase", () => {
+  it.each([
+    [1, "cake", "كيكة"],
+    [2, "cake", "كيكتين"],
+    [2, "piece", "قطعتين"],
+    [3, "cake", "3 كيكات"],
+    [11, "piece", "11 قطعة"],
+    [0, "piece", "0 قطع"],
+  ] as const)("%i %s → %s", (n, unit, text) => {
+    expect(countPhrase(n, unit)).toBe(text);
+  });
+
+  it("formatQuantity uses the natural forms", () => {
+    expect(formatQuantity(22, 10)).toBe("كيكتين + قطعتين");
+    expect(formatQuantity(10, 10)).toBe("كيكة");
+  });
+});
+
 describe("countWord", () => {
   it.each([
     [0, "كيكات"],
     [1, "كيكة"],
-    [2, "كيكة"],
+    [2, "كيكة"], // الرقم مكتوب لحاله؛ مع الرقم: countPhrase
     [3, "كيكات"],
     [10, "كيكات"],
     [11, "كيكة"],

@@ -242,7 +242,7 @@ test("the daily round shares the old batch between branches", async ({ page }) =
   await page.goto("/factory/requests");
   await page.getByRole("link", { name: /توزيع اليوم/ }).click();
   // القديم (كيكتين) بينقسم: وحدة لكل فرع، مش الثنتين لأول فرع
-  const old = `رقم ${dayNumberOf(yesterday)}: 1 كيكة`;
+  const old = `رقم ${dayNumberOf(yesterday)}: كيكة`;
   await expect(page.getByLabel(`دفعات ${PRODUCT} لـالصويفية`)).toContainText(old);
   await expect(page.getByLabel(`دفعات ${PRODUCT} لـالجبيهة`)).toContainText(old);
   await page.getByRole("textbox", { name: "اسم السائق لفرع الصويفية" }).fill("أبو محمد");

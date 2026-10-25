@@ -6,7 +6,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { ProductName } from "@/components/ui/ProductName";
 import { QuantityField } from "@/components/ui/QuantityField";
 import { Stepper } from "@/components/ui/Stepper";
-import { formatQuantity } from "@/lib/units";
+import { countPhrase, formatQuantity } from "@/lib/units";
 import { createRequestAction } from "../actions";
 import { forgottenItems, linesSummary, orderTarget, suggestQuantity } from "../logic";
 import type { OrderProduct } from "../queries";
@@ -178,8 +178,12 @@ export function OrderForm({
                 <ProductName name={p.nameEn} className="font-semibold" />
                 <span className="text-muted">
                   {[
-                    rows[p.id].wholeCakes ? `${rows[p.id].wholeCakes} كيكة` : "",
-                    rows[p.id].loosePieces ? `${rows[p.id].loosePieces} ${packaging ? "حبة" : "قطعة"}` : "",
+                    rows[p.id].wholeCakes ? countPhrase(rows[p.id].wholeCakes, "cake") : "",
+                    rows[p.id].loosePieces
+                      ? packaging
+                        ? `${rows[p.id].loosePieces} حبة`
+                        : countPhrase(rows[p.id].loosePieces, "piece")
+                      : "",
                   ]
                     .filter(Boolean)
                     .join(" + ")}

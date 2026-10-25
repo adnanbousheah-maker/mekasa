@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { countWord } from "@/lib/units";
+import { countPhrase } from "@/lib/units";
 
 // ─── الكمية المقترحة: الحد المطلوب − الموجود ─────────────────────────
 
@@ -148,7 +148,7 @@ export function requestVsDispatch(requested: number | null, sent: number): strin
 export function receiptDifference(sent: number, got: number, piecesPerCake: number | null): string | null {
   if (got === sent) return null;
   const n = Math.abs(got - sent);
-  return `${got < sent ? "ناقص" : "زايد"} ${n} ${countWord(n, unitOf(piecesPerCake))}`;
+  return `${got < sent ? "ناقص" : "زايد"} ${countPhrase(n, unitOf(piecesPerCake))}`;
 }
 
 /** "6 أصناف · 11 كيكة · 8 قطع". */
@@ -166,9 +166,9 @@ export function linesSummary(
   const pieces = used.reduce((s, l) => s + l.loosePieces, 0);
   const parts = [
     `${used.length} ${used.length >= 3 && used.length <= 10 ? "أصناف" : "صنف"}`,
-    `${cakes} ${countWord(cakes, "cake")}`,
+    countPhrase(cakes, "cake"),
   ];
-  if (pieces > 0) parts.push(`${pieces} ${countWord(pieces, "piece")}`);
+  if (pieces > 0) parts.push(countPhrase(pieces, "piece"));
   return parts.join(" · ");
 }
 
