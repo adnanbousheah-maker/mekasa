@@ -9,18 +9,20 @@ export function AdminNav({ footer }: { footer: ReactNode }) {
   return (
     <nav
       aria-label="القائمة الرئيسية"
-      className="flex w-full flex-col gap-1 border-line bg-surface px-4 py-6 lg:min-h-dvh lg:border-l"
+      className="flex w-full flex-col gap-1 border-b border-line bg-surface px-4 py-3 lg:min-h-dvh lg:border-b-0 lg:border-l lg:py-6"
     >
-      <div className="flex flex-col items-start gap-0.5 px-2 pb-5">
+      <div className="flex items-center justify-between gap-0.5 px-2 pb-2 lg:flex-col lg:items-start lg:pb-5">
         <Logo />
         <span className="text-xs tracking-wide text-muted">لوحة الإدارة</span>
       </div>
 
-      <Suspense fallback={<NavItemList pathname={null} />}>
-        <ActiveNavItems />
-      </Suspense>
+      <div className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-1 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
+        <Suspense fallback={<NavItemList pathname={null} />}>
+          <ActiveNavItems />
+        </Suspense>
+      </div>
 
-      <div className="min-h-6 grow" />
+      <div className="hidden min-h-6 grow lg:block" />
       <Link
         href="/admin/ai"
         className="flex h-12 items-center gap-2.5 rounded-xl bg-ink px-3.5 text-[15px] font-semibold text-white"

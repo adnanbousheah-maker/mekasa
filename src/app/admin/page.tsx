@@ -241,7 +241,7 @@ async function Overview() {
           return (
             <Link
               key={l.id}
-              href={l.kind === "factory" ? "/admin/stock" : `/admin/counts?location=${l.id}`}
+              href={`/admin/locations/${l.id}`}
               aria-label={l.name}
               className="flex flex-col gap-2.5 rounded-2xl border border-line bg-surface p-[18px]"
             >

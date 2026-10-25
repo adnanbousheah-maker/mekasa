@@ -137,6 +137,30 @@ test.describe("admin", () => {
     expect((await page.request.get("/admin/export/orders-day")).status()).toBe(200);
   });
 
+  test("each branch and store has its own page with everything about it", async ({ page }) => {
+    await signInAndWait(page, ADMIN.phone, ADMIN.pin);
+    await page
+      .getByRole("navigation", { name: "القائمة الرئيسية" })
+      .getByRole("link", { name: "الفروع والمستودعات" })
+      .click();
+    await expect(page.getByRole("heading", { name: "الفروع والمستودعات" })).toBeVisible();
+    await page.getByRole("link", { name: "دابوق", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "فرع دابوق" })).toBeVisible();
+    for (const section of [
+      "الستوك والحدود",
+      "الطلبات والإخراج (آخر 7 أيام)",
+      "آخر الجرودات",
+      "التالف هالأسبوع",
+      "الموظفين",
+    ]) {
+      await expect(page.getByRole("region", { name: section })).toBeVisible();
+    }
+    await expect(page.getByRole("region", { name: "الموظفين" })).toContainText(BRANCH_DBQ.name);
+    await page.goto("/admin/locations");
+    await page.getByRole("link", { name: "مستودع التغليف" }).click();
+    await expect(page.getByRole("region", { name: "مواد التغليف" })).toContainText("Cake Box");
+  });
+
   test("the admin edits par levels in settings", async ({ page }) => {
     await signInAndWait(page, ADMIN.phone, ADMIN.pin);
     await page.goto("/admin/settings?tab=par");

@@ -9,6 +9,12 @@ const ITEMS: { href: string; label: string; icon: string; ready: boolean }[] = [
     ready: true,
   },
   {
+    href: "/admin/locations",
+    label: "الفروع والمستودعات",
+    icon: "M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z",
+    ready: true,
+  },
+  {
     href: "/admin/stock",
     label: "الستوك والاستهلاك",
     icon: "M3 7l9-4 9 4-9 4zM3 12l9 4 9-4M3 17l9 4 9-4",
@@ -65,7 +71,8 @@ function isActive(pathname: string, href: string): boolean {
   return href === "/admin" ? pathname === "/admin" : pathname === href || pathname.startsWith(`${href}/`);
 }
 
-const BASE = "flex h-11 items-center gap-2.5 rounded-[10px] px-3 text-[15px]";
+// بالجوال سطر بيتمرر، وباللابتوب قائمة جنب الصفحة
+const BASE = "flex h-11 shrink-0 items-center gap-2.5 rounded-[10px] px-3 text-[15px] whitespace-nowrap";
 
 /** الروابط. بدون pathname (null) بتطلع بدون تمييز، وبتنعرض هيك لحد ما المسار يوصل. */
 export function NavItemList({ pathname }: { pathname: string | null }) {

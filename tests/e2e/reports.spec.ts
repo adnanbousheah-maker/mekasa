@@ -27,6 +27,7 @@ test.describe("admin dashboards", () => {
     await expect(page.getByRole("heading", { name: "بدها انتباهك" })).toBeVisible();
 
     await page.getByRole("link", { name: "الجرودات", exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/counts$/);
     await page.getByRole("link", { name: "الصويفية", exact: true }).click();
     await page
       .getByRole("link", { name: /^الصويفية ·/ })
