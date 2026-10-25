@@ -83,9 +83,18 @@ export async function runReminders(now = new Date()): Promise<ReminderRun> {
     await db.from("notification_log").update({ recipients }).eq("id", logged.id);
     result.sent.push({ kind: alert.kind, scheduleId: alert.schedule.id, recipients });
   }
-  await alertUnreceivedDispatches(db, result);
-  await alertBelowMin(db, today, result);
-  await alertForgottenItems(db, now, result);
+  // كل نوع تنبيه لحاله: إذا واحد فشل، الباقي بيكمل
+  for (const [name, run] of [
+    ["unreceived", () => alertUnreceivedDispatches(db, result)],
+    ["below_min", () => alertBelowMin(db, today, result)],
+    ["missing_items", () => alertForgottenItems(db, now, result)],
+  ] as const) {
+    try {
+      await run();
+    } catch (error) {
+      console.error(`reminders: ${name}`, error);
+    }
+  }
   return result;
 }
 
@@ -109,8 +118,17 @@ async function alertBelowMin(db: ReturnType<typeof createAdminClient>, today: st
     .select("location_id, product_id, location:locations!inner(name, kind), product:products!inner(name_en)");
   if (error) throw new Error(error.message);
 
+  // اللي انبعت اليوم ما بنحاول نسجله كمان مرة (كان بيفشل كل دقيقة على القيد)
+  const { data: sent } = await db
+    .from("alert_log")
+    .select("location_id, product_id")
+    .eq("kind", "below_min")
+    .eq("slot_date", today);
+  const already = new Set((sent ?? []).map((a) => `${a.location_id}:${a.product_id}`));
+
   const fresh = new Map<string, { name: string; kind: string; products: string[] }>();
   for (const row of below ?? []) {
+    if (already.has(`${row.location_id}:${row.product_id}`)) continue;
     const { data: logged } = await db
       .from("alert_log")
       .insert({
@@ -165,8 +183,19 @@ async function alertForgottenItems(db: ReturnType<typeof createAdminClient>, now
   if (error) throw new Error(error.message);
   if (!requests?.length) return;
 
+  const { data: sent } = await db
+    .from("alert_log")
+    .select("request_id")
+    .eq("kind", "order_missing_item")
+    .in(
+      "request_id",
+      requests.map((r) => r.id),
+    );
+  const already = new Set((sent ?? []).map((a) => a.request_id));
+
   let admins: string[] | null = null;
   for (const r of requests) {
+    if (already.has(r.id)) continue;
     const { data: logged } = await db
       .from("alert_log")
       .insert({ kind: "order_missing_item", location_id: r.requesting_location_id, request_id: r.id })

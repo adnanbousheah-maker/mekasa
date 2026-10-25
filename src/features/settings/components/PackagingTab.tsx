@@ -18,7 +18,7 @@ export function PackagingTab({ items, stock, storeName }: Props) {
         </span>
         <NewPackagingItem />
       </div>
-      <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
+      <div className="scroll-hint overflow-x-auto rounded-2xl border border-line bg-surface">
         <table className="w-full min-w-[480px] border-collapse text-sm">
           <thead>
             <tr className="bg-table-head text-table-head-text">

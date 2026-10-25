@@ -44,12 +44,15 @@ async function Receive({ params }: { params: Params }) {
     <StaffScreen>
       <ScreenHeader
         title={
-          atFactory ? `استلام مرتجع من ${d.fromName}` : `استلام طلبية ${dayLabel(d.dispatchedAt, new Date())}`
+          atFactory
+            ? `استلام مرتجع من ${d.fromName}`
+            : `${d.isPackaging ? "استلام تغليف" : "استلام طلبية"} ${dayLabel(d.dispatchedAt, new Date())}`
         }
         subtitle={`عدّ اللي وصل وأكّد كل صنف · طلع من ${d.fromName} ${formatClock(new Date(d.dispatchedAt))}`}
         backHref={atFactory ? "/factory/returns" : "/orders"}
       />
       <ReceiveForm
+        packaging={d.isPackaging}
         dispatchId={d.id}
         doneHref={atFactory ? "/factory/returns" : "/orders?received=1"}
         lines={d.lines.map((l) => ({

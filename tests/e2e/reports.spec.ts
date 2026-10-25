@@ -10,6 +10,7 @@ test("branch counts Flan for the admin to review", async ({ page }) => {
   const flan = page.getByRole("listitem", { name: "Flan" });
   for (let i = 0; i < 3; i++) await flan.getByRole("button", { name: "زيد كيكة Flan" }).click();
   await page.getByRole("button", { name: "تأكيد الجرد" }).click();
+  await page.getByRole("button", { name: "أكيد، ما في منهم" }).click();
   await expect(page.getByRole("heading", { name: "تم الجرد" })).toBeVisible();
   expect(await stockOf("SWF", "Flan")).toBe(30);
 });

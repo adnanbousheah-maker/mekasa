@@ -119,18 +119,11 @@ export function OrderForm({
                       {p.avgPieces !== null
                         ? ` · بيروح ${formatQuantity(p.avgPieces, p.piecesPerCake)} يوم ${tomorrowName}`
                         : p.parPieces !== undefined &&
-                          ` · الحد ${formatQuantity(p.parPieces, p.piecesPerCake)}`}
+                          ` · المطلوب ${formatQuantity(p.parPieces, p.piecesPerCake)}`}
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {p.piecesPerCake === null ? (
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[13px] text-muted">كيكات</span>
-                        <div className="flex h-12 items-center justify-center rounded-xl bg-quiet text-[13px] text-muted">
-                          قطع بس
-                        </div>
-                      </div>
-                    ) : (
+                  <div className={`grid gap-2.5 ${p.piecesPerCake === null ? "grid-cols-1" : "grid-cols-2"}`}>
+                    {p.piecesPerCake !== null && (
                       <Stepper
                         label="كيكات"
                         value={row.wholeCakes}
@@ -140,7 +133,7 @@ export function OrderForm({
                       />
                     )}
                     <Stepper
-                      label="قطع"
+                      label={p.piecesPerCake === null ? "قطع (قطع بس)" : "قطع"}
                       value={row.loosePieces}
                       onChange={(v) => update(p.id, "loosePieces", v)}
                       incrementLabel={`زيد قطعة ${p.nameEn}`}

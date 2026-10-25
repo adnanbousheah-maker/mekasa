@@ -181,6 +181,8 @@
 - **موديل Claude:** `claude-haiku-5-5` للمساعد وقراءة الفورم (طلب صاحب المشروع: الأرخص للتجربة، بحد صرف 5 دولار من لوحة Anthropic). ما إله server-side fallback، فما في `fallbacks`/`betas`، والرفض بيرجع للإدخال اليدوي أو رسالة "جرّب بطريقة ثانية". الموديل ثابت بـ `OCR_MODEL` و`ASSISTANT_MODEL`.
 - **قراءة البيانات بالصفحة** جوا `<Suspense>` بالصفحة نفسها (مش بس بالـ layout)، وإلا Next بيشتكي "uncached data during a navigation" (cacheComponents).
 - **الألوان والخطوط** tokens بـ `src/app/globals.css` (مثلاً `bg-ink`، `text-muted`، `bg-warn-soft`). ما في ألوان hex جوا المكونات، إلا ألوان أرقام الأيام من `DAY_COLORS`.
+- **مراجعة 25 أكتوبر (سهولة الاستخدام):** الجرد (الفرع والتغليف) بيعلّم كل صنف انعدّ ("✓ انعدّ" أو زر "ما في منه")، وبالأسفل "عدّيت X من Y"، والتأكيد مع أصناف ما انعدّت بيفتح نافذة "في أصناف ما عدّيتها" (ارجع وعدّهم / أكيد، ما في منهم). `Dialog` بيسكّر حاله بالتنظيف (Next بيخبّي الصفحة القديمة، ونافذة مفتوحة فيها كانت تقفل الشاشة). `Stepper typed` = خانة رقم بتنكتب (للتغليف بالحبة). "طلبيات اليوم" صار اسمها "مجموع طلبات اليوم". جداول الأدمن بالجوال فيها تلميح "اسحب الجدول" (`scroll-hint`)، والموظفين كروت.
+- **`branch_suggestions` (migration `20261025100800`):** الأيام بتنحسب لكل صنف لحاله: اليوم بيدخل بس إذا الصنف انعدّ (عد > 0 أو تعديل ≠ 0)، وإلا الحد المطلوب. **`v_below_min` بالمصنع** بيحسب الدفعات المش منتهية بس.
 
 ## الأصناف (من المنيو)
 كيكة وقطع: Classic Choco، The Red One، The One، Qudrat Qader، Flan، Strawberry، Belgian Choco، Black & White، Classic Crunch، Classic Strawberry، Nightmare، Caramel Crunch، Latte، Carrot، Pecan، Double Choco، San Sebastian.

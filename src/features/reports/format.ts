@@ -17,9 +17,10 @@ export function totalCakesAndPieces(items: { qty: number; piecesPerCake: number 
 
 /** الاستهلاك بالكيكات حسب حجم كل صنف: "17 كيكة"، "2.5 كيكة". */
 export function cakesLabel(cakes: number): string {
-  const rounded = Math.round(cakes * 10) / 10;
+  const rounded = Math.round(Math.abs(cakes) * 10) / 10;
   const word = Number.isInteger(rounded) && rounded >= 3 && rounded <= 10 ? "كيكات" : "كيكة";
-  return `${rounded} ${word}`;
+  // استهلاك سالب = العد أكثر من المتوقع (رقم مستحيل)، فبنقولها بالكلام مش بإشارة ناقص
+  return cakes < 0 ? `زيادة ${rounded} ${word}` : `${rounded} ${word}`;
 }
 
 export function toCakes(qty: number, piecesPerCake: number | null): number {

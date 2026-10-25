@@ -61,6 +61,7 @@ async function PackagingDispatch({ searchParams }: { searchParams: SearchParams 
         requestId={request?.id ?? null}
         batches={null}
         withDriver
+        packaging
         doneHref="/packaging"
         initialLines={(request?.lines ?? []).map((l) => ({
           productId: l.productId,

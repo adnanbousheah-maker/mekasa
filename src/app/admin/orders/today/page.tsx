@@ -10,7 +10,7 @@ import { businessDate } from "@/lib/time";
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 
-// طلبيات اليوم مجمّعة للإنتاج (بتنطبع)
+// مجموع طلبات اليوم مجمّعة للإنتاج (بتنطبع)
 export default function OrdersTodayPage({ searchParams }: { searchParams: SearchParams }) {
   return (
     <Suspense fallback={<AdminLoading />}>
@@ -29,7 +29,7 @@ async function OrdersToday({ searchParams }: { searchParams: SearchParams }) {
   return (
     <>
       <div className="print:hidden">
-        <PageHeader title="طلبيات اليوم" subtitle="كل اللي طلبته الفروع، مجمّع حسب الصنف للإنتاج" />
+        <PageHeader title="مجموع طلبات اليوم" subtitle="كل اللي طلبته الفروع، مجمّع حسب الصنف للإنتاج" />
       </div>
       <DaySummaryTable
         summary={summary}

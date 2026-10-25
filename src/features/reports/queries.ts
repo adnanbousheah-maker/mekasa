@@ -219,10 +219,14 @@ export async function listCounts(
     .order("started_at", { ascending: false })
     .limit(filter.limit ?? 100);
   if (filter.locationId) query = query.eq("location_id", filter.locationId);
-  const [{ data, error }, locations] = await Promise.all([query, listReportLocations()]);
+  // كل المواقع (مش بس الفروع والمصنع)، مشان جرد مستودع التغليف يبين باسمه
+  const [{ data, error }, { data: locations }] = await Promise.all([
+    query,
+    supabase.from("locations").select("id, name"),
+  ]);
   if (error) fail("counts", error);
   const names = await staffNames(data.map((c) => c.counted_by!));
-  const locationNames = new Map(locations.map((l) => [l.id, l.name]));
+  const locationNames = new Map((locations ?? []).map((l) => [l.id, l.name]));
   return data.map((c) => ({
     id: c.id!,
     locationId: c.location_id!,

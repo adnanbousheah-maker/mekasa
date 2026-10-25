@@ -78,3 +78,14 @@
     touch-action: manipulation;
   }
 }
+
+/* الجداول العريضة بلوحة الإدارة على الجوال: تلميح إنه الجدول بيتمرر للجنب */
+@media (max-width: 767px) {
+  .scroll-hint::before {
+    content: "↔ اسحب الجدول للجنب لتشوف باقي الأعمدة";
+    display: block;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--color-muted);
+  }
+}

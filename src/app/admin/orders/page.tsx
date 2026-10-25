@@ -102,7 +102,7 @@ async function Orders({ searchParams }: { searchParams: SearchParams }) {
               href="/admin/orders/today"
               className="flex h-11 items-center rounded-xl bg-ink px-4 font-semibold text-white"
             >
-              طلبيات اليوم (للإنتاج)
+              مجموع طلبات اليوم (للإنتاج)
             </Link>
             <ExportButton href="/admin/export/orders" />
           </>
@@ -138,11 +138,13 @@ async function Orders({ searchParams }: { searchParams: SearchParams }) {
                   {BADGES[m.state][0]}
                 </span>
               </span>
-              <span className="text-[13px] text-muted">{linesSummary((m.dispatch ?? m.request)!.lines)}</span>
+              <span className="text-[13px] text-muted">
+                {linesSummary((m.dispatch ?? m.request)!.lines, (m.dispatch ?? m.request)!.isPackaging)}
+              </span>
             </Link>
           ))}
         </section>
-        {selected && <MoveDetail move={selected} />}
+        {selected && <MoveDetail move={selected} chosen={typeof params.id === "string"} />}
       </div>
     </>
   );
@@ -166,7 +168,8 @@ function titleOf(m: Move): string {
   return `${d!.toName} · إخراج بدون طلب من ${d!.fromName} ${dayLabel(d!.dispatchedAt, now)}`;
 }
 
-function MoveDetail({ move }: { move: Move }) {
+// بالجوال: الطلب اللي انكبس عليه (chosen) بيطلع فوق القائمة
+function MoveDetail({ move, chosen }: { move: Move; chosen: boolean }) {
   const { request: r, dispatch: d } = move;
   const productIds = [
     ...new Set([...(r?.lines ?? []).map((l) => l.productId), ...(d?.lines ?? []).map((l) => l.productId)]),
@@ -199,7 +202,7 @@ function MoveDetail({ move }: { move: Move }) {
   return (
     <section
       aria-label="التفاصيل"
-      className="flex min-w-0 flex-[999_1_520px] flex-col gap-4 rounded-2xl border border-line bg-surface p-5"
+      className={`${chosen ? "max-lg:order-first" : ""} flex min-w-0 flex-[999_1_520px] flex-col gap-4 rounded-2xl border border-line bg-surface p-5`}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex flex-col gap-1">
@@ -213,22 +216,25 @@ function MoveDetail({ move }: { move: Move }) {
       <div className="grid grid-cols-3 gap-2 text-sm">
         <div className="flex flex-col rounded-xl bg-quiet p-3">
           <span className="text-muted">المطلوب</span>
-          <span className="font-semibold">{r ? linesSummary(r.lines) : "بدون طلب"}</span>
+          <span className="font-semibold">{r ? linesSummary(r.lines, r.isPackaging) : "بدون طلب"}</span>
         </div>
         <div className="flex flex-col rounded-xl bg-quiet p-3">
           <span className="text-muted">طلع</span>
-          <span className="font-semibold">{d ? linesSummary(d.lines) : "—"}</span>
+          <span className="font-semibold">{d ? linesSummary(d.lines, d.isPackaging) : "—"}</span>
         </div>
         <div className="flex flex-col rounded-xl bg-quiet p-3">
           <span className="text-muted">وصل</span>
           <span className="font-semibold">
             {d?.receivedAt
-              ? linesSummary(d.lines.map((l) => l.received ?? { wholeCakes: 0, loosePieces: 0 }))
+              ? linesSummary(
+                  d.lines.map((l) => l.received ?? { wholeCakes: 0, loosePieces: 0 }),
+                  d.isPackaging,
+                )
               : "—"}
           </span>
         </div>
       </div>
-      <div className="overflow-x-auto">
+      <div className="scroll-hint overflow-x-auto">
         <table className="w-full min-w-[520px] border-collapse text-sm">
           <thead>
             <tr className="bg-table-head text-table-head-text">

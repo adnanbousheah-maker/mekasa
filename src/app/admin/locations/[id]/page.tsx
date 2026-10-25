@@ -108,7 +108,7 @@ async function Location({ params }: { params: Params }) {
         title: isBranch
           ? `${r.isPackaging ? "طلب تغليف" : "طلب"} ${formatLongDate(r.requestedAt.slice(0, 10))}`
           : `طلب ${r.fromName}`,
-        summary: linesSummary(r.lines),
+        summary: linesSummary(r.lines, r.isPackaging),
         status: d?.status === "in_transit" ? "بالطريق" : REQUEST_STATUS_LABELS[r.status],
       };
     }),
@@ -118,7 +118,7 @@ async function Location({ params }: { params: Params }) {
         id: d.id,
         at: d.dispatchedAt,
         title: isBranch ? `من ${d.fromName} بدون طلب` : `إخراج لـ${d.toName} بدون طلب`,
-        summary: linesSummary(d.lines),
+        summary: linesSummary(d.lines, d.isPackaging),
         status: d.status === "in_transit" ? "بالطريق" : d.status === "received" ? "مستلم" : "ملغي",
       })),
   ].sort((a, b) => b.at.localeCompare(a.at));
@@ -150,7 +150,7 @@ async function Location({ params }: { params: Params }) {
           </Link>
         }
       >
-        <div className="overflow-x-auto">
+        <div className="scroll-hint overflow-x-auto">
           <table className="w-full min-w-[460px] border-collapse text-sm">
             <thead>
               <tr className="bg-table-head text-table-head-text">
@@ -222,7 +222,7 @@ async function Location({ params }: { params: Params }) {
         action={
           loc.kind === "factory" ? (
             <Link href="/admin/orders/today" className={linkClass}>
-              طلبيات اليوم (للإنتاج)
+              مجموع طلبات اليوم (للإنتاج)
             </Link>
           ) : undefined
         }

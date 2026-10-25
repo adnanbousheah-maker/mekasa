@@ -5,7 +5,7 @@ import { StaffLoading, StaffScreen } from "@/components/ui/StaffScreen";
 import { requireStaff } from "@/features/auth/session";
 import { NotForYou } from "@/features/orders/components/OrderBits";
 import { RoundForm } from "@/features/orders/components/RoundForm";
-import { factoryBatchStock, loadDocuments } from "@/features/orders/queries";
+import { allActiveProducts, factoryBatchStock, loadDocuments } from "@/features/orders/queries";
 
 // توزيع اليوم: كل طلبات الفروع مرة وحدة، والقديم بالعدل
 export default function RoundPage() {
@@ -22,21 +22,30 @@ async function Round() {
     return <NotForYou title="توزيع اليوم" text="التوزيع لموظف الإخراج بالمصنع." />;
   }
   await connection();
-  const [{ requests }, batches] = await Promise.all([
+  const [{ requests }, batches, products] = await Promise.all([
     loadDocuments({
       requests: { supplyingLocationId: staff.location.id, statuses: ["sent"] },
       sinceDays: 14,
     }),
     factoryBatchStock(staff.location.id),
+    allActiveProducts(),
   ]);
+  const sizes = Object.fromEntries(products.map((p) => [p.id, p.piecesPerCake]));
 
   return (
     <StaffScreen>
       <ScreenHeader title="توزيع اليوم" subtitle="كل طلبات الفروع مع بعض" backHref="/factory/requests" />
       {requests.length === 0 ? (
-        <p className="text-muted">ما في طلبات بانتظار الإخراج.</p>
+        <p className="rounded-2xl border border-dashed border-line-dashed p-5 text-center text-muted">
+          ما في طلبات جديدة. أول ما فرع يطلب، بتطلع هون.
+        </p>
       ) : (
-        <RoundForm key={new Date().toISOString()} requests={[...requests].reverse()} batches={batches} />
+        <RoundForm
+          key={new Date().toISOString()}
+          requests={[...requests].reverse()}
+          batches={batches}
+          sizes={sizes}
+        />
       )}
     </StaffScreen>
   );

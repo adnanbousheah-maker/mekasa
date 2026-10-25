@@ -129,8 +129,8 @@ test.describe("admin", () => {
   test("today's orders add up every branch for production, and print", async ({ page }) => {
     await signInAndWait(page, ADMIN.phone, ADMIN.pin);
     await page.goto("/admin/orders");
-    await page.getByRole("link", { name: "طلبيات اليوم (للإنتاج)" }).click();
-    const table = page.getByRole("region", { name: "طلبيات اليوم" });
+    await page.getByRole("link", { name: "مجموع طلبات اليوم (للإنتاج)" }).click();
+    const table = page.getByRole("region", { name: "مجموع طلبات اليوم" });
     await expect(table.getByRole("heading", { name: /\(اليوم\)/ })).toBeVisible();
     await expect(table.getByRole("columnheader", { name: "دابوق" })).toBeVisible();
     await expect(table.getByRole("row", { name: /Flan/ })).toContainText("كيك");

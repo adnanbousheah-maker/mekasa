@@ -22,7 +22,7 @@ test("a branch employee records broken cakes with a photo", async ({ page }) => 
   });
   await expect(page.getByText("انرفعت الصورة")).toBeVisible();
 
-  await page.getByRole("button", { name: "سجّل 2 كيكة تالف" }).click();
+  await page.getByRole("button", { name: "سجّل كيكتين تالفات" }).click();
   await expect(page.getByRole("heading", { name: "انسجل التالف" })).toBeVisible();
 
   expect(await stockOf("DBQ", "Classic Choco")).toBe(before - 20);
@@ -39,11 +39,11 @@ test("other needs a note, and pieces-only products are counted in pieces", async
   await page.getByRole("dialog").getByRole("button", { name: "Tiramisu" }).click();
   await expect(page.getByRole("radio", { name: "كيكة كاملة" })).toBeHidden();
   await page.getByRole("radio", { name: "غيره" }).click();
-  await page.getByRole("button", { name: "سجّل 1 قطعة تالف" }).click();
+  await page.getByRole("button", { name: "سجّل قطعة تالفة" }).click();
   await expect(page.getByRole("alert").filter({ hasText: "اكتب شو صار" })).toBeVisible();
 
   await page.getByLabel("شو صار؟").fill("الزبون رجعها");
-  await page.getByRole("button", { name: "سجّل 1 قطعة تالف" }).click();
+  await page.getByRole("button", { name: "سجّل قطعة تالفة" }).click();
   await expect(page.getByRole("heading", { name: "انسجل التالف" })).toBeVisible();
   const waste = await lastWaste("DBQ");
   expect(waste.reason_note).toBe("الزبون رجعها");
@@ -55,10 +55,10 @@ test("the factory records waste on a batch", async ({ page }) => {
   await page.goto("/waste");
   await page.getByRole("button", { name: "اختار الصنف" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Carrot" }).click();
-  await page.getByRole("button", { name: "سجّل 1 كيكة تالف" }).click();
+  await page.getByRole("button", { name: "سجّل كيكة تالفة" }).click();
   await expect(page.getByRole("alert").filter({ hasText: "اختار رقم الدفعة" })).toBeVisible();
   await page.getByRole("radiogroup", { name: "رقم الدفعة" }).getByRole("radio").last().click();
-  await page.getByRole("button", { name: "سجّل 1 كيكة تالف" }).click();
+  await page.getByRole("button", { name: "سجّل كيكة تالفة" }).click();
   await expect(page.getByRole("heading", { name: "انسجل التالف" })).toBeVisible();
   expect((await lastWaste("FAC")).qty_pieces).toBe(10);
 });

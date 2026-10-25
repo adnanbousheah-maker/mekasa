@@ -31,7 +31,7 @@ async function Factory() {
         subtitle="كل عمود رقم يوم إنتاج. الأقدم على اليمين، ولازم يطلع أول."
         actions={<ExportButton href="/admin/export/factory" />}
       />
-      <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
+      <div className="scroll-hint overflow-x-auto rounded-2xl border border-line bg-surface">
         <table className={`${tableClass} min-w-[760px]`}>
           <thead>
             <tr className={theadRowClass}>
@@ -100,7 +100,7 @@ async function Factory() {
           اللي انسجل إنتاج رقم {dayNumberOf(today)}، ناقص اللي طلع منه، لازم يساوي جرد رقم{" "}
           {dayNumberOf(today)}. أي فرق معناه إنتاج انسجل غلط أو بضاعة طلعت بدون إخراج.
         </span>
-        <div className="overflow-x-auto">
+        <div className="scroll-hint overflow-x-auto">
           <table className={`${tableClass} min-w-[560px]`}>
             <thead>
               <tr className={theadRowClass}>

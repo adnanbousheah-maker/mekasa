@@ -36,6 +36,8 @@ type Props = {
   batches: FactoryBatchStock[] | null;
   // اسم السائق: من المصنع ومن مستودع التغليف
   withDriver?: boolean;
+  // مواد التغليف بالحبة
+  packaging?: boolean;
   doneHref: string;
 };
 
@@ -50,6 +52,7 @@ export function DispatchForm({
   initialLines,
   batches,
   withDriver = batches !== null,
+  packaging = false,
   doneHref,
 }: Props) {
   const router = useRouter();
@@ -217,7 +220,10 @@ export function DispatchForm({
               </div>
               {l.requestedPieces !== null && (
                 <span className="text-[13px] text-muted">
-                  طلبوا: {formatQuantity(l.requestedPieces, p.piecesPerCake)}
+                  طلبوا:{" "}
+                  {packaging
+                    ? `${l.requestedPieces} حبة`
+                    : formatQuantity(l.requestedPieces, p.piecesPerCake)}
                 </span>
               )}
               <div className={`grid gap-2.5 ${p.piecesPerCake === null ? "grid-cols-1" : "grid-cols-2"}`}>
@@ -231,7 +237,8 @@ export function DispatchForm({
                   />
                 )}
                 <Stepper
-                  label="قطع"
+                  label={packaging ? "حبات" : "قطع"}
+                  typed={packaging}
                   value={l.loosePieces}
                   onChange={(v) => update(l.productId, { loosePieces: v })}
                   incrementLabel={`زيد قطعة ${p.nameEn}`}
@@ -315,7 +322,7 @@ export function DispatchForm({
               {error}
             </p>
           )}
-          <span className="text-center text-sm text-muted">{linesSummary(lines)}</span>
+          <span className="text-center text-sm text-muted">{linesSummary(lines, packaging)}</span>
           <button
             type="button"
             disabled={

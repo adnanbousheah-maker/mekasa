@@ -152,8 +152,16 @@ export function receiptDifference(sent: number, got: number, piecesPerCake: numb
 }
 
 /** "6 أصناف · 11 كيكة · 8 قطع". */
-export function linesSummary(lines: { wholeCakes: number; loosePieces: number }[]): string {
+export function linesSummary(
+  lines: { wholeCakes: number; loosePieces: number }[],
+  // مواد التغليف بالحبة
+  packaging = false,
+): string {
   const used = lines.filter((l) => l.wholeCakes + l.loosePieces > 0);
+  if (packaging) {
+    const units = used.reduce((s, l) => s + l.loosePieces, 0);
+    return `${used.length} ${used.length >= 3 && used.length <= 10 ? "أصناف" : "صنف"} · ${units} حبة`;
+  }
   const cakes = used.reduce((s, l) => s + l.wholeCakes, 0);
   const pieces = used.reduce((s, l) => s + l.loosePieces, 0);
   const parts = [

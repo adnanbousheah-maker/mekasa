@@ -11,7 +11,7 @@ import { businessDate } from "@/lib/time";
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 const ISO = /^\d{4}-\d{2}-\d{2}$/;
 
-// طلبيات اليوم للإنتاج: لأمين المستودع والإخراج بالمصنع
+// مجموع طلبات اليوم للإنتاج: لأمين المستودع والإخراج بالمصنع
 export default function FactoryTodayPage({ searchParams }: { searchParams: SearchParams }) {
   return (
     <Suspense fallback={<StaffLoading />}>
@@ -27,7 +27,7 @@ async function FactoryToday({ searchParams }: { searchParams: SearchParams }) {
     staff.location?.kind !== "factory" ||
     !(staff.roles.includes("dispatcher") || staff.roles.includes("storekeeper"))
   ) {
-    return <NotForYou title="طلبيات اليوم" text="هالشاشة لموظفين المصنع." />;
+    return <NotForYou title="مجموع طلبات اليوم" text="هالشاشة لموظفين المصنع." />;
   }
   await connection();
   const today = businessDate(new Date());
@@ -35,7 +35,7 @@ async function FactoryToday({ searchParams }: { searchParams: SearchParams }) {
   return (
     <StaffScreen>
       <div className="print:hidden">
-        <ScreenHeader title="طلبيات اليوم" subtitle="للإنتاج: مجموع طلبات الفروع" />
+        <ScreenHeader title="مجموع طلبات اليوم" subtitle="للإنتاج: مجموع طلبات الفروع" />
       </div>
       <DaySummaryTable
         summary={await ordersOfDay(date)}

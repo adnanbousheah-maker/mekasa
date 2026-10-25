@@ -73,7 +73,7 @@ async function Requests() {
               <span className="text-sm text-muted">{formatClock(new Date(r.requestedAt))}</span>
             </div>
             <span className="text-sm text-muted">
-              {linesSummary(r.lines)} · طلبها {r.requestedBy}
+              {linesSummary(r.lines, r.isPackaging)} · طلبها {r.requestedBy}
             </span>
             {isDispatcher && (
               <Link
@@ -103,7 +103,7 @@ async function Requests() {
                 </span>
               </div>
               <span className="text-sm text-muted">
-                طلع {formatClock(new Date(d.dispatchedAt))} · {linesSummary(d.lines)}
+                طلع {formatClock(new Date(d.dispatchedAt))} · {linesSummary(d.lines, d.isPackaging)}
               </span>
             </li>
           );
@@ -117,7 +117,7 @@ async function Requests() {
             {returns.map((d) => (
               <li key={d.id} className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-4">
                 <span className="text-[17px] font-bold">من فرع {d.fromName}</span>
-                <span className="text-sm text-muted">{linesSummary(d.lines)}</span>
+                <span className="text-sm text-muted">{linesSummary(d.lines, d.isPackaging)}</span>
                 {staff.roles.includes("storekeeper") && (
                   <Link
                     href={`/receive/${d.id}`}

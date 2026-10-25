@@ -66,7 +66,7 @@ async function Orders({ searchParams }: { searchParams: SearchParams }) {
     ...outgoing.map((d) => ({ kind: "outgoing" as const, at: d.dispatchedAt, dispatch: d })),
   ].sort((a, b) => b.at.localeCompare(a.at));
 
-  const sent = (d: DispatchDoc) => linesSummary(d.lines);
+  const sent = (d: DispatchDoc) => linesSummary(d.lines, d.isPackaging);
   const receivedDiff = (d: DispatchDoc) => {
     const diff = d.lines.reduce((s, l) => s + ((l.received?.qtyPieces ?? l.qtyPieces) - l.qtyPieces), 0);
     if (diff === 0) return null;
@@ -116,7 +116,7 @@ async function Orders({ searchParams }: { searchParams: SearchParams }) {
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div className="flex flex-col rounded-xl bg-quiet p-2.5">
                         <span className="text-muted">طلبت</span>
-                        <span className="font-semibold">{linesSummary(r.lines)}</span>
+                        <span className="font-semibold">{linesSummary(r.lines, r.isPackaging)}</span>
                       </div>
                       <div className="flex flex-col rounded-xl bg-info-soft p-2.5">
                         <span className="text-info-text">طلع {formatClock(new Date(d.dispatchedAt))}</span>
@@ -137,7 +137,7 @@ async function Orders({ searchParams }: { searchParams: SearchParams }) {
                   </>
                 ) : (
                   <span className="text-sm text-muted">
-                    {linesSummary(r.lines)} · {formatClock(new Date(r.requestedAt))}
+                    {linesSummary(r.lines, r.isPackaging)} · {formatClock(new Date(r.requestedAt))}
                   </span>
                 )}
               </li>

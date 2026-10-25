@@ -37,7 +37,39 @@ async function Staff() {
       </header>
 
       <div className="flex flex-wrap items-start gap-4">
-        <section className="min-w-0 flex-[999_1_560px] overflow-x-auto rounded-2xl border border-line bg-surface">
+        {/* بالجوال: كرت لكل موظف والأزرار تحته (الجدول ما بيوسع) */}
+        <ul aria-label="الموظفين" className="flex w-full flex-col gap-2.5 md:hidden">
+          {staff.map((s) => (
+            <li
+              key={s.id}
+              className={`flex flex-col gap-2 rounded-2xl border border-line bg-surface p-4 ${s.isActive ? "" : "opacity-60"}`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="flex flex-col">
+                  <span className="text-[17px] font-semibold">{s.fullName}</span>
+                  <span dir="ltr" className="text-right text-xs text-muted">
+                    {maskPhone(s.phone)}
+                  </span>
+                </span>
+                <StatusChip isActive={s.isActive} isLocked={s.isLocked} />
+              </div>
+              <span className="text-sm text-muted">
+                {s.location?.name ?? "كل المواقع"} · {s.roles.map((r) => ROLE_LABELS[r]).join("، ")}
+              </span>
+              <span className="text-xs text-muted">
+                آخر دخول: {formatLastSeen(s.lastLoginAt ? new Date(s.lastLoginAt) : null, now)}
+              </span>
+              <StaffRowActions
+                staffId={s.id}
+                fullName={s.fullName}
+                isActive={s.isActive}
+                isSelf={s.id === me?.id}
+              />
+            </li>
+          ))}
+        </ul>
+
+        <section className="hidden min-w-0 flex-[999_1_560px] overflow-x-auto rounded-2xl border border-line bg-surface md:block">
           <table className="w-full min-w-[680px] border-collapse text-sm">
             <thead>
               <tr className="bg-table-head text-table-head-text">

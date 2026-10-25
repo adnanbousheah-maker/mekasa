@@ -18,6 +18,11 @@ export function Dialog({ open, onClose, title, children }: Props) {
     if (!dialog) return;
     if (open && !dialog.open) dialog.showModal();
     if (!open && dialog.open) dialog.close();
+    // Next بيخلي الصفحة اللي انتقلنا منها مخبّاية بالخلفية: نافذة مفتوحة فيها كانت تقفل الصفحة الجديدة.
+    // التنظيف بيصير لما الصفحة تتخبى أو تنشال، فبنسكّر النافذة (وبترجع تنفتح إذا رجعنا والحالة مفتوحة).
+    return () => {
+      if (dialog.open) dialog.close();
+    };
   }, [open]);
 
   return (

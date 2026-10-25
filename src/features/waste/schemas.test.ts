@@ -38,8 +38,9 @@ describe("wasteSchema", () => {
 
 describe("wasteSubmitLabel", () => {
   it("uses the right word for the number", () => {
-    expect(wasteSubmitLabel(1, "cake")).toBe("سجّل 1 كيكة تالف");
-    expect(wasteSubmitLabel(3, "cake")).toBe("سجّل 3 كيكات تالف");
-    expect(wasteSubmitLabel(5, "piece")).toBe("سجّل 5 قطع تالف");
+    expect(wasteSubmitLabel(1, "cake")).toBe("سجّل كيكة تالفة");
+    expect(wasteSubmitLabel(2, "piece")).toBe("سجّل قطعتين تالفات");
+    expect(wasteSubmitLabel(3, "cake")).toBe("سجّل 3 كيكات تالفة");
+    expect(wasteSubmitLabel(5, "piece")).toBe("سجّل 5 قطع تالفة");
   });
 });

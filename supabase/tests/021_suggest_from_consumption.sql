@@ -38,9 +38,9 @@ select results_eq(
   'the average is over the counted same weekdays'
 );
 select results_eq(
-  $$ select avg_pieces from public.branch_suggestions(tests.location('SWF')) where product_id = tests.product('Latte') $$,
-  $$ values (0) $$,
-  'an item with no consumption on counted days averages zero'
+  $$ select avg_pieces, days_used from public.branch_suggestions(tests.location('SWF')) where product_id = tests.product('Latte') $$,
+  $$ values (null::int, 0) $$,
+  'an item that was not at the branch on those days has no average, so the order falls back to par'
 );
 
 -- يوم مش نفس يوم بكرا ما بيدخل

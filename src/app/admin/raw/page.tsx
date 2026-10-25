@@ -55,7 +55,7 @@ async function Raw() {
           </>
         }
       />
-      <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
+      <div className="scroll-hint overflow-x-auto rounded-2xl border border-line bg-surface">
         <table className="w-full min-w-[860px] border-collapse text-sm">
           <thead>
             <tr className="bg-table-head text-table-head-text">

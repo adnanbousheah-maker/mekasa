@@ -324,7 +324,7 @@ function FactoryTasks({ staff, data }: { staff: CurrentStaff; data: FactoryHomeD
             <TaskLink
               variant="tile"
               href="/factory/today"
-              title="طلبيات اليوم"
+              title="مجموع طلبات اليوم"
               icon={<ClipboardIcon size={24} />}
             />
           </div>
@@ -344,7 +344,7 @@ function FactoryTasks({ staff, data }: { staff: CurrentStaff; data: FactoryHomeD
               <TaskLink
                 variant="tile"
                 href="/factory/today"
-                title="طلبيات اليوم"
+                title="مجموع طلبات اليوم"
                 icon={<ClipboardIcon size={24} />}
               />
             )}

@@ -33,5 +33,8 @@ export type WasteInput = z.input<typeof wasteSchema>;
 
 /** نص زر التسجيل: "سجّل 2 كيكة تالف". */
 export function wasteSubmitLabel(qty: number, unit: "cake" | "piece"): string {
-  return `سجّل ${qty} ${countWord(qty, unit)} تالف`;
+  // عربي طبيعي: كيكة / كيكتين / 3 كيكات
+  if (qty === 1) return unit === "cake" ? "سجّل كيكة تالفة" : "سجّل قطعة تالفة";
+  if (qty === 2) return unit === "cake" ? "سجّل كيكتين تالفات" : "سجّل قطعتين تالفات";
+  return `سجّل ${qty} ${countWord(qty, unit)} تالفة`;
 }

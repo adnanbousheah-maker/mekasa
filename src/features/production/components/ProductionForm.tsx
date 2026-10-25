@@ -44,11 +44,11 @@ export function ProductionForm({ products, dayNumber }: { products: Product[]; d
               aria-label={p.nameEn}
               className={`flex items-center gap-3 rounded-[14px] bg-surface px-3 py-2.5 ${n > 0 ? "border-2 border-ink" : "border border-line"}`}
             >
-              <div className="flex grow flex-col">
+              <div className="flex min-w-0 grow flex-col">
                 <ProductName name={p.nameEn} className="text-base font-semibold" />
                 <span className="text-xs text-muted">{p.piecesPerCake === null ? "قطع" : "كيكات"}</span>
               </div>
-              <div className="flex h-12 w-[140px] items-center justify-between overflow-hidden rounded-xl border border-line-strong">
+              <div className="flex h-12 w-[140px] shrink-0 items-center justify-between overflow-hidden rounded-xl border border-line-strong">
                 <button
                   type="button"
                   aria-label={`زيد ${p.nameEn}`}

@@ -27,7 +27,13 @@ select results_eq(
   'only items under their minimum are listed, including items with no stock at all'
 );
 
--- المصنع ومستودع التغليف كمان، كل واحد بأصنافه
+-- المصنع ومستودع التغليف كمان، كل واحد بأصنافه. بالمصنع 5 كيكات Flan بس منتهية (عمرها 8 أيام)، فما بتنحسب
+select tests.create_staff('ffffffff-0000-4000-8000-000000000003', 'ليث', '962797770003', 'FAC', '{storekeeper}');
+select tests.authenticate_as('ffffffff-0000-4000-8000-000000000003');
+select public.submit_count(tests.location('FAC'), format(
+  '[{"product_id": "%s", "production_date": "%s", "whole_cakes": 5}]',
+  tests.product('Flan'), public.amman_today() - 8)::jsonb);
+select tests.as_postgres();
 insert into public.par_levels (location_id, product_id, par_pieces, min_pieces)
 values (tests.location('FAC'), tests.product('Flan'), 0, 30),
        (tests.location('PKG'), tests.product('Cake Box'), 0, 200),

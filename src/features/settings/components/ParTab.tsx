@@ -18,7 +18,7 @@ type Props = {
 
 const KIND_NOTES: Record<string, string> = {
   branch:
-    "المطلوب = كم بدك يكون بالفرع بعد الاستلام (التطبيق بيقترح الفرق). الأدنى = إذا الموجود نزل تحته بعد الجرد، بيوصل تنبيه للفرع وإلك.",
+    "المطلوب = كم بدك يكون بالفرع بعد الاستلام. الطلبية بتنقترح حسب استهلاك الفرع، وقبل ما يصير في جرودات كفاية حسب المطلوب. الأدنى = إذا الموجود نزل تحته بعد الجرد، بيوصل تنبيه للفرع وإلك.",
   factory: "الأدنى = إذا ستوك المصنع من هالصنف نزل تحته بعد الجرد، بيوصل تنبيه للمصنع وإلك.",
   packaging: "الأدنى بالحبة = إذا الموجود بالمستودع نزل تحته، بيوصل تنبيه لأمين التغليف وإلك.",
 };
@@ -45,7 +45,7 @@ export function ParTab({ locations, current, products, par, min, stock }: Props)
       <span className="text-sm leading-relaxed text-muted">{KIND_NOTES[current.kind]}</span>
 
       {/* مفتاح الموقع: الخانات بتحفظ قيمتها الأولى، فلازم تنعمل من جديد لما يتغير الموقع */}
-      <div key={current.id} className="overflow-x-auto rounded-2xl border border-line bg-surface">
+      <div key={current.id} className="scroll-hint overflow-x-auto rounded-2xl border border-line bg-surface">
         <table className="w-full min-w-[420px] border-collapse text-sm">
           <thead>
             <tr className="bg-table-head text-table-head-text">
@@ -110,7 +110,7 @@ export function ParTab({ locations, current, products, par, min, stock }: Props)
                       initial={floor === undefined ? "" : String(toUnits(floor))}
                       placeholder="—"
                       onSave={setMinLevelAction.bind(null, current.id, p.id)}
-                      className={`${isPackaging ? "w-20" : "w-16"} bg-warn-soft`}
+                      className={isPackaging ? "w-20" : "w-16"}
                     />
                   </td>
                 </tr>

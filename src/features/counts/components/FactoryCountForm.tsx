@@ -171,8 +171,8 @@ export function FactoryCountForm({ products, batches, today, scheduleId, started
                         ? "+ تاريخ ثاني"
                         : "+ تاريخ"
                       : productRows.length > 0
-                        ? "+ رقم ثاني"
-                        : "+ رقم"}
+                        ? "+ رقم يوم ثاني"
+                        : "+ أضف رقم اليوم"}
                   </button>
                 )
               )}

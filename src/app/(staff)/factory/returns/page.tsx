@@ -53,7 +53,7 @@ async function Returns() {
           {incoming.map((d) => (
             <li key={d.id} className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-4">
               <span className="text-[17px] font-bold">بالطريق من فرع {d.fromName}</span>
-              <span className="text-sm text-muted">{linesSummary(d.lines)}</span>
+              <span className="text-sm text-muted">{linesSummary(d.lines, d.isPackaging)}</span>
               <Link
                 href={`/receive/${d.id}`}
                 className="flex h-12 items-center justify-center rounded-xl bg-ink font-semibold text-white"

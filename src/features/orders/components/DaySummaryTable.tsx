@@ -11,21 +11,21 @@ type Props = { summary: DaySummary; date: string; today: string; basePath: strin
 export function DaySummaryTable({ summary, date, today, basePath, exportHref }: Props) {
   const { branches, rows } = summary;
   return (
-    <section aria-label="طلبيات اليوم" className="flex flex-col gap-3">
+    <section aria-label="مجموع طلبات اليوم" className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2 print:hidden">
         <div className="flex items-center gap-2">
           <Link
             href={`${basePath}?date=${shiftDate(date, -1)}`}
             className="flex h-11 items-center rounded-xl border border-line-strong bg-surface px-3"
           >
-            ← اليوم اللي قبل
+            → اليوم اللي قبل
           </Link>
           {date !== today && (
             <Link
               href={`${basePath}?date=${shiftDate(date, 1)}`}
               className="flex h-11 items-center rounded-xl border border-line-strong bg-surface px-3"
             >
-              اللي بعده →
+              اللي بعده ←
             </Link>
           )}
         </div>
@@ -44,7 +44,7 @@ export function DaySummaryTable({ summary, date, today, basePath, exportHref }: 
       </div>
 
       <h2 className="text-lg font-bold">
-        طلبيات {formatLongDate(date)}
+        طلبات {formatLongDate(date)}
         {date === today ? " (اليوم)" : ""} · {summary.requests} {summary.requests === 1 ? "طلب" : "طلبات"}
       </h2>
       <p className="text-sm text-muted print:hidden">

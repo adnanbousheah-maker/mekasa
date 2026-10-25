@@ -16,11 +16,21 @@ test("a branch employee counts by hand and the stock follows the count", async (
   await expect(choco.getByRole("status", { name: "كيكات: 2" })).toBeVisible();
 
   const tiramisu = page.getByRole("listitem", { name: "Tiramisu" });
-  await expect(tiramisu.getByText("قطع بس")).toBeVisible();
+  await expect(tiramisu.getByText("قطع (قطع بس)")).toBeVisible();
   await tiramisu.getByRole("button", { name: "زيد قطعة Tiramisu" }).click();
 
-  await expect(page.getByText("20 صنف · 2 كيكة · 2 قطعة")).toBeVisible();
+  await expect(page.getByText("عدّيت 2 من 20 · 2 كيكة · 2 قطعة")).toBeVisible();
+  await expect(choco.getByText("✓ انعدّ")).toBeVisible();
   await page.getByRole("button", { name: "تأكيد الجرد" }).click();
+  // 18 صنف ما انعدّوا: تحذير قبل ما ينحسبوا صفر
+  const missing = page.getByRole("dialog", { name: "في أصناف ما عدّيتها" });
+  await expect(missing).toContainText("هدول الـ18");
+  await missing.getByRole("button", { name: "ارجع وعدّهم" }).click();
+  await expect(missing).toBeHidden();
+  await page.getByRole("button", { name: "ما في Flan" }).click();
+  await expect(page.getByText(/^عدّيت 3 من 20/)).toBeVisible();
+  await page.getByRole("button", { name: "تأكيد الجرد" }).click();
+  await missing.getByRole("button", { name: "أكيد، ما في منهم" }).click();
 
   await expect(page.getByRole("heading", { name: "تم الجرد" })).toBeVisible();
   await expect(page.getByText(/لـ دابوق انحفظ/)).toBeVisible();

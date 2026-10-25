@@ -64,7 +64,8 @@ export function EnableNotifications({ vapidPublicKey }: { vapidPublicKey: string
     <div className="flex flex-col gap-1.5 rounded-[14px] border border-line bg-surface p-3">
       {support === "denied" ? (
         <p className="text-sm text-muted">
-          التذكيرات مسكّرة من إعدادات المتصفح لهالموقع. فعّلها من الإعدادات إذا بدك تذكير بالجرد.
+          🔕 تذكير الجرد مسكّر على هالجوال. لتفعيله: افتح إعدادات المتصفح ← المواقع ← ميكاسا ← الإشعارات ←
+          سماح. وإذا مش عارف، اسأل المدير.
         </p>
       ) : (
         <button

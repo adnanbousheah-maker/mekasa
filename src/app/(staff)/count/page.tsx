@@ -31,7 +31,8 @@ async function Count() {
           subtitle="عدّ كل رقم لحاله"
         />
         <p className="text-[13px] leading-relaxed text-muted">
-          ما بنعرض الكمية المتوقعة مشان العد يكون حقيقي. الفرق بيطلع للمدير بعد التأكيد.
+          لكل صنف: اختار رقم اليوم المكتوب على الكيك، وعدّ كل رقم لحاله. ما بنعرض الكمية المتوقعة مشان العد
+          يكون حقيقي.
         </p>
         <FactoryCountForm
           key={now.toISOString()}

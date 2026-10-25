@@ -72,8 +72,18 @@ export function Kpi({
 }
 
 /** أعمدة أفقية بسيطة (الاستهلاك والتالف حسب الموقع). */
-export function Bars({ items, unit }: { items: { label: string; value: number }[]; unit?: string }) {
+export function Bars({
+  items,
+  unit,
+  empty,
+}: {
+  items: { label: string; value: number }[];
+  unit?: string;
+  // نص بدل الأعمدة إذا كلها صفر (مشان ما تبين معطلة)
+  empty?: string;
+}) {
   const max = Math.max(...items.map((i) => i.value), 1);
+  if (empty && items.every((i) => i.value === 0)) return <p className="text-sm text-muted">{empty}</p>;
   return (
     <ul className="flex flex-col gap-2.5">
       {items.map((i) => (

@@ -100,7 +100,7 @@ async function Overview() {
     alerts.push({
       tone: "danger",
       title: `إخراج ${d.toName} ما انستلم من ${Math.floor(d.hoursInTransit)} ساعة`,
-      sub: `طلع ${formatLongDate(d.dispatchedAt.slice(0, 10))} ${formatClock(new Date(d.dispatchedAt))} · ${linesSummary(d.lines)}`,
+      sub: `طلع ${formatLongDate(d.dispatchedAt.slice(0, 10))} ${formatClock(new Date(d.dispatchedAt))} · ${linesSummary(d.lines, d.isPackaging)}`,
       action: "تابع",
       href: `/admin/orders?filter=road&id=${d.requestId ?? d.id}`,
     });
@@ -134,7 +134,7 @@ async function Overview() {
     alerts.push({
       tone: "warn",
       title: `طلب ${r.fromName} بانتظار موافقتك`,
-      sub: linesSummary(r.lines),
+      sub: linesSummary(r.lines, r.isPackaging),
       action: "وافق",
       href: `/admin/orders?filter=wait&id=${r.id}`,
     });
@@ -308,6 +308,7 @@ async function Overview() {
               items={locations
                 .filter((l) => l.kind === "branch")
                 .map((l) => ({ label: l.name, value: Math.round(cakesAt(weekUse, l.id) * 10) / 10 }))}
+              empty="لسا ما في جردين ورا بعض هالأسبوع لنحسب الاستهلاك. بعد جرد الفروع اليومي بيبين هون."
             />
           </section>
           <section className="flex flex-col gap-2.5 rounded-2xl border border-line bg-surface p-5">
@@ -327,7 +328,7 @@ async function Overview() {
                   <span className="font-semibold">
                     {r.fromName} · {formatClock(new Date(r.requestedAt))}
                   </span>
-                  <span className="text-muted">{linesSummary(r.lines)}</span>
+                  <span className="text-muted">{linesSummary(r.lines, r.isPackaging)}</span>
                 </div>
               ))}
           </section>

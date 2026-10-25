@@ -108,6 +108,8 @@ export interface DispatchDoc {
   dispatchedAt: string;
   dispatchedBy: string;
   driverName: string | null;
+  // من مستودع التغليف
+  isPackaging: boolean;
   hoursInTransit: number;
   lines: (DocLine & {
     lineId: string;
@@ -132,7 +134,7 @@ const REQUEST_COLUMNS =
   "id, status, requested_at, requested_by, requesting_location_id, requesting:locations!stock_requests_requesting_location_id_fkey(name), supplying:locations!stock_requests_supplying_location_id_fkey(name, kind), stock_request_lines(id, product_id, whole_cakes, loose_pieces, qty_pieces, pieces_per_cake_snapshot, suggested_pieces), stock_request_missing(product_id, suggested_pieces)";
 
 const DISPATCH_COLUMNS =
-  "id, kind, status, request_id, from_location_id, to_location_id, dispatched_at, dispatched_by, driver_name, from:locations!dispatches_from_location_id_fkey(name), to:locations!dispatches_to_location_id_fkey(name), dispatch_lines(id, product_id, request_line_id, whole_cakes, loose_pieces, qty_pieces, pieces_per_cake_snapshot, dispatch_line_batches(qty_pieces, is_fefo_override, batch:batches(production_date, day_number))), receipts(received_at, received_by, receipt_lines(id, dispatch_line_id, whole_cakes, loose_pieces, qty_pieces, note, resolution, damaged_pieces))";
+  "id, kind, status, request_id, from_location_id, to_location_id, dispatched_at, dispatched_by, driver_name, from:locations!dispatches_from_location_id_fkey(name, kind), to:locations!dispatches_to_location_id_fkey(name), dispatch_lines(id, product_id, request_line_id, whole_cakes, loose_pieces, qty_pieces, pieces_per_cake_snapshot, dispatch_line_batches(qty_pieces, is_fefo_override, batch:batches(production_date, day_number))), receipts(received_at, received_by, receipt_lines(id, dispatch_line_id, whole_cakes, loose_pieces, qty_pieces, note, resolution, damaged_pieces))";
 
 /** الطلبات والإخراجات حسب فلتر. RLS بتخلي كل واحد يشوف اللي إله علاقة فيه بس. */
 export async function loadDocuments(filter: {
@@ -235,6 +237,7 @@ export async function loadDocuments(filter: {
         dispatchedAt: d.dispatched_at,
         dispatchedBy: names.get(d.dispatched_by) ?? "",
         driverName: d.driver_name,
+        isPackaging: d.from.kind === "packaging",
         hoursInTransit: (Date.now() - new Date(d.dispatched_at).getTime()) / 3_600_000,
         receivedAt: receipt?.received_at ?? null,
         receivedBy: receipt ? (names.get(receipt.received_by) ?? "") : null,

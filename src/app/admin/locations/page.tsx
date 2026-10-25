@@ -72,8 +72,7 @@ async function Locations() {
                   </span>
                 )}
                 <span className="text-sm text-muted">
-                  {l.kind === "branch" ? "طلبات مفتوحة" : "طلبات بانتظار الإخراج"}: {pending} · بالطريق:{" "}
-                  {road}
+                  طلبات مفتوحة: {pending} · بالطريق: {road}
                 </span>
                 <span className="text-sm text-muted">
                   {last

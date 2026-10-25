@@ -14,7 +14,16 @@ type Qty = { wholeCakes: number; loosePieces: number };
 const keyOf = (requestId: string, productId: string) => `${requestId}:${productId}`;
 
 /** توزيع اليوم: كل طلبات الفروع مع بعض، والدفعات القديمة بتتوزع على الكل حسب الطلب. */
-export function RoundForm({ requests, batches }: { requests: RequestDoc[]; batches: FactoryBatchStock[] }) {
+export function RoundForm({
+  requests,
+  batches,
+  sizes,
+}: {
+  requests: RequestDoc[];
+  batches: FactoryBatchStock[];
+  // عدد القطع بالكيكة هلا (نفس اللي dispatch_round بتحسب فيه)، مش وقت الطلب
+  sizes: Record<string, number | null>;
+}) {
   const router = useRouter();
   const [qty, setQty] = useState<Record<string, Qty>>(() =>
     Object.fromEntries(
@@ -38,8 +47,7 @@ export function RoundForm({ requests, batches }: { requests: RequestDoc[]; batch
   const allocation = new Map<string, { productionDate: string; qty: number }[]>();
   const short = new Map<string, number>();
   for (const productId of productIds) {
-    const ppc =
-      requests.flatMap((r) => r.lines).find((l) => l.productId === productId)?.piecesPerCake ?? null;
+    const ppc = productId in sizes ? sizes[productId] : null;
     const productBatches = batches.filter((b) => b.productId === productId);
     const { byLine, short: missing } = fairAllocate(
       productBatches,
@@ -96,7 +104,11 @@ export function RoundForm({ requests, batches }: { requests: RequestDoc[]; batch
                 className="h-12 rounded-xl border border-line-strong bg-surface px-3 text-base"
               />
             </label>
-            {r.lines.map((l) => {
+            {r.lines.map((line) => {
+              const l = {
+                ...line,
+                piecesPerCake: line.productId in sizes ? sizes[line.productId] : line.piecesPerCake,
+              };
               const key = keyOf(r.id, l.productId);
               const q = qty[key] ?? { wholeCakes: 0, loosePieces: 0 };
               const set = (patch: Partial<Qty>) => setQty((all) => ({ ...all, [key]: { ...q, ...patch } }));

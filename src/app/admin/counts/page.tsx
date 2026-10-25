@@ -44,7 +44,7 @@ async function Counts({ searchParams }: { searchParams: SearchParams }) {
         hrefFor={(v) => (v ? `/admin/counts?location=${v}` : "/admin/counts")}
         options={[{ value: "", label: "الكل" }, ...locations.map((l) => ({ value: l.id, label: l.name }))]}
       />
-      <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
+      <div className="scroll-hint overflow-x-auto rounded-2xl border border-line bg-surface">
         <table className={`${tableClass} min-w-[760px]`}>
           <thead>
             <tr className={theadRowClass}>

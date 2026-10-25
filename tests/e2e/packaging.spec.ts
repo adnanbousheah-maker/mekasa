@@ -36,6 +36,7 @@ test("a branch orders packaging, the keeper sends it, and the branch receives it
   await page.getByRole("link", { name: /جرد المستودع/ }).click();
   await page.getByRole("textbox", { name: "عدد Cake Box" }).fill("500");
   await page.getByRole("button", { name: "تأكيد الجرد" }).click();
+  await page.getByRole("button", { name: "أكيد، ما في منهم" }).click();
   await expect(page.getByText("انحفظ جرد المستودع")).toBeVisible();
   expect(await stockOf("PKG", "Cake Box")).toBe(500);
 

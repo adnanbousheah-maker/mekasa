@@ -35,7 +35,10 @@ export function ReceiveForm({
   dispatchId,
   lines,
   doneHref,
+  packaging = false,
 }: {
+  // مواد التغليف: بالحبة، والرقم بينكتب
+  packaging?: boolean;
   dispatchId: string;
   lines: ReceiveLine[];
   doneHref: string;
@@ -178,7 +181,8 @@ export function ReceiveForm({
                   />
                 )}
                 <Stepper
-                  label="قطع"
+                  label={packaging ? "حبات" : "قطع"}
+                  typed={packaging}
                   value={r.loosePieces}
                   onChange={(v) => change(l.lineId, { loosePieces: v, ok: true })}
                   incrementLabel={`زيد قطعة ${l.productName}`}
@@ -216,7 +220,8 @@ export function ReceiveForm({
                       />
                     )}
                     <Stepper
-                      label="قطع تالفة"
+                      label={packaging ? "حبات تالفة" : "قطع تالفة"}
+                      typed={packaging}
                       value={r.damagedLoose}
                       onChange={(v) => change(l.lineId, { damagedLoose: v })}
                       incrementLabel={`زيد قطعة تالفة ${l.productName}`}

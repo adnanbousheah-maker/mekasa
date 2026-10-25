@@ -34,13 +34,10 @@ export function ProductsTab({ products, defaultPieces, defaultShelfLife }: Props
         <NewProductDialog defaultPieces={defaultPieces} />
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
+      <div className="scroll-hint overflow-x-auto rounded-2xl border border-line bg-surface">
         <table className="w-full min-w-[720px] border-collapse text-sm">
           <thead>
             <tr className="bg-table-head text-table-head-text">
-              <th scope="col" className="w-14 p-3">
-                <span className="sr-only">صورة</span>
-              </th>
               <th scope="col" className="px-2 py-3 text-right font-semibold">
                 الاسم
               </th>
@@ -64,13 +61,6 @@ export function ProductsTab({ products, defaultPieces, defaultShelfLife }: Props
           <tbody>
             {products.map((p) => (
               <tr key={p.id} className={`border-t border-line-soft ${p.isActive ? "" : "bg-canvas"}`}>
-                <td className="px-3 py-2">
-                  <span
-                    role="img"
-                    aria-label="صورة الصنف"
-                    className="block size-10 rounded-lg bg-quiet-strong"
-                  />
-                </td>
                 <th scope="row" className="px-2 py-2 text-right font-semibold">
                   <ProductName name={p.nameEn} />
                 </th>
@@ -78,7 +68,7 @@ export function ProductsTab({ products, defaultPieces, defaultShelfLife }: Props
                   <InlineField
                     label={`الاسم بالعربي لـ ${p.nameEn}`}
                     initial={p.nameAr ?? ""}
-                    placeholder="[الاسم بالعربي]"
+                    placeholder="اختياري"
                     onSave={updateProductNameArAction.bind(null, p.id)}
                     className="w-40"
                   />
@@ -102,7 +92,7 @@ export function ProductsTab({ products, defaultPieces, defaultShelfLife }: Props
                         className="w-14"
                       />
                       <span className="text-[11px] text-muted">
-                        {p.piecesPerCake === null ? "العام" : "خاص"}
+                        {p.piecesPerCake === null ? "الافتراضي" : "خاص"}
                       </span>
                     </span>
                   )}
