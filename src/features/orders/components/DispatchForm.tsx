@@ -55,6 +55,7 @@ export function DispatchForm({
   const [lines, setLines] = useState<Line[]>(initialLines.map((l) => ({ ...l, firstDate: null })));
   const [adding, setAdding] = useState(false);
   const [fefoAlert, setFefoAlert] = useState(false);
+  const [driverName, setDriverName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSaving, startTransition] = useTransition();
   const isFactory = batches !== null;
@@ -108,6 +109,7 @@ export function DispatchForm({
         toLocationId: destination ?? "",
         requestId,
         confirmFefoOverride: confirmOverride,
+        driverName,
         lines: send.map((l) => ({
           productId: l.productId,
           wholeCakes: byId.get(l.productId)?.piecesPerCake === null ? 0 : l.wholeCakes,
@@ -160,6 +162,18 @@ export function DispatchForm({
           ))}
         </div>
       </fieldset>
+      {isFactory && (
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-semibold text-muted">اسم السائق</span>
+          <input
+            value={driverName}
+            maxLength={60}
+            onChange={(e) => setDriverName(e.target.value)}
+            placeholder="مثلاً: أبو محمد"
+            className="h-12 rounded-xl border border-line-strong bg-surface px-3 text-base"
+          />
+        </label>
+      )}
       <p className="text-[13px] leading-relaxed text-muted">
         {requestId ? "الكميات معبّاية من الطلب. غيّر براحتك" : "الكميات مقترحة حسب الحد المطلوب. غيّر براحتك"}
         {isFactory ? "، والنظام بيطلّع من الدفعة الأقدم أول." : "."}

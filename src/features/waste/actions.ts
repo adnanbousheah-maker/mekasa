@@ -1,6 +1,5 @@
 "use server";
 
-import { refresh } from "next/cache";
 import { requireStaff } from "@/features/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { wasteSchema, type WasteInput } from "./schemas";
@@ -38,6 +37,7 @@ export async function recordWasteAction(input: WasteInput): Promise<WasteResult>
           : "ما انسجل التالف. جرب كمان مرة.";
     return { status: "error", message };
   }
-  refresh();
+  // بدون refresh(): الفورم بينعمل من جديد مع كل رسم للصفحة (key)، فالـ refresh كان يمسح
+  // رسالة "انسجل التالف" أحياناً والموظف ممكن يسجل مرتين. باقي الصفحات بتجيب بياناتها لما ينفتحوا.
   return { status: "done" };
 }

@@ -45,6 +45,7 @@ async function pickDestination(page: Page, name: string) {
 
 async function receiveAll(page: Page) {
   await page.getByRole("button", { name: `تأكيد ${PRODUCT}`, exact: true }).click();
+  await page.getByRole("checkbox", { name: /فحصت البضاعة قدام السائق/ }).check();
   await page.getByRole("button", { name: "تأكيد الاستلام" }).click();
 }
 

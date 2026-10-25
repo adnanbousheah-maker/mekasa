@@ -4,6 +4,7 @@ import {
   BRANCH_DBQ,
   FACTORY,
   factoryTodayStock,
+  lastWaste,
   setParLevels,
   signInAndWait,
   stockOf,
@@ -61,6 +62,7 @@ test("the dispatcher sends it from the oldest batch, and the branch receives one
   await expect(page.getByRole("radio", { name: "فرع دابوق" })).toHaveAttribute("aria-checked", "true");
   const flan = page.getByRole("listitem", { name: "Flan" });
   await expect(flan.getByText("طلبوا: 2 كيكة")).toBeVisible();
+  await page.getByRole("textbox", { name: "اسم السائق" }).fill("أبو محمد");
   await page.getByRole("button", { name: "تأكيد الإخراج" }).click();
   await expect(page.getByRole("heading", { name: "طلبات الفروع" })).toBeVisible();
   await expect(page.getByText("بالطريق").first()).toBeVisible();
@@ -78,9 +80,22 @@ test("the dispatcher sends it from the oldest batch, and the branch receives one
   await line.getByRole("button", { name: "نقّص كيكة Flan" }).click();
   await expect(line.getByText("ناقص 1 كيكة")).toBeVisible();
   await line.getByPlaceholder("مثلاً: وحدة وصلت مكسورة").fill("وحدة مكسورة");
-  await page.getByRole("button", { name: "تأكيد الاستلام" }).click();
+  // من الكيكة اللي وصلت، قطعتين تالفات من التوصيل
+  await line.getByRole("button", { name: "في تالف من التوصيل؟" }).click();
+  await line.getByRole("button", { name: "زيد قطعة تالفة Flan" }).click();
+  await line.getByRole("button", { name: "زيد قطعة تالفة Flan" }).click();
+  const confirm = page.getByRole("button", { name: "تأكيد الاستلام" });
+  await expect(confirm).toBeDisabled();
+  await page.getByRole("checkbox", { name: /فحصت الباقي قدام السائق/ }).check();
+  await confirm.click();
   await expect(page.getByText("انسجل الاستلام")).toBeVisible();
-  expect(await stockOf("DBQ", "Flan")).toBe(before + 10);
+  expect(await stockOf("DBQ", "Flan")).toBe(before + 10 - 2);
+  const waste = await lastWaste("DBQ");
+  expect(waste).toMatchObject({
+    qty_pieces: 2,
+    reason: "broken",
+    reason_note: "وصل تالف بالتوصيل · السائق: أبو محمد",
+  });
 });
 
 test.describe("admin", () => {

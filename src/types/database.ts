@@ -539,6 +539,7 @@ export type Database = {
         Row: {
           dispatched_at: string;
           dispatched_by: string;
+          driver_name: string | null;
           from_location_id: string;
           id: string;
           kind: Database["public"]["Enums"]["dispatch_kind"];
@@ -551,6 +552,7 @@ export type Database = {
         Insert: {
           dispatched_at?: string;
           dispatched_by: string;
+          driver_name?: string | null;
           from_location_id: string;
           id?: string;
           kind: Database["public"]["Enums"]["dispatch_kind"];
@@ -562,6 +564,7 @@ export type Database = {
         Update: {
           dispatched_at?: string;
           dispatched_by?: string;
+          driver_name?: string | null;
           from_location_id?: string;
           id?: string;
           kind?: Database["public"]["Enums"]["dispatch_kind"];
@@ -1310,6 +1313,8 @@ export type Database = {
       };
       receipt_lines: {
         Row: {
+          damage_waste_id: string | null;
+          damaged_pieces: number;
           dispatch_line_id: string;
           id: string;
           loose_pieces: number;
@@ -1325,6 +1330,8 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          damage_waste_id?: string | null;
+          damaged_pieces?: number;
           dispatch_line_id: string;
           id?: string;
           loose_pieces?: number;
@@ -1339,6 +1346,8 @@ export type Database = {
           whole_cakes?: number;
         };
         Update: {
+          damage_waste_id?: string | null;
+          damaged_pieces?: number;
           dispatch_line_id?: string;
           id?: string;
           loose_pieces?: number;
@@ -1353,6 +1362,13 @@ export type Database = {
           whole_cakes?: number;
         };
         Relationships: [
+          {
+            foreignKeyName: "receipt_lines_damage_waste_id_fkey";
+            columns: ["damage_waste_id"];
+            isOneToOne: false;
+            referencedRelation: "waste_records";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "receipt_lines_dispatch_line_id_fkey";
             columns: ["dispatch_line_id"];
@@ -2677,6 +2693,7 @@ export type Database = {
       create_dispatch: {
         Args: {
           p_confirm_fefo_override?: boolean;
+          p_driver_name?: string;
           p_lines: Json;
           p_note?: string;
           p_request_id?: string;

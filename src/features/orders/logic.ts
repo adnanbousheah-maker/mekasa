@@ -141,6 +141,8 @@ export const createDispatchSchema = z.object({
     .refine((lines) => lines.length > 0, "ما في ولا صنف طالع"),
   note: z.string().trim().max(500).default(""),
   confirmFefoOverride: z.boolean().default(false),
+  // اسم السائق (اختياري): بيطلع مع التوالف وقت الاستلام
+  driverName: z.string().trim().max(60).default(""),
 });
 
 export const receiveSchema = z.object({
@@ -152,10 +154,15 @@ export const receiveSchema = z.object({
         wholeCakes: qty,
         loosePieces: qty,
         note: z.string().trim().max(300).default(""),
+        // من اللي وصل، قديش كان تالف من التوصيل
+        damagedWhole: qty.default(0),
+        damagedLoose: qty.default(0),
       }),
     )
     .min(1)
     .max(200),
+  // الموظف لازم يأكد إنه فحص البضاعة قدام السائق
+  checked: z.literal(true, "أكّد إنك فحصت البضاعة قدام السائق"),
 });
 
 export type CreateRequestInput = z.input<typeof createRequestSchema>;

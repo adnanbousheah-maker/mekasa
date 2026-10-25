@@ -10,7 +10,10 @@ test("a branch employee records broken cakes with a photo", async ({ page }) => 
 
   await page.getByRole("button", { name: "اختار الصنف" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Classic Choco" }).click();
+  // نستنى الشباك يتسكر، وإلا الكبسة على "زيد" بتضيع
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "زيد" }).click();
+  await expect(page.getByRole("status", { name: "الكمية: 2" })).toBeVisible();
   await page.getByRole("radio", { name: "انكسرت" }).click();
   await page.getByLabel("أضف صورة (اختياري)").setInputFiles({
     name: "cake.png",

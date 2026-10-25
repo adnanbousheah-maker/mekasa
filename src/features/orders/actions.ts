@@ -80,6 +80,7 @@ export async function createDispatchAction(input: CreateDispatchInput): Promise<
     p_request_id: d.requestId ?? undefined,
     p_note: d.note || undefined,
     p_confirm_fefo_override: d.confirmFefoOverride,
+    p_driver_name: d.driverName || undefined,
     p_lines: d.lines.map((l) => ({
       product_id: l.productId,
       whole_cakes: l.wholeCakes,
@@ -101,7 +102,13 @@ export async function createDispatchAction(input: CreateDispatchInput): Promise<
 export async function receiveDispatchAction(input: ReceiveInput): Promise<OrderResult> {
   await requireStaff();
   const parsed = receiveSchema.safeParse(input);
-  if (!parsed.success) return { status: "error", message: "في رقم مش منطقي" };
+  if (!parsed.success) {
+    const unchecked = parsed.error.issues.some((i) => i.path[0] === "checked");
+    return {
+      status: "error",
+      message: unchecked ? "أكّد إنك فحصت البضاعة قدام السائق" : "في رقم مش منطقي",
+    };
+  }
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("receive_dispatch", {
     p_dispatch_id: parsed.data.dispatchId,
@@ -110,6 +117,8 @@ export async function receiveDispatchAction(input: ReceiveInput): Promise<OrderR
       whole_cakes: l.wholeCakes,
       loose_pieces: l.loosePieces,
       note: l.note,
+      damaged_whole: l.damagedWhole,
+      damaged_loose: l.damagedLoose,
     })) as Json,
   });
   if (error) {

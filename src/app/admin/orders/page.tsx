@@ -177,6 +177,7 @@ function MoveDetail({ move }: { move: Move }) {
   const people = [
     r ? `طلبه ${r.requestedBy} ${formatClock(new Date(r.requestedAt))}` : null,
     d ? `طلّعه ${d.dispatchedBy} ${formatClock(new Date(d.dispatchedAt))}` : null,
+    d?.driverName ? `السائق: ${d.driverName}` : null,
     d?.receivedBy ? `استلمه ${d.receivedBy} ${formatClock(new Date(d.receivedAt!))}` : null,
   ].filter(Boolean);
   const openDiffLines = d
@@ -265,6 +266,9 @@ function MoveDetail({ move }: { move: Move }) {
                   </td>
                   <td className="px-3 py-2.5 text-[13px] text-muted">
                     {[
+                      row.got?.damagedPieces
+                        ? `تالف بالتوصيل: ${formatQuantityCompact(row.got.damagedPieces, row.ppc)}`
+                        : null,
                       row.got?.note,
                       row.got?.resolution
                         ? { waste: "اعتُمد تالف", review: "للمراجعة", resolved: "انحل" }[row.got.resolution]
