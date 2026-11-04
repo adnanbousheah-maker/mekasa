@@ -7,15 +7,18 @@ type Message = { role: "user" | "assistant"; text: string; voice?: boolean };
 
 const SUGGESTIONS = ["مين ما جرد اليوم؟", "شو تحت الحد المطلوب؟", "التالف هالأسبوع"];
 
-// Web Speech API (بالمتصفح، مش بكل المتصفحات)
+// Web Speech API (بالمتصفح، مش بكل المتصفحات). Chrome بيبعت الصوت لخدمة Google وبيرجع نص.
+type RecognitionResult = { isFinal: boolean; 0: { transcript: string } };
 type Recognition = {
   lang: string;
   interimResults: boolean;
-  onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
-  onerror: (() => void) | null;
+  continuous: boolean;
+  onresult: ((e: { resultIndex: number; results: ArrayLike<RecognitionResult> }) => void) | null;
+  onerror: ((e: { error: string }) => void) | null;
   onend: (() => void) | null;
   start: () => void;
   stop: () => void;
+  abort: () => void;
 };
 
 function speechRecognition(): (new () => Recognition) | null {
@@ -27,20 +30,36 @@ function speechRecognition(): (new () => Recognition) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
+// إذا المتصفح ما بيعرف الأردني، العربي العام
+const VOICE_LANGS = ["ar-JO", "ar-SA"];
+// سكتة هالقد بعد آخر كلمة = خلص السؤال
+const SILENCE_MS = 2500;
+
+const VOICE_ERRORS: Record<string, string> = {
+  "not-allowed":
+    "المايك مسكّر على هالمتصفح. اكبس على القفل جنب عنوان الموقع ← الميكروفون ← سماح، وجرب كمان مرة.",
+  "service-not-allowed":
+    "المايك مسكّر على هالمتصفح. اكبس على القفل جنب عنوان الموقع ← الميكروفون ← سماح، وجرب كمان مرة.",
+  "no-speech": "ما سمعت شي. اكبس المايك، استنى لما يصير أحمر، وبعدين احكي.",
+  "audio-capture": "ما لقيت مايك شغّال على هالجهاز.",
+  network: "تحويل الصوت لكلام بده إنترنت. تأكد من النت وجرب كمان مرة.",
+};
+
 /** design/admin/AdminAI: أسئلة بالكتابة أو بالصوت، والأجوبة من بيانات التطبيق بس. */
 export function AssistantChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [listening, setListening] = useState(false);
-  const [voiceSupported, setVoiceSupported] = useState(false);
+  // الزر بيبين بعد ما الصفحة تفتح بالمتصفح (مش بالسيرفر)، وإذا الصوت مش مدعوم بيشرح ليش
+  const [voiceShown, setVoiceShown] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAsking, startTransition] = useTransition();
   const recognition = useRef<Recognition | null>(null);
   const end = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const id = requestAnimationFrame(() => setVoiceSupported(speechRecognition() !== null));
+    const id = requestAnimationFrame(() => setVoiceShown(true));
     return () => cancelAnimationFrame(id);
   }, []);
   useEffect(() => end.current?.scrollIntoView({ behavior: "smooth", block: "end" }), [messages, isAsking]);
@@ -62,27 +81,92 @@ export function AssistantChat() {
     });
   };
 
+  // آخر نسخة من ask، مشان أحداث التسجيل ما تشتغل على حالة قديمة
+  const askRef = useRef(ask);
+  useEffect(() => {
+    askRef.current = ask;
+  });
+  const silence = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (silence.current) clearTimeout(silence.current);
+      recognition.current?.abort();
+    },
+    [],
+  );
+
+  const listen = (langIndex = 0) => {
+    const Ctor = speechRecognition();
+    if (!Ctor) {
+      setError(
+        "الصوت ما بيشتغل على هالمتصفح. افتح ميكاسا على Chrome، أو اكبس مايك الكيبورد واحكي، وبينكتب السؤال لحاله.",
+      );
+      return;
+    }
+    const r = new Ctor();
+    r.lang = VOICE_LANGS[langIndex];
+    r.interimResults = true;
+    r.continuous = true;
+    let finalText = "";
+    let interim = "";
+    let failed = false;
+    const restartSilence = () => {
+      if (silence.current) clearTimeout(silence.current);
+      silence.current = setTimeout(() => r.stop(), SILENCE_MS);
+    };
+    r.onresult = (e) => {
+      interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const res = e.results[i];
+        if (res.isFinal) finalText += `${res[0].transcript} `;
+        else interim += res[0].transcript;
+      }
+      // الموظف بيشوف شو انسمع وهو بيحكي
+      setText(`${finalText}${interim}`.trim());
+      restartSilence();
+    };
+    r.onerror = (e) => {
+      if (e.error === "aborted") return;
+      failed = true;
+      if (e.error === "language-not-supported" && langIndex + 1 < VOICE_LANGS.length) {
+        setTimeout(() => listen(langIndex + 1), 0);
+        return;
+      }
+      setError(VOICE_ERRORS[e.error] ?? "ما زبط التسجيل. جرب كمان مرة أو اكتب سؤالك.");
+    };
+    r.onend = () => {
+      if (silence.current) clearTimeout(silence.current);
+      if (recognition.current === r) {
+        recognition.current = null;
+        setListening(false);
+      }
+      if (failed) return;
+      const said = `${finalText}${interim}`.trim();
+      if (said) askRef.current(said, true);
+      else setError(VOICE_ERRORS["no-speech"]);
+    };
+    recognition.current = r;
+    setError(null);
+    setText("");
+    setListening(true);
+    try {
+      r.start();
+      // إذا ما حكى ولا كلمة خلال 8 ثواني، منوقف
+      silence.current = setTimeout(() => r.stop(), 8000);
+    } catch {
+      recognition.current = null;
+      setListening(false);
+      setError("ما زبط التسجيل. جرب كمان مرة أو اكتب سؤالك.");
+    }
+  };
+
   const toggleMic = () => {
     if (listening) {
+      // وقف: اللي انسمع لحد هلا بيروح سؤال
       recognition.current?.stop();
       return;
     }
-    const Ctor = speechRecognition();
-    if (!Ctor) return;
-    const r = new Ctor();
-    r.lang = "ar-JO";
-    r.interimResults = false;
-    r.onresult = (e) => {
-      const said = Array.from(e.results)
-        .map((res) => res[0]?.transcript ?? "")
-        .join(" ");
-      ask(said, true);
-    };
-    r.onerror = () => setError("ما سمعتك منيح. جرب كمان مرة أو اكتب سؤالك.");
-    r.onend = () => setListening(false);
-    recognition.current = r;
-    setListening(true);
-    r.start();
+    listen();
   };
 
   return (
@@ -174,12 +258,12 @@ export function AssistantChat() {
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={listening ? "عم بسمعك…" : "اسأل عن أي شي بميكاسا"}
+            placeholder={listening ? "احكي هلا… وبس تخلص اسكت أو اكبس الزر الأحمر" : "اسأل عن أي شي بميكاسا"}
             aria-label="اكتب سؤالك"
             maxLength={1000}
             className="h-14 grow rounded-[14px] border border-line-strong bg-surface px-4 text-base outline-none focus:border-ink"
           />
-          {voiceSupported && (
+          {voiceShown && (
             <button
               type="button"
               onClick={toggleMic}
