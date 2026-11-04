@@ -19,7 +19,7 @@ test.describe("assistant", () => {
 });
 
 // تسجيل الصوت بمايك مزيف: نفس أحداث Web Speech API اللي بيعطيها Chrome
-function fakeSpeech(mode: "speak" | "denied" | "none") {
+function fakeSpeech() {
   return (m: string) => {
     const w = window as unknown as Record<string, unknown>;
     if (m === "none") return;
@@ -67,7 +67,7 @@ test.describe("assistant voice", () => {
   test.use({ viewport: { width: 1360, height: 900 }, isMobile: false, hasTouch: false });
 
   test("speaking shows the words live, survives a short pause, then asks", async ({ page }) => {
-    await page.addInitScript(fakeSpeech("speak"), "speak");
+    await page.addInitScript(fakeSpeech(), "speak");
     await signInAndWait(page, ADMIN.phone, ADMIN.pin);
     await page.goto("/admin/ai");
     const chat = page.getByRole("region", { name: "مساعد ميكاسا" });
@@ -79,7 +79,7 @@ test.describe("assistant voice", () => {
   });
 
   test("a blocked microphone says how to allow it", async ({ page }) => {
-    await page.addInitScript(fakeSpeech("denied"), "denied");
+    await page.addInitScript(fakeSpeech(), "denied");
     await signInAndWait(page, ADMIN.phone, ADMIN.pin);
     await page.goto("/admin/ai");
     const chat = page.getByRole("region", { name: "مساعد ميكاسا" });
@@ -88,7 +88,7 @@ test.describe("assistant voice", () => {
   });
 
   test("a browser without voice explains what to do instead", async ({ page }) => {
-    await page.addInitScript(fakeSpeech("none"), "none");
+    await page.addInitScript(fakeSpeech(), "none");
     await page.addInitScript(() => {
       const w = window as unknown as Record<string, unknown>;
       delete w.webkitSpeechRecognition;
