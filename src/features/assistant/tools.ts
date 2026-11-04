@@ -5,6 +5,7 @@ import { formatScheduleTime } from "@/features/settings/schemas";
 import type { createClient } from "@/lib/supabase/server";
 import { businessDate, formatClock, formatLongDate } from "@/lib/time";
 import { formatQuantity } from "@/lib/units";
+import { moreAssistantTools } from "./more-tools";
 
 // أدوات المساعد: قراءة بس، بجلسة الأدمن نفسه (RLS). كل نتيجة فيها مصدرها مشان الجواب يذكره.
 
@@ -361,5 +362,6 @@ export function assistantTools(db: Db, now: Date) {
         });
       },
     }),
+    ...moreAssistantTools(db, now),
   ];
 }
