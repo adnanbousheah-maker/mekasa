@@ -72,7 +72,8 @@ function isActive(pathname: string, href: string): boolean {
 }
 
 // بالجوال سطر بيتمرر، وباللابتوب قائمة جنب الصفحة
-const BASE = "flex h-11 shrink-0 items-center gap-2.5 rounded-[10px] px-3 text-[15px] whitespace-nowrap";
+const BASE =
+  "flex h-11 shrink-0 items-center gap-2.5 rounded-[10px] border-s-[3px] px-3 text-[15px] whitespace-nowrap";
 
 /** الروابط. بدون pathname (null) بتطلع بدون تمييز، وبتنعرض هيك لحد ما المسار يوصل. */
 export function NavItemList({ pathname }: { pathname: string | null }) {
@@ -83,13 +84,17 @@ export function NavItemList({ pathname }: { pathname: string | null }) {
         key={item.href}
         href={item.href}
         aria-current={active ? "page" : undefined}
-        className={`${BASE} ${active ? "bg-quiet font-semibold text-ink" : "text-table-head-text hover:bg-quiet"}`}
+        className={`${BASE} ${active ? "border-brand bg-quiet font-semibold text-ink" : "border-transparent text-table-head-text hover:bg-quiet"}`}
       >
         <NavIcon d={item.icon} />
         <span className="grow">{item.label}</span>
       </Link>
     ) : (
-      <span key={item.href} className={`${BASE} text-line-strong`} title="بتنبني بالخطوات الجاية">
+      <span
+        key={item.href}
+        className={`${BASE} border-transparent text-line-strong`}
+        title="بتنبني بالخطوات الجاية"
+      >
         <NavIcon d={item.icon} />
         <span className="grow">{item.label}</span>
         <span className="text-xs">قريباً</span>

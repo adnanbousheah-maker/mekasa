@@ -4,7 +4,7 @@ import { requireStaff } from "@/features/auth/session";
 import { StaffHome } from "@/features/home/components/StaffHome";
 import { branchHomeData, factoryHomeData } from "@/features/home/queries";
 import { isPackagingKeeper, packagingStore, pendingPackagingRequests } from "@/features/packaging/queries";
-import { getOpenSlot } from "@/features/reminders/queries";
+import { getMonthlyCountsDue, getOpenSlot } from "@/features/reminders/queries";
 
 export default function HomePage() {
   // قراءة الجلسة لازم تكون جوا Suspense (cacheComponents)
@@ -20,8 +20,9 @@ async function Home() {
   if (staff.roles.includes("admin")) redirect("/admin");
   const counts = staff.roles.includes("branch_staff") || staff.roles.includes("storekeeper");
   const location = staff.location;
-  const [slot, branch, factory, packaging] = await Promise.all([
+  const [slot, monthly, branch, factory, packaging] = await Promise.all([
     location && counts ? getOpenSlot(location.id) : null,
+    getMonthlyCountsDue(staff.roles),
     location?.kind === "branch" ? branchHomeData(location.id) : null,
     location?.kind === "factory" ? factoryHomeData(location.id) : null,
     isPackagingKeeper(staff) ? packagingHome() : null,
@@ -31,6 +32,7 @@ async function Home() {
       staff={staff}
       now={new Date()}
       slot={slot}
+      monthly={monthly}
       branch={branch}
       factory={factory}
       packaging={packaging}

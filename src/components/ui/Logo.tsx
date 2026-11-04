@@ -5,22 +5,21 @@ type Props = {
   priority?: boolean;
 };
 
-// المقاسات من التصميم: 117×58 بالرئيسية، 240×120 بشاشة الدخول.
+// اللوجو الذهبي (ميكاسا بالإنجليزي والعربي)، خلفيته شفافة. الطول ثابت والعرض حسب الصورة.
 const SIZES = {
-  sm: "h-[58px] w-[117px]",
-  lg: "h-[120px] w-[240px]",
+  sm: "h-[54px] w-auto",
+  lg: "h-[112px] w-auto",
 } as const;
 
-/** خلفية اللوجو البيضا بتذوب بالخلفية بـ multiply. */
 export function Logo({ size = "sm", priority = false }: Props) {
   return (
     <Image
-      src="/logo.jpg"
+      src="/logo.png"
       alt="ميكاسا"
-      width={180}
-      height={180}
+      width={720}
+      height={390}
       priority={priority}
-      className={`${SIZES[size]} object-cover mix-blend-multiply`}
+      className={`${SIZES[size]} object-contain`}
     />
   );
 }

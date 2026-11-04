@@ -347,3 +347,59 @@ export async function setMinLevelAction(
   refresh();
   return done;
 }
+
+const monthlySchema = z.object({ locationId: z.uuid(), scope: z.enum(["stock", "raw"]) });
+
+/** ساعة جرد آخر الشهر لموقع (بتفعّله كمان). */
+export async function setMonthlyCountTimeAction(
+  locationId: string,
+  scope: string,
+  time: string,
+): Promise<SaveResult> {
+  await requireAdmin();
+  const key = monthlySchema.safeParse({ locationId, scope });
+  if (!key.success) return fail("الموقع مش موجود");
+  const parsed = scheduleTimeSchema.safeParse(time);
+  if (!parsed.success) return fail(firstIssue(parsed.error));
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("monthly_counts")
+    .upsert(
+      { location_id: locationId, scope: key.data.scope, time_of_day: parsed.data, is_active: true },
+      { onConflict: "location_id,scope" },
+    );
+  if (error) {
+    console.error("setMonthlyCountTime", error);
+    return fail(error.code === "23514" ? "هالموقع ما إله هالجرد" : SAVE_FAILED);
+  }
+  refresh();
+  return done;
+}
+
+/** تشغيل أو إيقاف جرد آخر الشهر لموقع. */
+export async function setMonthlyCountActiveAction(
+  locationId: string,
+  scope: string,
+  active: boolean,
+): Promise<SaveResult> {
+  await requireAdmin();
+  const key = monthlySchema.safeParse({ locationId, scope });
+  if (!key.success) return fail("الموقع مش موجود");
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("monthly_counts")
+    .update({ is_active: active })
+    .eq("location_id", locationId)
+    .eq("scope", key.data.scope)
+    .select("id")
+    .maybeSingle();
+  if (error) {
+    console.error("setMonthlyCountActive", error);
+    return fail(SAVE_FAILED);
+  }
+  if (!data) return fail("اختار الساعة أول");
+  refresh();
+  return done;
+}

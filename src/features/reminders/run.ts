@@ -1,10 +1,10 @@
 import "server-only";
 import { formatScheduleTime } from "@/features/settings/schemas";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { businessDate } from "@/lib/time";
-import { pendingAlerts } from "./slots";
+import { businessDate, countDay, isLastDayOfMonth } from "@/lib/time";
+import { pendingAlerts, slotStatus, slotTime, type ReminderSettings } from "./slots";
 import { sendPushToStaff } from "./push";
-import { countReminderMessage } from "./subscription";
+import { countReminderMessage, monthlyCountMessage } from "./subscription";
 
 export interface ReminderRun {
   sent: { kind: string; scheduleId: string; recipients: number }[];
@@ -18,6 +18,8 @@ export interface ReminderRun {
 export async function runReminders(now = new Date()): Promise<ReminderRun> {
   const db = createAdminClient();
   const today = businessDate(now);
+  // الجرد ومواعيده على يوم الجرد (بيخلص 5 الصبح)
+  const countToday = countDay(now);
 
   const [settings, schedules, counts, sent] = await Promise.all([
     db.from("app_settings").select("count_reminder_minutes_before, count_late_after_minutes").single(),
@@ -26,21 +28,22 @@ export async function runReminders(now = new Date()): Promise<ReminderRun> {
       .select("id, location_id, time_of_day, location:locations!inner(name, kind, is_active)")
       .eq("is_active", true)
       .eq("location.is_active", true),
-    db.from("stock_counts").select("schedule_id").eq("business_date", today).eq("status", "confirmed"),
-    db.from("notification_log").select("kind, schedule_id").eq("slot_date", today),
+    db.from("stock_counts").select("schedule_id").eq("business_date", countToday).eq("status", "confirmed"),
+    db.from("notification_log").select("kind, schedule_id").eq("slot_date", countToday),
   ]);
   for (const r of [settings, schedules, counts, sent]) if (r.error) throw new Error(r.error.message);
 
+  const reminderSettings: ReminderSettings = {
+    reminderMinutesBefore: settings.data!.count_reminder_minutes_before,
+    lateAfterMinutes: settings.data!.count_late_after_minutes,
+  };
   const alerts = pendingAlerts(
     schedules.data!.map((s) => ({ id: s.id, locationId: s.location_id, timeOfDay: s.time_of_day })),
-    today,
+    countToday,
     now,
     new Set(counts.data!.map((c) => c.schedule_id).filter((id): id is string => id !== null)),
     new Set(sent.data!.map((n) => `${n.kind}:${n.schedule_id}`)),
-    {
-      reminderMinutesBefore: settings.data!.count_reminder_minutes_before,
-      lateAfterMinutes: settings.data!.count_late_after_minutes,
-    },
+    reminderSettings,
   );
 
   const result: ReminderRun = { sent: [] };
@@ -52,7 +55,7 @@ export async function runReminders(now = new Date()): Promise<ReminderRun> {
         kind: alert.kind,
         location_id: alert.schedule.locationId,
         schedule_id: alert.schedule.id,
-        slot_date: today,
+        slot_date: countToday,
       })
       .select("id")
       .maybeSingle();
@@ -88,6 +91,7 @@ export async function runReminders(now = new Date()): Promise<ReminderRun> {
     ["unreceived", () => alertUnreceivedDispatches(db, result)],
     ["below_min", () => alertBelowMin(db, today, result)],
     ["missing_items", () => alertForgottenItems(db, now, result)],
+    ["monthly", () => alertMonthlyCounts(db, now, countToday, reminderSettings, result)],
   ] as const) {
     try {
       await run();
@@ -96,6 +100,93 @@ export async function runReminders(now = new Date()): Promise<ReminderRun> {
     }
   }
   return result;
+}
+
+type Db = ReturnType<typeof createAdminClient>;
+
+/**
+ * جرد آخر الشهر (بآخر يوم بالشهر بس): تذكير قبل الموعد لموظفين الموقع، و"متأخر" لإلهم وللأدمن.
+ * كل موقع ونوع جرد بينبعتله مرة بس (alert_log).
+ */
+async function alertMonthlyCounts(
+  db: Db,
+  now: Date,
+  countToday: string,
+  settings: ReminderSettings,
+  result: ReminderRun,
+) {
+  if (!isLastDayOfMonth(countToday)) return;
+  const { data: monthly, error } = await db
+    .from("monthly_counts")
+    .select("id, location_id, scope, time_of_day, location:locations!inner(name, kind, is_active)")
+    .eq("is_active", true)
+    .eq("location.is_active", true);
+  if (error) throw new Error(error.message);
+  if (!monthly?.length) return;
+
+  const [stockCounts, rawCounts, sent] = await Promise.all([
+    db.from("stock_counts").select("location_id").eq("business_date", countToday).eq("status", "confirmed"),
+    db.from("raw_counts").select("location_id").eq("business_date", countToday).eq("status", "confirmed"),
+    db
+      .from("alert_log")
+      .select("kind, location_id")
+      .in("kind", [
+        "monthly_count_reminder",
+        "monthly_count_late",
+        "monthly_raw_reminder",
+        "monthly_raw_late",
+      ])
+      .eq("slot_date", countToday),
+  ]);
+  const counted = {
+    stock: new Set((stockCounts.data ?? []).map((c) => c.location_id)),
+    raw: new Set((rawCounts.data ?? []).map((c) => c.location_id)),
+  };
+  const already = new Set((sent.data ?? []).map((a) => `${a.kind}:${a.location_id}`));
+
+  let admins: string[] | null = null;
+  for (const m of monthly) {
+    const scope = m.scope === "raw" ? "raw" : "stock";
+    const slotAt = slotTime(countToday, m.time_of_day);
+    const status = slotStatus(slotAt, now, counted[scope].has(m.location_id), settings);
+    if (status !== "due" && status !== "late") continue;
+    // بعد ساعتين من التأخير ما بنبعت شي جديد (متل مواعيد كل يوم)
+    if (now.getTime() - slotAt.getTime() > 2 * 3_600_000 + settings.lateAfterMinutes * 60_000) continue;
+    const late = status === "late";
+    const kind = `monthly_${scope === "raw" ? "raw" : "count"}_${late ? "late" : "reminder"}` as const;
+    if (already.has(`${kind}:${m.location_id}`)) continue;
+
+    const { data: logged } = await db
+      .from("alert_log")
+      .insert({ kind, location_id: m.location_id, slot_date: countToday })
+      .select("id")
+      .maybeSingle();
+    if (!logged) continue;
+
+    const role =
+      scope === "raw" || m.location.kind === "factory"
+        ? "storekeeper"
+        : m.location.kind === "packaging"
+          ? "packaging_keeper"
+          : "branch_staff";
+    let query = db
+      .from("staff")
+      .select("id, staff_roles!staff_roles_staff_id_fkey!inner(role)")
+      .eq("is_active", true)
+      .eq("staff_roles.role", role);
+    // أمين التغليف وين ما كان، والباقي بموقعه
+    if (role !== "packaging_keeper") query = query.eq("location_id", m.location_id);
+    const { data: staff } = await query;
+    const ids = (staff ?? []).map((s) => s.id);
+    if (late) ids.push(...(admins ??= await activeAdmins(db)));
+
+    const place = m.location.kind === "branch" ? `فرع ${m.location.name}` : m.location.name;
+    const recipients = await sendPushToStaff(
+      [...new Set(ids)],
+      monthlyCountMessage(late, scope, formatScheduleTime(m.time_of_day), place, m.location.kind),
+    );
+    result.sent.push({ kind, scheduleId: m.id, recipients });
+  }
 }
 
 async function activeAdmins(db: ReturnType<typeof createAdminClient>): Promise<string[]> {

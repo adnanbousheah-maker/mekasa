@@ -783,6 +783,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      monthly_counts: {
+        Row: {
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          location_id: string;
+          scope: string;
+          time_of_day: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          location_id: string;
+          scope: string;
+          time_of_day: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          location_id?: string;
+          scope?: string;
+          time_of_day?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "monthly_counts_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       notification_log: {
         Row: {
           dispatch_id: string | null;
@@ -2768,6 +2804,27 @@ export type Database = {
           },
         ];
       };
+      v_monthly_counts_today: {
+        Row: {
+          done: boolean | null;
+          id: string | null;
+          location_id: string | null;
+          scope: string | null;
+          slot_at: string | null;
+          status: string | null;
+          time_of_day: string | null;
+        };
+        ComputedFields: never;
+        Relationships: [
+          {
+            foreignKeyName: "monthly_counts_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       v_products: {
         Row: {
           created_at: string | null;
@@ -3112,6 +3169,7 @@ export type Database = {
           whole_cakes: number;
         }[];
       };
+      count_day_today: { Args: Record<PropertyKey, never>; Returns: string };
       create_dispatch: {
         Args: {
           p_confirm_fefo_override?: boolean;
@@ -3206,7 +3264,15 @@ export type Database = {
         | "return_to_stock"
         | "admin_correction";
       notification_kind:
-        "count_reminder" | "count_late" | "dispatch_unreceived" | "below_min" | "order_missing_item";
+        | "count_reminder"
+        | "count_late"
+        | "dispatch_unreceived"
+        | "below_min"
+        | "order_missing_item"
+        | "monthly_count_reminder"
+        | "monthly_count_late"
+        | "monthly_raw_reminder"
+        | "monthly_raw_late";
       product_kind: "cake" | "packaging";
       raw_movement_type: "opening_balance" | "receipt" | "issue" | "count_adjustment" | "admin_correction";
       request_status: "pending_approval" | "sent" | "dispatched" | "received" | "cancelled";
@@ -3347,6 +3413,10 @@ export const Constants = {
         "dispatch_unreceived",
         "below_min",
         "order_missing_item",
+        "monthly_count_reminder",
+        "monthly_count_late",
+        "monthly_raw_reminder",
+        "monthly_raw_late",
       ],
       product_kind: ["cake", "packaging"],
       raw_movement_type: ["opening_balance", "receipt", "issue", "count_adjustment", "admin_correction"],

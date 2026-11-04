@@ -110,6 +110,42 @@ test("count schedules: add a time to a branch and take it off again", async ({ p
   await expect(dabouq.getByText("9:00")).toBeVisible();
 });
 
+test("the monthly count: every place has one, and the admin sets its time", async ({ page }) => {
+  await openSettings(page, "schedule");
+  const monthly = page.getByRole("region", { name: "جرد آخر الشهر" });
+  await expect(monthly.getByText("جرد المواد الأولية")).toBeVisible();
+  await expect(monthly.getByText("جرد مواد التغليف")).toBeVisible();
+
+  const time = monthly.getByLabel("ساعة جرد آخر الشهر: الكيك · دابوق");
+  await expect(time).toHaveValue("23:00");
+  await time.fill("00:40");
+  await time.press("Enter");
+  await expect(monthly.getByRole("status").filter({ hasText: "انحفظ" })).toBeVisible();
+  await page.reload();
+  await expect(monthly.getByLabel("ساعة جرد آخر الشهر: الكيك · دابوق")).toHaveValue("00:40");
+
+  const dabouq = monthly.getByRole("switch", { name: "جرد آخر الشهر: الكيك · دابوق" });
+  await dabouq.click();
+  await expect(dabouq).toHaveAttribute("aria-checked", "false");
+  await expect(dabouq).toBeEnabled();
+  await page.reload();
+  await expect(monthly.getByRole("switch", { name: "جرد آخر الشهر: الكيك · دابوق" })).toHaveAttribute(
+    "aria-checked",
+    "false",
+  );
+
+  // نرجعه متل ما كان
+  const again = monthly.getByRole("switch", { name: "جرد آخر الشهر: الكيك · دابوق" });
+  await again.click();
+  await expect(again).toHaveAttribute("aria-checked", "true");
+  await expect(again).toBeEnabled();
+  await monthly.getByLabel("ساعة جرد آخر الشهر: الكيك · دابوق").fill("23:00");
+  await monthly.getByLabel("ساعة جرد آخر الشهر: الكيك · دابوق").press("Enter");
+  await expect(monthly.getByRole("status").filter({ hasText: "انحفظ" })).toBeVisible();
+  await page.reload();
+  await expect(monthly.getByLabel("ساعة جرد آخر الشهر: الكيك · دابوق")).toHaveValue("23:00");
+});
+
 test("a product can live longer than a week, and then its batches go by date", async ({ page, browser }) => {
   await openSettings(page, "products");
   await saveField(page, "مدة الحياة لـ Pecan", "14");

@@ -8,6 +8,10 @@ describe("slotTime", () => {
   it("is the schedule time today in Amman", () => {
     expect(slotTime("2026-10-23", "09:00:00").toISOString()).toBe("2026-10-23T06:00:00.000Z");
   });
+
+  it("puts a slot before 5 in the morning after midnight", () => {
+    expect(slotTime("2026-10-23", "00:40:00").toISOString()).toBe("2026-10-23T21:40:00.000Z");
+  });
 });
 
 describe("slotStatus", () => {

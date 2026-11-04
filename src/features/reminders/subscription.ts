@@ -21,6 +21,32 @@ export interface PushMessage {
   tag?: string;
 }
 
+/** جرد آخر الشهر: تذكير قبل الموعد، و"متأخر" بعده. */
+export function monthlyCountMessage(
+  late: boolean,
+  scope: "stock" | "raw",
+  time: string,
+  place: string,
+  locationKind: string,
+): PushMessage {
+  const what = scope === "raw" ? "المواد الأولية" : locationKind === "packaging" ? "مواد التغليف" : "الكيك";
+  const url =
+    scope === "raw" ? "/factory/raw/count" : locationKind === "packaging" ? "/packaging/count" : "/count";
+  return late
+    ? {
+        title: "جرد آخر الشهر متأخر",
+        body: `${place}: جرد ${what} لآخر الشهر (الساعة ${time}) لسا ما انعمل.`,
+        url,
+        tag: `monthly-${scope}-${time}`,
+      }
+    : {
+        title: "اليوم جرد آخر الشهر",
+        body: `${place}: الساعة ${time} عدّ كل ${what}.`,
+        url,
+        tag: `monthly-${scope}-${time}`,
+      };
+}
+
 export function countReminderMessage(
   kind: "count_reminder" | "count_late",
   time: string,

@@ -50,6 +50,16 @@ join (values
   ('DBQ', '09:00')
 ) as t(code, time_of_day) on t.code = l.code;
 
+-- ─── جرد آخر الشهر: كل موقع، والمواد الأولية بالمصنع ─────────────────
+
+insert into public.monthly_counts (location_id, scope, time_of_day)
+select l.id, t.scope, t.time_of_day::time
+from public.locations l
+join (values
+  ('FAC', 'stock', '20:00'), ('FAC', 'raw', '20:00'), ('PKG', 'stock', '20:00'),
+  ('SWF', 'stock', '23:00'), ('JBH', 'stock', '23:00'), ('DBQ', 'stock', '23:00')
+) as t(code, scope, time_of_day) on t.code = l.code;
+
 -- ─── الحد المطلوب: 20 من كل صنف بكل فرع (مثال لحد ما الأدمن يعدله) ───
 
 insert into public.par_levels (location_id, product_id, par_pieces)

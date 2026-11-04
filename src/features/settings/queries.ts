@@ -90,3 +90,38 @@ export async function listScheduleLocations(): Promise<ScheduleLocation[]> {
       .map((s) => ({ id: s.id, timeOfDay: s.time_of_day })),
   }));
 }
+
+export interface MonthlyCountRow {
+  locationId: string;
+  locationName: string;
+  locationKind: string;
+  scope: "stock" | "raw";
+  timeOfDay: string | null;
+  isActive: boolean;
+}
+
+/** جرد آخر الشهر: سطر لكل موقع (والمواد الأولية بالمصنع)، حتى لو لسا ما انحطله ساعة. */
+export async function listMonthlyCounts(): Promise<MonthlyCountRow[]> {
+  await requireAdmin();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("locations")
+    .select("id, name, kind, monthly_counts(scope, time_of_day, is_active)")
+    .in("kind", ["branch", "factory", "packaging"])
+    .eq("is_active", true)
+    .order("sort_order");
+  if (error) throw new Error(`Could not load monthly counts: ${error.message}`);
+  return data.flatMap((l) =>
+    (l.kind === "factory" ? (["stock", "raw"] as const) : (["stock"] as const)).map((scope) => {
+      const row = l.monthly_counts.find((m) => m.scope === scope);
+      return {
+        locationId: l.id,
+        locationName: l.name,
+        locationKind: l.kind,
+        scope,
+        timeOfDay: row?.time_of_day ?? null,
+        isActive: row?.is_active ?? false,
+      };
+    }),
+  );
+}

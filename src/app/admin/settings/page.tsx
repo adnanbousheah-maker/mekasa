@@ -5,12 +5,14 @@ import { PackagingTab } from "@/features/settings/components/PackagingTab";
 import { ParTab } from "@/features/settings/components/ParTab";
 import { ProductsTab } from "@/features/settings/components/ProductsTab";
 import { listReportProducts, minLevels, parLevels, stockByProduct } from "@/features/reports/queries";
+import { MonthlyCountsCard } from "@/features/settings/components/MonthlyCountsCard";
 import { ScheduleCard } from "@/features/settings/components/ScheduleCard";
 import { packagingStock, packagingStore } from "@/features/packaging/queries";
 import {
   getSettings,
   listMinLevelLocations,
   listProducts,
+  listMonthlyCounts,
   listScheduleLocations,
 } from "@/features/settings/queries";
 
@@ -99,20 +101,27 @@ async function TabContent({ tab, loc }: { tab: TabId; loc: string | null }) {
   }
 
   if (tab === "schedule") {
-    const [locations, settings] = await Promise.all([listScheduleLocations(), getSettings()]);
+    const [locations, settings, monthly] = await Promise.all([
+      listScheduleLocations(),
+      getSettings(),
+      listMonthlyCounts(),
+    ]);
     const reminders = `تذكير قبل ${settings.count_reminder_minutes_before} دقيقة · متأخر بعد ${settings.count_late_after_minutes} دقيقة`;
     return (
-      <section className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-3">
-        {locations.map((l) => (
-          <ScheduleCard
-            key={l.id}
-            locationId={l.id}
-            name={l.name}
-            times={l.times}
-            note={l.kind === "factory" ? `جرد الكيك بالدفعات + المواد الأولية · ${reminders}` : reminders}
-          />
-        ))}
-      </section>
+      <div className="flex flex-col gap-3">
+        <section className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-3">
+          {locations.map((l) => (
+            <ScheduleCard
+              key={l.id}
+              locationId={l.id}
+              name={l.name}
+              times={l.times}
+              note={l.kind === "factory" ? `جرد الكيك بالدفعات + المواد الأولية · ${reminders}` : reminders}
+            />
+          ))}
+        </section>
+        <MonthlyCountsCard rows={monthly} />
+      </div>
     );
   }
 

@@ -46,6 +46,21 @@ export function businessDate(at: Date): string {
   return `${part(parts, "year")}-${part(parts, "month")}-${part(parts, "day")}`;
 }
 
+/** يوم الجرد بيخلص 5 الصبح: جرد 12:40 بالليل تبع اليوم اللي قبله (نفس private.count_day بقاعدة البيانات). */
+export const COUNT_DAY_START_HOUR = 5;
+
+/** يوم الجرد بعمّان (YYYY-MM-DD): متل businessDate بس قبل 5 الصبح بيرجع اليوم اللي قبل. */
+export function countDay(at: Date): string {
+  return businessDate(new Date(at.getTime() - COUNT_DAY_START_HOUR * 3_600_000));
+}
+
+/** آخر يوم بالشهر؟ (تاريخ YYYY-MM-DD) */
+export function isLastDayOfMonth(isoDate: string): boolean {
+  const next = parseIsoDate(isoDate);
+  next.setUTCDate(next.getUTCDate() + 1);
+  return next.getUTCDate() === 1;
+}
+
 /** "9:21" أو "21:00": ساعة بدون صفر بالأول، 24 ساعة. */
 export function formatClock(at: Date): string {
   const parts = clockParts.formatToParts(at);

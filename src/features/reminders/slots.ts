@@ -1,3 +1,5 @@
+import { COUNT_DAY_START_HOUR } from "@/lib/time";
+
 // حالة مواعيد الجرد اليوم، ومين لازم ياخذ إشعار. نفس منطق v_count_slots_today بقاعدة البيانات،
 // بس هون للـ cron اللي بيشتغل بـ service role (ما إله موقع، فالـ view ما بترجعله شي).
 
@@ -17,9 +19,14 @@ export interface ReminderSettings {
 
 const MINUTE = 60_000;
 
-/** وقت الموعد اليوم (بعمّان) كـ Date. عمّان +03:00 طول السنة. */
+/**
+ * وقت الموعد بيوم الجرد (بعمّان) كـ Date. عمّان +03:00 طول السنة.
+ * موعد قبل 5 الصبح تبع آخر اليوم، يعني بعد نص الليل (نفس private.slot_at).
+ */
 export function slotTime(todayIso: string, timeOfDay: string): Date {
-  return new Date(`${todayIso}T${timeOfDay.slice(0, 5)}:00+03:00`);
+  const at = new Date(`${todayIso}T${timeOfDay.slice(0, 5)}:00+03:00`);
+  if (Number(timeOfDay.slice(0, 2)) < COUNT_DAY_START_HOUR) at.setTime(at.getTime() + 86_400_000);
+  return at;
 }
 
 export function slotStatus(slotAt: Date, now: Date, done: boolean, settings: ReminderSettings): SlotStatus {

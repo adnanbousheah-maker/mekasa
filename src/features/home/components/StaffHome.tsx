@@ -7,7 +7,8 @@ import { LogoutButton } from "@/features/auth/components/LogoutButton";
 import type { CurrentStaff } from "@/features/auth/session";
 import { CountReminder } from "@/features/reminders/components/CountReminder";
 import { EnableNotifications } from "@/features/reminders/components/EnableNotifications";
-import type { OpenSlot } from "@/features/reminders/queries";
+import { MonthlyCountBanner } from "@/features/reminders/components/MonthlyCountBanner";
+import type { MonthlyCountDue, OpenSlot } from "@/features/reminders/queries";
 import { ROLE_LABELS } from "@/features/staff/roles";
 import { batchLabel } from "@/lib/batch-label";
 import { dayNumberOf } from "@/lib/day-number";
@@ -30,6 +31,8 @@ type Props = {
   staff: CurrentStaff;
   now: Date;
   slot?: OpenSlot | null;
+  // آخر يوم بالشهر: جرد شهري لكل شي
+  monthly?: MonthlyCountDue[];
   vapidPublicKey?: string | null;
   branch?: BranchHomeData | null;
   factory?: FactoryHomeData | null;
@@ -42,6 +45,7 @@ export function StaffHome({
   staff,
   now,
   slot = null,
+  monthly = [],
   vapidPublicKey = null,
   branch = null,
   factory = null,
@@ -82,6 +86,7 @@ export function StaffHome({
       </header>
 
       {slot && <CountReminder slot={slot} now={now} />}
+      {monthly.length > 0 && <MonthlyCountBanner items={monthly} />}
 
       {atFactory && <FactoryTasks staff={staff} data={factory} />}
       {atBranch && <BranchTasks data={branch} />}

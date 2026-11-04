@@ -1,5 +1,32 @@
 import { describe, expect, it } from "vitest";
-import { businessDate, formatClock, formatLastSeen, formatLongDate, greetingFor } from "./time";
+import {
+  businessDate,
+  countDay,
+  formatClock,
+  formatLastSeen,
+  formatLongDate,
+  greetingFor,
+  isLastDayOfMonth,
+} from "./time";
+
+describe("countDay", () => {
+  it("keeps counts after midnight on the day before, until 5 in the morning", () => {
+    expect(countDay(new Date("2026-11-05T00:40:00+03:00"))).toBe("2026-11-04");
+    expect(countDay(new Date("2026-11-05T04:59:00+03:00"))).toBe("2026-11-04");
+    expect(countDay(new Date("2026-11-05T05:00:00+03:00"))).toBe("2026-11-05");
+    expect(countDay(new Date("2026-11-04T23:00:00+03:00"))).toBe("2026-11-04");
+  });
+});
+
+describe("isLastDayOfMonth", () => {
+  it("knows month ends, February included", () => {
+    expect(isLastDayOfMonth("2026-11-30")).toBe(true);
+    expect(isLastDayOfMonth("2026-11-29")).toBe(false);
+    expect(isLastDayOfMonth("2026-12-31")).toBe(true);
+    expect(isLastDayOfMonth("2027-02-28")).toBe(true);
+    expect(isLastDayOfMonth("2028-02-28")).toBe(false);
+  });
+});
 
 describe("businessDate", () => {
   it("uses Amman time, not UTC", () => {

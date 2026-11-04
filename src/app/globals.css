@@ -23,6 +23,9 @@
   --color-print-muted: #666666;
   --color-print-fill: #f2f2f2;
 
+  /* ذهبي اللوجو: للوجو ولمسات صغيرة بس (مش لون معنى) */
+  --color-brand: #cb9e29;
+
   /* ألوان المعنى بس */
   --color-ok: #2e7d4f;
   --color-ok-soft: #e3f2e8;
