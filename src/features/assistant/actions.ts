@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { underAiQuota } from "@/features/ai/quota";
 import { requireAdmin } from "@/features/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -25,6 +26,9 @@ export async function askAssistantAction(input: z.input<typeof askSchema>): Prom
   if (!parsed.success)
     return { status: "error", message: parsed.error.issues[0]?.message ?? "السؤال مش صحيح" };
   const { question, voice } = parsed.data;
+  if (!(await underAiQuota(admin.id, "assistant"))) {
+    return { status: "error", message: "سألت كثير بهالساعة. استنى شوي وجرّب كمان مرة." };
+  }
 
   const db = await createClient();
   const service = createAdminClient();

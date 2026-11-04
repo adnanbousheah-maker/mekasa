@@ -41,7 +41,7 @@ export async function getCountContext(): Promise<CountContext | null> {
   const [slots, settings] = await Promise.all([
     supabase
       .from("v_count_slots_today")
-      .select("schedule_id, time_of_day, status")
+      .select("schedule_id, time_of_day, slot_at, status")
       .eq("location_id", loc.id)
       .order("slot_at"),
     supabase.from("app_settings").select("photo_count_enabled, factory_shelf_life_days").single(),
@@ -50,8 +50,11 @@ export async function getCountContext(): Promise<CountContext | null> {
   if (settings.error) throw new Error(`Could not load settings: ${settings.error.message}`);
 
   const open = slots.data.filter((s) => s.status === "due" || s.status === "late");
-  // الأقرب (آخر موعد وصل وقته)
-  const current = open.at(-1);
+  // الأقرب (آخر موعد وصل وقته)، أو موعد جاي خلال ساعة: اللي بيجرد بدري ما بيطلع "متأخر" بعدين
+  const soon = slots.data.find(
+    (s) => s.status === "upcoming" && new Date(s.slot_at!).getTime() - Date.now() <= 60 * 60_000,
+  );
+  const current = open.at(-1) ?? soon;
 
   return {
     staff,

@@ -10,7 +10,9 @@ export type SubmitCountResult = { status: "error"; message: string } | { status:
 
 const SAVE_FAILED = "ما انحفظ الجرد. تأكد من النت وجرب كمان مرة.";
 
-function countErrorMessage(code: string | undefined): string {
+function countErrorMessage(code: string | undefined, hint?: string): string {
+  if (hint === "stale_count")
+    return "في جرد ثاني انعمل هون بعد ما فتحت الشاشة. ارجع للرئيسية وافتح الجرد من جديد.";
   if (code === "23505") return "هالجرد انعمل قبل. ارجع للرئيسية.";
   if (code === "42501") return "ما إلك صلاحية تجرد هون";
   if (code === "23514") return "في رقم مش منطقي. راجع الأرقام وجرب كمان مرة.";
@@ -37,7 +39,7 @@ export async function submitCountAction(input: SubmitCountInput): Promise<Submit
   });
   if (error) {
     console.error("submitCount", error);
-    return { status: "error", message: countErrorMessage(error.code) };
+    return { status: "error", message: countErrorMessage(error.code, error.hint) };
   }
   refresh();
   return { status: "done", countId: data };

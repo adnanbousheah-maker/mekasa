@@ -2,7 +2,7 @@ import "server-only";
 import { formatScheduleTime } from "@/features/settings/schemas";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { businessDate, countDay, isLastDayOfMonth } from "@/lib/time";
-import { pendingAlerts, slotStatus, slotTime, type ReminderSettings } from "./slots";
+import { pendingAlerts, slotStatus, slotTime, type PendingAlert, type ReminderSettings } from "./slots";
 import { sendPushToStaff } from "./push";
 import { countReminderMessage, monthlyCountMessage } from "./subscription";
 
@@ -48,43 +48,12 @@ export async function runReminders(now = new Date()): Promise<ReminderRun> {
 
   const result: ReminderRun = { sent: [] };
   for (const alert of alerts) {
-    // نحجز الإشعار أول: إذا انحجز قبل (cron ثاني)، ما بنبعت
-    const { data: logged, error } = await db
-      .from("notification_log")
-      .insert({
-        kind: alert.kind,
-        location_id: alert.schedule.locationId,
-        schedule_id: alert.schedule.id,
-        slot_date: countToday,
-      })
-      .select("id")
-      .maybeSingle();
-    if (error || !logged) continue;
-
-    const schedule = schedules.data!.find((s) => s.id === alert.schedule.id)!;
-    const role = schedule.location.kind === "factory" ? "storekeeper" : "branch_staff";
-    const { data: staff } = await db
-      .from("staff")
-      .select("id, staff_roles!staff_roles_staff_id_fkey!inner(role)")
-      .eq("is_active", true)
-      .eq("location_id", alert.schedule.locationId)
-      .eq("staff_roles.role", role);
-    const ids = (staff ?? []).map((s) => s.id);
-    if (alert.kind === "count_late") {
-      const { data: admins } = await db
-        .from("staff")
-        .select("id, staff_roles!staff_roles_staff_id_fkey!inner(role)")
-        .eq("is_active", true)
-        .eq("staff_roles.role", "admin");
-      ids.push(...(admins ?? []).map((a) => a.id));
+    try {
+      await sendCountAlert(db, alert, schedules.data!, countToday, result);
+    } catch (error) {
+      // موعد واحد فشل: الباقي بيكمل
+      console.error("reminders: count", error);
     }
-
-    const place =
-      schedule.location.kind === "branch" ? `فرع ${schedule.location.name}` : schedule.location.name;
-    const message = countReminderMessage(alert.kind, formatScheduleTime(alert.schedule.timeOfDay), place);
-    const recipients = await sendPushToStaff([...new Set(ids)], message);
-    await db.from("notification_log").update({ recipients }).eq("id", logged.id);
-    result.sent.push({ kind: alert.kind, scheduleId: alert.schedule.id, recipients });
   }
   // كل نوع تنبيه لحاله: إذا واحد فشل، الباقي بيكمل
   for (const [name, run] of [
@@ -103,6 +72,58 @@ export async function runReminders(now = new Date()): Promise<ReminderRun> {
 }
 
 type Db = ReturnType<typeof createAdminClient>;
+
+type ScheduleRow = {
+  id: string;
+  location_id: string;
+  time_of_day: string;
+  location: { name: string; kind: string; is_active: boolean };
+};
+
+/** تذكير أو "متأخر" لموعد جرد واحد: للموظفين، والمتأخر للأدمن كمان (على لوحته). */
+async function sendCountAlert(
+  db: Db,
+  alert: PendingAlert,
+  schedules: ScheduleRow[],
+  countToday: string,
+  result: ReminderRun,
+) {
+  // نحجز الإشعار أول: إذا انحجز قبل (cron ثاني)، ما بنبعت
+  const { data: logged, error } = await db
+    .from("notification_log")
+    .insert({
+      kind: alert.kind,
+      location_id: alert.schedule.locationId,
+      schedule_id: alert.schedule.id,
+      slot_date: countToday,
+    })
+    .select("id")
+    .maybeSingle();
+  if (error || !logged) return;
+
+  const schedule = schedules.find((s) => s.id === alert.schedule.id)!;
+  const role = schedule.location.kind === "factory" ? "storekeeper" : "branch_staff";
+  const { data: staff, error: staffError } = await db
+    .from("staff")
+    .select("id, staff_roles!staff_roles_staff_id_fkey!inner(role)")
+    .eq("is_active", true)
+    .eq("location_id", alert.schedule.locationId)
+    .eq("staff_roles.role", role);
+  if (staffError) throw new Error(staffError.message);
+  const admins = alert.kind === "count_late" ? await activeAdmins(db) : [];
+  const adminIds = new Set(admins);
+
+  const place =
+    schedule.location.kind === "branch" ? `فرع ${schedule.location.name}` : schedule.location.name;
+  const message = countReminderMessage(alert.kind, formatScheduleTime(alert.schedule.timeOfDay), place);
+  const recipients =
+    (await sendPushToStaff(
+      [...new Set((staff ?? []).map((s) => s.id))].filter((id) => !adminIds.has(id)),
+      message,
+    )) + (admins.length ? await sendPushToStaff([...adminIds], { ...message, url: "/admin" }) : 0);
+  await db.from("notification_log").update({ recipients }).eq("id", logged.id);
+  result.sent.push({ kind: alert.kind, scheduleId: alert.schedule.id, recipients });
+}
 
 /**
  * جرد آخر الشهر (بآخر يوم بالشهر بس): تذكير قبل الموعد لموظفين الموقع، و"متأخر" لإلهم وللأدمن.
@@ -316,7 +337,20 @@ async function alertUnreceivedDispatches(db: ReturnType<typeof createAdminClient
     .select("id, to_location_id, hours_in_transit")
     .eq("is_overdue", true);
   if (error) throw new Error(error.message);
-  for (const d of overdue ?? []) {
+  if (!overdue?.length) return;
+  // اللي انبعت قبل ما بنرجع نسجله (كان بيفشل كل دقيقة على القيد)
+  const { data: sentBefore, error: sentError } = await db
+    .from("notification_log")
+    .select("dispatch_id")
+    .eq("kind", "dispatch_unreceived")
+    .in(
+      "dispatch_id",
+      overdue.map((d) => d.id!),
+    );
+  if (sentError) throw new Error(sentError.message);
+  const already = new Set((sentBefore ?? []).map((n) => n.dispatch_id));
+  for (const d of overdue) {
+    if (already.has(d.id)) continue;
     const { data: logged } = await db
       .from("notification_log")
       .insert({ kind: "dispatch_unreceived", location_id: d.to_location_id, dispatch_id: d.id })
@@ -332,15 +366,19 @@ async function alertUnreceivedDispatches(db: ReturnType<typeof createAdminClient
         .eq("staff_roles.role", "admin"),
       db.from("locations").select("name").eq("id", d.to_location_id!).single(),
     ]);
-    const recipients = await sendPushToStaff(
-      [...new Set([...(staff ?? []), ...(admins ?? [])].map((s) => s.id))],
-      {
-        title: "إخراج ما انستلم",
-        body: `في إخراج لـ${loc?.name ?? ""} بالطريق من ${Math.floor(Number(d.hours_in_transit ?? 0))} ساعة. استلمه أو بلّغ عن مشكلة.`,
-        url: "/orders",
-        tag: `dispatch-${d.id}`,
-      },
-    );
+    const message = {
+      title: "إخراج ما انستلم",
+      body: `في إخراج لـ${loc?.name ?? ""} بالطريق من ${Math.floor(Number(d.hours_in_transit ?? 0))} ساعة. استلمه أو بلّغ عن مشكلة.`,
+      tag: `dispatch-${d.id}`,
+    };
+    const adminIds = new Set((admins ?? []).map((a) => a.id));
+    // الفرع بيفتح استلاماته، والأدمن الطلب بلوحته
+    const recipients =
+      (await sendPushToStaff(
+        (staff ?? []).map((s) => s.id).filter((id) => !adminIds.has(id)),
+        { ...message, url: "/orders" },
+      )) +
+      (await sendPushToStaff([...adminIds], { ...message, url: `/admin/orders?filter=road&id=${d.id}` }));
     await db.from("notification_log").update({ recipients }).eq("id", logged.id);
     result.sent.push({ kind: "dispatch_unreceived", scheduleId: d.id!, recipients });
   }

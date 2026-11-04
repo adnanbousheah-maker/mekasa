@@ -19,7 +19,7 @@ export const LOGIN_FAILED_MESSAGE =
   `${LOCKOUT.timedLockMinutes} دقيقة، وإذا ضل مقفول احكي مع المدير.`;
 
 /** كل رد فاشل بياخذ هالوقت على الأقل، مشان سرعة الرد ما تكشف إذا الرقم موجود. */
-export const MIN_FAILURE_RESPONSE_MS = 700;
+export const MIN_FAILURE_RESPONSE_MS = 1500;
 
 export async function waitUntilElapsed(startedAt: number, minimumMs: number, now = Date.now): Promise<void> {
   const remaining = startedAt + minimumMs - now();

@@ -10,7 +10,11 @@ import type { PushMessage } from "./subscription";
  */
 export async function sendPushToStaff(staffIds: string[], message: PushMessage): Promise<number> {
   const env = pushEnv();
-  if (!env || staffIds.length === 0) return 0;
+  if (!env) {
+    console.warn("push: VAPID keys are missing, nothing was sent");
+    return 0;
+  }
+  if (staffIds.length === 0) return 0;
 
   const db = createAdminClient();
   const { data: subs, error } = await db
@@ -22,11 +26,14 @@ export async function sendPushToStaff(staffIds: string[], message: PushMessage):
   const payload = JSON.stringify(message);
   const options = {
     vapidDetails: {
-      subject: "mailto:admin@mekasa.local",
+      // آبل بترفض subject مش حقيقي: رابط التطبيق
+      subject: process.env.VAPID_SUBJECT ?? "https://mekasa.vercel.app",
       publicKey: env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
       privateKey: env.VAPID_PRIVATE_KEY,
     },
     TTL: 60 * 60,
+    urgency: "high" as const,
+    timeout: 10_000,
   };
 
   const results = await Promise.allSettled(

@@ -19,6 +19,7 @@ import { linesSummary } from "@/features/orders/logic";
 import { loadDocuments } from "@/features/orders/queries";
 import { amount } from "@/features/raw/logic";
 import { listRawMaterials } from "@/features/raw/queries";
+import { EnableNotifications } from "@/features/reminders/components/EnableNotifications";
 import { lateLabel } from "@/features/reminders/slots";
 import { formatScheduleTime } from "@/features/settings/schemas";
 import { businessDate, formatClock, formatLongDate, greetingFor } from "@/lib/time";
@@ -223,6 +224,12 @@ async function Overview() {
             : `${alerts.length} ${alerts.length <= 10 && alerts.length >= 3 ? "أشياء" : "شي"} بدها انتباهك`}
         </span>
       </header>
+      <div className="max-w-md">
+        <EnableNotifications
+          vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null}
+          label="🔔 فعّل تنبيهات الإدارة على هالجهاز (التأخير، الحد الأدنى، اللي ما انستلم)"
+        />
+      </div>
 
       <section aria-label="المواقع" className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
         {locations.map((l) => {

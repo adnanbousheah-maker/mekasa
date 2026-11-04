@@ -1,5 +1,6 @@
 "use server";
 
+import { underAiQuota } from "@/features/ai/quota";
 import { requireStaff } from "@/features/auth/session";
 import type { CountProduct } from "@/features/counts/queries";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -24,6 +25,9 @@ export async function readCountFormAction(photoPath: string): Promise<ReadFormRe
   if (!location || location.kind !== "branch") return { status: "error", message: "الجرد بالصورة للفروع" };
   if (!photoPath.startsWith(`${location.id}/`) || photoPath.includes("..")) {
     return { status: "error", message: "الصورة مش لموقعك" };
+  }
+  if (!(await underAiQuota(staff.id, "count_ocr"))) {
+    return { status: "error", message: `قريت صور كثير بهالساعة. ${MANUAL_HINT}` };
   }
 
   const supabase = await createClient();

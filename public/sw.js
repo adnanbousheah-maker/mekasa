@@ -1,4 +1,4 @@
-// Service worker ميكاسا: إشعارات التذكير بس. ما بنخزن صفحات (الأرقام لازم تكون دايماً جديدة).
+// Service worker ميكاسا: الإشعارات بس. ما بنخزن صفحات (الأرقام لازم تكون دايماً جديدة).
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
@@ -18,6 +18,8 @@ self.addEventListener("push", (event) => {
       icon: "/icons/icon-192.png",
       badge: "/icons/icon-192.png",
       tag: data.tag,
+      // إشعار جديد بنفس الـ tag (متل "متأخر" بعد التذكير) لازم يرن كمان
+      renotify: Boolean(data.tag),
       data: { url: data.url || "/" },
     }),
   );
@@ -27,14 +29,23 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = new URL(event.notification.data?.url || "/", self.location.origin).href;
   event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+    (async () => {
+      const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
       for (const client of clients) {
         if (client.url.startsWith(self.location.origin) && "focus" in client) {
-          client.navigate(url);
-          return client.focus();
+          await client.focus();
+          if ("navigate" in client) {
+            try {
+              await client.navigate(url);
+              return;
+            } catch {
+              // نافذة مش تحت الـ service worker: منفتح وحدة جديدة
+            }
+          }
+          break;
         }
       }
-      return self.clients.openWindow(url);
-    }),
+      await self.clients.openWindow(url);
+    })(),
   );
 });
