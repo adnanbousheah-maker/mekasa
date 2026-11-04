@@ -124,31 +124,28 @@ async function alertMonthlyCounts(
   if (error) throw new Error(error.message);
   if (!monthly?.length) return;
 
-  const [stockCounts, rawCounts, sent] = await Promise.all([
-    db.from("stock_counts").select("location_id").eq("business_date", countToday).eq("status", "confirmed"),
-    db.from("raw_counts").select("location_id").eq("business_date", countToday).eq("status", "confirmed"),
-    db
-      .from("alert_log")
-      .select("kind, location_id")
-      .in("kind", [
-        "monthly_count_reminder",
-        "monthly_count_late",
-        "monthly_raw_reminder",
-        "monthly_raw_late",
-      ])
-      .eq("slot_date", countToday),
-  ]);
-  const counted = {
-    stock: new Set((stockCounts.data ?? []).map((c) => c.location_id)),
-    raw: new Set((rawCounts.data ?? []).map((c) => c.location_id)),
-  };
-  const already = new Set((sent.data ?? []).map((a) => `${a.kind}:${a.location_id}`));
+  const { data: sent, error: sentError } = await db
+    .from("alert_log")
+    .select("kind, location_id")
+    .in("kind", ["monthly_count_reminder", "monthly_count_late", "monthly_raw_reminder", "monthly_raw_late"])
+    .eq("slot_date", countToday);
+  if (sentError) throw new Error(sentError.message);
+  const already = new Set((sent ?? []).map((a) => `${a.kind}:${a.location_id}`));
 
   let admins: string[] | null = null;
   for (const m of monthly) {
     const scope = m.scope === "raw" ? "raw" : "stock";
     const slotAt = slotTime(countToday, m.time_of_day);
-    const status = slotStatus(slotAt, now, counted[scope].has(m.location_id), settings);
+    if (slotStatus(slotAt, now, false, settings) === "upcoming") continue;
+    // نفس الفحص اللي بالـ view: جرد قريب من الموعد، وكل المواد الأولية
+    const { data: done, error: doneError } = await db.rpc("monthly_count_done", {
+      p_location_id: m.location_id,
+      p_scope: scope,
+      p_day: countToday,
+      p_slot_at: slotAt.toISOString(),
+    });
+    if (doneError) throw new Error(doneError.message);
+    const status = slotStatus(slotAt, now, done === true, settings);
     if (status !== "due" && status !== "late") continue;
     // بعد ساعتين من التأخير ما بنبعت شي جديد (متل مواعيد كل يوم)
     if (now.getTime() - slotAt.getTime() > 2 * 3_600_000 + settings.lateAfterMinutes * 60_000) continue;
@@ -183,7 +180,14 @@ async function alertMonthlyCounts(
     const place = m.location.kind === "branch" ? `فرع ${m.location.name}` : m.location.name;
     const recipients = await sendPushToStaff(
       [...new Set(ids)],
-      monthlyCountMessage(late, scope, formatScheduleTime(m.time_of_day), place, m.location.kind),
+      monthlyCountMessage(
+        late,
+        scope,
+        formatScheduleTime(m.time_of_day),
+        place,
+        m.location.kind,
+        m.location_id,
+      ),
     );
     result.sent.push({ kind, scheduleId: m.id, recipients });
   }

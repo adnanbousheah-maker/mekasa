@@ -15,7 +15,7 @@ export async function getOpenSlot(locationId: string): Promise<OpenSlot | null> 
     .select("time_of_day, slot_at, status")
     .eq("location_id", locationId)
     .in("status", ["due", "late"])
-    .order("time_of_day", { ascending: false })
+    .order("slot_at", { ascending: false })
     .limit(1)
     .maybeSingle();
   if (error) throw new Error(`Could not load count slots: ${error.message}`);

@@ -112,6 +112,11 @@ describe("schedule times", () => {
   it("normalizes to HH:MM", () => {
     expect(scheduleTimeSchema.parse("9:00")).toBe("09:00");
     expect(scheduleTimeSchema.parse("21:30")).toBe("21:30");
+    expect(scheduleTimeSchema.parse("00:40")).toBe("00:40");
+    // يوم الجرد بيتغير 5 الصبح
+    expect(scheduleTimeSchema.safeParse("04:30").success).toBe(false);
+    expect(scheduleTimeSchema.safeParse("05:59").success).toBe(false);
+    expect(scheduleTimeSchema.parse("06:00")).toBe("06:00");
     expect(scheduleTimeSchema.parse("00:05")).toBe("00:05");
   });
 

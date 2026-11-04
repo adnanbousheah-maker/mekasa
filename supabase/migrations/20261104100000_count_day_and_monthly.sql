@@ -135,49 +135,80 @@ $$;
 create trigger monthly_counts_check before insert or update on public.monthly_counts
   for each row execute function private.check_monthly_count();
 
+-- جرد آخر الشهر انعمل؟ جرد مؤكد بيوم الجرد بدأ قبل الموعد بـ 3 ساعات أو بعده (مش جرد الصبح).
+-- المواد الأولية جردها جزئي، فلازم كل مادة فعّالة تكون انعدّت.
+create function private.monthly_count_done(p_location_id uuid, p_scope text, p_day date, p_slot_at timestamptz)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select case
+    when p_scope = 'raw' then
+      exists (
+        select 1 from public.raw_counts c
+        where c.location_id = p_location_id and c.business_date = p_day and c.status = 'confirmed'
+          and c.started_at >= p_slot_at - interval '3 hours')
+      and not exists (
+        select 1 from public.raw_materials m
+        where m.is_active and not exists (
+          select 1 from public.raw_count_lines l
+          join public.raw_counts c on c.id = l.count_id
+          where l.material_id = m.id and c.location_id = p_location_id and c.business_date = p_day
+            and c.status = 'confirmed' and c.started_at >= p_slot_at - interval '3 hours'))
+    else exists (
+      select 1 from public.stock_counts c
+      where c.location_id = p_location_id and c.business_date = p_day and c.status = 'confirmed'
+        and c.started_at >= p_slot_at - interval '3 hours')
+  end
+$$;
+
+revoke execute on function private.monthly_count_done(uuid, text, date, timestamptz) from public, anon;
+grant execute on function private.monthly_count_done(uuid, text, date, timestamptz) to authenticated, service_role;
+
+-- للكرون (service role، ما إله موقع فالـ view ما بترجعله شي)
+create function public.monthly_count_done(p_location_id uuid, p_scope text, p_day date, p_slot_at timestamptz)
+returns boolean
+language sql
+stable
+set search_path = ''
+as $$
+  select private.monthly_count_done(p_location_id, p_scope, p_day, p_slot_at)
+$$;
+
+revoke execute on function public.monthly_count_done(uuid, text, date, timestamptz) from public, anon, authenticated;
+grant execute on function public.monthly_count_done(uuid, text, date, timestamptz) to service_role;
+
 -- جرد آخر الشهر اليوم (بيرجع صفوف بس بآخر يوم بالشهر): الموعد، وإذا انعمل، والحالة
 create view public.v_monthly_counts_today with (security_invoker = true) as
-with today as (
-  select public.count_day_today() as day
-),
-due as (
+with due as (
   select mc.id, mc.location_id, mc.scope, mc.time_of_day, t.day,
          private.slot_at(t.day, mc.time_of_day) as slot_at
   from public.monthly_counts mc
-  cross join today t
+  cross join (select public.count_day_today() as day) t
   join public.locations l on l.id = mc.location_id and l.is_active
   where mc.is_active
     and private.can_see_location(mc.location_id)
     and t.day = (date_trunc('month', t.day) + interval '1 month - 1 day')::date
+),
+checked as (
+  select d.*, private.monthly_count_done(d.location_id, d.scope, d.day, d.slot_at) as done from due d
 )
 select
-  d.id,
-  d.location_id,
-  d.scope,
-  d.time_of_day,
-  d.slot_at,
+  c.id,
+  c.location_id,
+  c.scope,
+  c.time_of_day,
+  c.slot_at,
+  c.done,
   case
-    when d.scope = 'raw' then exists (
-      select 1 from public.raw_counts r
-      where r.location_id = d.location_id and r.business_date = d.day and r.status = 'confirmed')
-    else exists (
-      select 1 from public.stock_counts c
-      where c.location_id = d.location_id and c.business_date = d.day and c.status = 'confirmed')
-  end as done,
-  case
-    when (case
-            when d.scope = 'raw' then exists (
-              select 1 from public.raw_counts r
-              where r.location_id = d.location_id and r.business_date = d.day and r.status = 'confirmed')
-            else exists (
-              select 1 from public.stock_counts c
-              where c.location_id = d.location_id and c.business_date = d.day and c.status = 'confirmed')
-          end) then 'done'
-    when now() >= d.slot_at + make_interval(mins => s.count_late_after_minutes) then 'late'
-    when now() >= d.slot_at - make_interval(mins => s.count_reminder_minutes_before) then 'due'
+    when c.done then 'done'
+    when now() >= c.slot_at + make_interval(mins => s.count_late_after_minutes) then 'late'
+    when now() >= c.slot_at - make_interval(mins => s.count_reminder_minutes_before) then 'due'
     else 'upcoming'
   end as status
-from due d
+from checked c
 cross join public.app_settings s;
 
 revoke all on public.v_monthly_counts_today from anon;

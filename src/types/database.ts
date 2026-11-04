@@ -3204,6 +3204,10 @@ export type Database = {
         Returns: string;
       };
       dispatch_round: { Args: { p_round: Json }; Returns: string[] };
+      monthly_count_done: {
+        Args: { p_day: string; p_location_id: string; p_scope: string; p_slot_at: string };
+        Returns: boolean;
+      };
       receive_dispatch: { Args: { p_dispatch_id: string; p_lines: Json }; Returns: string };
       record_production: { Args: { p_lines: Json; p_note?: string }; Returns: string };
       record_raw_movement: {

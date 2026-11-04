@@ -67,5 +67,27 @@ select is(
   'monthly counts show only on the last day of the month'
 );
 
+-- انعمل؟ جرد من الصبح ما بيحسب، والمواد الأولية لازم كلها
+select tests.as_postgres();
+update public.stock_counts set status = 'confirmed', confirmed_at = now()
+where location_id = tests.location('JBH') and business_date = public.count_day_today();
+select ok(
+  private.monthly_count_done(tests.location('JBH'), 'stock', public.count_day_today(), now() + interval '1 hour'),
+  'a count started shortly before the monthly time counts'
+);
+select ok(
+  not private.monthly_count_done(tests.location('JBH'), 'stock', public.count_day_today(), now() + interval '5 hours'),
+  'a count from hours before the monthly time does not'
+);
+select ok(
+  not private.monthly_count_done(tests.location('FAC'), 'raw', public.count_day_today(), now()),
+  'raw materials are not done without counting every material'
+);
+select throws_ok(
+  $$ select public.monthly_count_done(tests.location('FAC'), 'raw', public.count_day_today(), now()) $$,
+  '42501', null,
+  'only the cron can call the public check'
+) from (select set_config('role', 'authenticated', true)) r;
+
 select * from finish();
 rollback;

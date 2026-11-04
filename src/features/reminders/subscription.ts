@@ -28,6 +28,7 @@ export function monthlyCountMessage(
   time: string,
   place: string,
   locationKind: string,
+  locationId: string,
 ): PushMessage {
   const what = scope === "raw" ? "المواد الأولية" : locationKind === "packaging" ? "مواد التغليف" : "الكيك";
   const url =
@@ -37,13 +38,13 @@ export function monthlyCountMessage(
         title: "جرد آخر الشهر متأخر",
         body: `${place}: جرد ${what} لآخر الشهر (الساعة ${time}) لسا ما انعمل.`,
         url,
-        tag: `monthly-${scope}-${time}`,
+        tag: `monthly-${scope}-${locationId}`,
       }
     : {
         title: "اليوم جرد آخر الشهر",
         body: `${place}: الساعة ${time} عدّ كل ${what}.`,
         url,
-        tag: `monthly-${scope}-${time}`,
+        tag: `monthly-${scope}-${locationId}`,
       };
 }
 
@@ -57,12 +58,12 @@ export function countReminderMessage(
         title: `جرد الساعة ${time}`,
         body: `وقت جرد ${place} قرّب. افتح التطبيق وابدأ.`,
         url: "/count",
-        tag: `count-${time}`,
+        tag: `count-${time}-${place}`,
       }
     : {
         title: `جرد الساعة ${time} متأخر`,
         body: `جرد ${place} لسا ما انعمل.`,
         url: "/count",
-        tag: `count-${time}`,
+        tag: `count-${time}-${place}`,
       };
 }

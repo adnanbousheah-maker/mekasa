@@ -32,7 +32,7 @@ describe("countReminderMessage", () => {
       title: "جرد الساعة 9:00",
       body: "وقت جرد فرع الصويفية قرّب. افتح التطبيق وابدأ.",
       url: "/count",
-      tag: "count-9:00",
+      tag: "count-9:00-فرع الصويفية",
     });
     expect(countReminderMessage("count_late", "9:00", "المصنع").title).toBe("جرد الساعة 9:00 متأخر");
   });

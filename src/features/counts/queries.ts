@@ -43,7 +43,7 @@ export async function getCountContext(): Promise<CountContext | null> {
       .from("v_count_slots_today")
       .select("schedule_id, time_of_day, status")
       .eq("location_id", loc.id)
-      .order("time_of_day"),
+      .order("slot_at"),
     supabase.from("app_settings").select("photo_count_enabled, factory_shelf_life_days").single(),
   ]);
   if (slots.error) throw new Error(`Could not load count slots: ${slots.error.message}`);

@@ -104,7 +104,9 @@ export const scheduleTimeSchema = z
   .string()
   .trim()
   .regex(/^([01]?\d|2[0-3]):[0-5]\d$/, "اختار ساعة صحيحة")
-  .transform((value) => value.padStart(5, "0"));
+  .transform((value) => value.padStart(5, "0"))
+  // يوم الجرد بيتغير 5 الصبح: موعد حواليها بيضيع تذكيره
+  .refine((value) => value < "04:00" || value >= "06:00", "اختار ساعة قبل 4 الصبح أو من 6 وطالع");
 
 /** "09:00:00" → "9:00" متل التصميم. */
 export function formatScheduleTime(timeOfDay: string): string {

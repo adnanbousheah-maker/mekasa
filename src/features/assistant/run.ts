@@ -1,7 +1,7 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import type { createClient } from "@/lib/supabase/server";
-import { formatClock, formatLongDate, businessDate } from "@/lib/time";
+import { businessDate, countDay, formatClock, formatLongDate } from "@/lib/time";
 import { assistantTools } from "./tools";
 
 // Haiku 5.5: الأرخص (طلب صاحب المشروع). بدون fallbacks لأنه ما إله server-side fallback.
@@ -61,7 +61,7 @@ export async function runAssistant(
       ...history.map((t) => ({ role: t.role, content: t.text })),
       {
         role: "user" as const,
-        content: `${question}\n\n(الوقت الآن بعمّان: ${formatLongDate(businessDate(now))} ${formatClock(now)}، تاريخ اليوم ${businessDate(now)})`,
+        content: `${question}\n\n(الوقت الآن بعمّان: ${formatLongDate(businessDate(now))} ${formatClock(now)}، تاريخ اليوم ${businessDate(now)}، ويوم الجرد ${countDay(now)}: الجرد بعد نص الليل لحد 5 الصبح بينحسب على اليوم اللي قبل، فاستهلاك "اليوم" وجرد "اليوم" على يوم الجرد)`,
       },
     ],
   });

@@ -185,7 +185,7 @@ export function assistantTools(db: Db, now: Date) {
         const { data } = await db
           .from("v_count_slots_today")
           .select("location_id, time_of_day, status, confirmed_at")
-          .order("time_of_day");
+          .order("slot_at");
         const label = { done: "تم", late: "متأخر", due: "وقته هلا", upcoming: "لسا" } as const;
         return json({
           slots: (data ?? []).map((s) => ({

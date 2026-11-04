@@ -457,7 +457,7 @@ export async function slotsToday(): Promise<SlotToday[]> {
   const { data, error } = await supabase
     .from("v_count_slots_today")
     .select("schedule_id, location_id, time_of_day, slot_at, status")
-    .order("time_of_day");
+    .order("slot_at");
   if (error) fail("count slots", error);
   return data.map((s) => ({
     scheduleId: s.schedule_id!,
