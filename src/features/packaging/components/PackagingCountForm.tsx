@@ -5,12 +5,36 @@ import { useState, useTransition } from "react";
 import { Dialog } from "@/components/ui/Dialog";
 import { ProductName } from "@/components/ui/ProductName";
 import { QuantityField } from "@/components/ui/QuantityField";
-import { submitPackagingCountAction } from "../actions";
+import { submitPackagingCountAction, submitSauceCountAction } from "../actions";
 
 type Item = { id: string; nameEn: string };
 
-/** جرد مستودع التغليف: عدد الحبات لكل مادة. اللي ما انعدّ بينحسب صفر، فبنحذّر قبل التأكيد. */
-export function PackagingCountForm({ items, startedAt }: { items: Item[]; startedAt: string }) {
+const VARIANTS = {
+  packaging: {
+    submit: submitPackagingCountAction,
+    doneHref: "/packaging?counted=1",
+    missingTitle: "في مواد ما عدّيتها",
+    missingText: "(يعني ما في منها بالمستودع)",
+  },
+  sauce: {
+    submit: submitSauceCountAction,
+    doneHref: "/count/sauces?saved=1",
+    missingTitle: "في صوصات ما عدّيتها",
+    missingText: "(يعني ما في منها عندك)",
+  },
+} as const;
+
+/** جرد بالحبة (مستودع التغليف، أو الصوصات): اللي ما انعدّ بينحسب صفر، فبنحذّر قبل التأكيد. */
+export function PackagingCountForm({
+  items,
+  startedAt,
+  variant = "packaging",
+}: {
+  items: Item[];
+  startedAt: string;
+  variant?: keyof typeof VARIANTS;
+}) {
+  const text = VARIANTS[variant];
   const router = useRouter();
   const [qty, setQty] = useState<Record<string, number>>({});
   const [counted, setCounted] = useState<Set<string>>(new Set());
@@ -27,12 +51,12 @@ export function PackagingCountForm({ items, startedAt }: { items: Item[]; starte
   const save = () =>
     startTransition(async () => {
       setAskMissing(false);
-      const result = await submitPackagingCountAction({
+      const result = await text.submit({
         startedAt,
         lines: items.map((i) => ({ productId: i.id, qty: qty[i.id] ?? 0 })),
       });
       if (result.status === "error") setError(result.message);
-      else router.replace("/packaging?counted=1");
+      else router.replace(text.doneHref);
     });
 
   return (
@@ -97,9 +121,9 @@ export function PackagingCountForm({ items, startedAt }: { items: Item[]; starte
         </div>
       </div>
 
-      <Dialog open={askMissing} onClose={() => setAskMissing(false)} title="في مواد ما عدّيتها">
+      <Dialog open={askMissing} onClose={() => setAskMissing(false)} title={text.missingTitle}>
         <p className="mb-2 text-[15px]">
-          رح تنحسب <strong>صفر</strong> (يعني ما في منها بالمستودع):
+          رح تنحسب <strong>صفر</strong> {text.missingText}:
         </p>
         <p dir="auto" className="mb-4 max-h-40 overflow-y-auto text-sm text-muted">
           {notCounted.map((i) => i.nameEn).join("، ")}

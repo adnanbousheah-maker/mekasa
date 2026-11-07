@@ -30,7 +30,7 @@ async function PackagingDispatch({ searchParams }: { searchParams: SearchParams 
   if (!store) return <NotForYou title="إخراج تغليف" text="ما في مستودع تغليف فعّال." />;
   const requestId = typeof requestParam === "string" && UUID.test(requestParam) ? requestParam : null;
   const [products, destinations, docs] = await Promise.all([
-    allActiveProducts("packaging"),
+    allActiveProducts(["packaging"]),
     destinationsFrom({ id: store.id, kind: "packaging" }),
     requestId
       ? loadDocuments({

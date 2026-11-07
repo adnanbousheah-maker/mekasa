@@ -33,3 +33,30 @@ export async function submitPackagingCountAction(input: PackagingCountInput): Pr
   refresh();
   return { status: "done", countId: data };
 }
+
+/** جرد الصوصات بموقع الموظف (الفرع أو المصنع). كامل: اللي ما انعدّ صفر. الصلاحية بتنفحص بـ submit_sauce_count. */
+export async function submitSauceCountAction(input: PackagingCountInput): Promise<PackagingCountResult> {
+  await requireStaff();
+  const parsed = packagingCountSchema.safeParse(input);
+  if (!parsed.success) return { status: "error", message: "في رقم مش منطقي. راجع الأرقام." };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("submit_sauce_count", {
+    p_lines: parsed.data.lines.map((l) => ({ product_id: l.productId, loose_pieces: l.qty })) as Json,
+    p_started_at: parsed.data.startedAt,
+  });
+  if (error) {
+    console.error("submitSauceCount", error);
+    return {
+      status: "error",
+      message:
+        error.code === "42501"
+          ? "ما إلك صلاحية تجرد الصوصات هون"
+          : error.hint === "stale_count"
+            ? "في جرد صوصات أحدث انحفظ. افتح الشاشة من جديد."
+            : "ما انحفظ الجرد. جرب كمان مرة.",
+    };
+  }
+  refresh();
+  return { status: "done", countId: data };
+}

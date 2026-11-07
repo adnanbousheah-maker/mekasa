@@ -33,7 +33,7 @@ async function Dispatch({ searchParams }: { searchParams: SearchParams }) {
   }
   const requestId = typeof requestParam === "string" && UUID.test(requestParam) ? requestParam : null;
   const [products, destinations, batches, piecesEnabled, docs] = await Promise.all([
-    allActiveProducts(),
+    allActiveProducts(["cake", "sauce"]),
     destinationsFrom(staff.location),
     factoryBatchStock(staff.location.id),
     factoryLoosePiecesEnabled(),

@@ -2,6 +2,7 @@ import { ProductName } from "@/components/ui/ProductName";
 import {
   setProductActiveAction,
   updateProductNameArAction,
+  updateProductNameEnAction,
   updateProductPiecesAction,
   updateProductShelfLifeAction,
   updateSettingAction,
@@ -62,7 +63,15 @@ export function ProductsTab({ products, defaultPieces, defaultShelfLife }: Props
             {products.map((p) => (
               <tr key={p.id} className={`border-t border-line-soft ${p.isActive ? "" : "bg-canvas"}`}>
                 <th scope="row" className="px-2 py-2 text-right font-semibold">
-                  <ProductName name={p.nameEn} />
+                  <span className="sr-only">
+                    <ProductName name={p.nameEn} />
+                  </span>
+                  <InlineField
+                    label={`اسم ${p.nameEn}`}
+                    initial={p.nameEn}
+                    onSave={updateProductNameEnAction.bind(null, p.id)}
+                    className="w-44 font-semibold"
+                  />
                 </th>
                 <td className="px-2 py-2">
                   <InlineField

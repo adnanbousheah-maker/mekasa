@@ -28,15 +28,22 @@ export function MonthlyCountBanner({ items }: { items: MonthlyCountDue[] }) {
           <span className="text-sm text-warn-text">عدّ كل شي، حتى اللي ما بتعدّه كل يوم.</span>
         )}
       </div>
-      {open.map((m) => (
-        <Link
-          key={m.id}
-          href={hrefOf(m)}
-          className="flex h-12 items-center justify-center rounded-xl bg-warn px-3 text-center text-[16px] font-semibold text-white"
-        >
-          جرد {whatOf(m)} · الساعة {formatScheduleTime(m.timeOfDay)}
-        </Link>
-      ))}
+      {open.flatMap((m) => {
+        const links = [{ key: m.id, href: hrefOf(m), what: whatOf(m) }];
+        // بالفروع والمصنع: الصوصات بجرد لحالها
+        if (m.scope === "stock" && m.locationKind !== "packaging") {
+          links.push({ key: `${m.id}-sauces`, href: "/count/sauces", what: "الصوصات" });
+        }
+        return links.map((l) => (
+          <Link
+            key={l.key}
+            href={l.href}
+            className="flex h-12 items-center justify-center rounded-xl bg-warn px-3 text-center text-[16px] font-semibold text-white"
+          >
+            جرد {l.what} · الساعة {formatScheduleTime(m.timeOfDay)}
+          </Link>
+        ));
+      })}
     </section>
   );
 }

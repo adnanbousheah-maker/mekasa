@@ -47,9 +47,21 @@ export function OrderForm({
   );
   const picked = products.filter((p) => rows[p.id].wholeCakes + rows[p.id].loosePieces > 0);
   const forgotten = forgottenItems(products, rows);
+  // التغليف والصوصات بالحبة
+  const byUnit = (p: OrderProduct) => packaging || p.kind === "sauce";
+  const pickedSauces = picked.filter((p) => p.kind === "sauce");
+  const sauceUnits = pickedSauces.reduce((n, p) => n + rows[p.id].loosePieces, 0);
   const summary = packaging
     ? `${picked.length} ${picked.length >= 3 && picked.length <= 10 ? "أصناف" : "صنف"} · ${picked.reduce((n, p) => n + rows[p.id].loosePieces, 0)} حبة`
-    : linesSummary(picked.map((p) => rows[p.id]));
+    : [
+        picked.length > pickedSauces.length || pickedSauces.length === 0
+          ? linesSummary(picked.filter((p) => p.kind !== "sauce").map((p) => rows[p.id]))
+          : "",
+        sauceUnits > 0 ? `${sauceUnits} حبة صوص` : "",
+      ]
+        .filter(Boolean)
+        .join(" · ");
+  const firstSauce = visible.find((p) => p.kind === "sauce")?.id;
   const update = (id: string, key: "wholeCakes" | "loosePieces", value: number) =>
     setRows((r) => ({ ...r, [id]: { ...r[id], [key]: value } }));
 
@@ -97,15 +109,20 @@ export function OrderForm({
         {visible.map((p) => {
           const row = rows[p.id];
           const active = row.wholeCakes + row.loosePieces > 0;
-          return (
+          const item = (
             <li
               key={p.id}
               aria-label={p.nameEn}
               className={`flex flex-col gap-2.5 rounded-2xl bg-surface p-3 ${active ? "border-2 border-ink" : "border border-line"}`}
             >
-              {packaging ? (
+              {byUnit(p) ? (
                 <div className="flex items-center justify-between gap-3">
-                  <ProductName name={p.nameEn} className="text-[17px] font-semibold" />
+                  <div className="flex flex-col">
+                    <ProductName name={p.nameEn} className="text-[17px] font-semibold" />
+                    {!packaging && (
+                      <span className="text-[13px] text-muted">عندك {Math.max(0, p.stockPieces)} حبة</span>
+                    )}
+                  </div>
                   <QuantityField
                     label={`عدد ${p.nameEn}`}
                     value={row.loosePieces}
@@ -151,6 +168,14 @@ export function OrderForm({
               )}
             </li>
           );
+          if (p.id !== firstSauce) return item;
+          return [
+            <li key="sauces-title" className="pt-3">
+              <h2 className="text-lg font-bold">الصوصات</h2>
+              <span className="text-[13px] text-muted">بتوصل مع الكيك، بالحبة</span>
+            </li>,
+            item,
+          ];
         })}
       </ul>
 
@@ -187,7 +212,7 @@ export function OrderForm({
                   {[
                     rows[p.id].wholeCakes ? countPhrase(rows[p.id].wholeCakes, "cake") : "",
                     rows[p.id].loosePieces
-                      ? packaging
+                      ? byUnit(p)
                         ? `${rows[p.id].loosePieces} حبة`
                         : countPhrase(rows[p.id].loosePieces, "piece")
                       : "",

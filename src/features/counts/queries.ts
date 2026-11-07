@@ -71,7 +71,9 @@ export async function getCountContext(): Promise<CountContext | null> {
   };
 }
 
-export async function listCountProducts(kind: "cake" | "packaging" = "cake"): Promise<CountProduct[]> {
+export async function listCountProducts(
+  kind: "cake" | "packaging" | "sauce" = "cake",
+): Promise<CountProduct[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_products")

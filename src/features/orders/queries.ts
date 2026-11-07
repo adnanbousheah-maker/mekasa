@@ -5,9 +5,12 @@ import { recentDates } from "@/lib/day-number";
 import { businessDate } from "@/lib/time";
 import { shiftDate, summarizeDay, type DaySummary } from "./day-summary";
 
+export type ProductKind = "cake" | "packaging" | "sauce";
+
 export interface OrderProduct {
   id: string;
   nameEn: string;
+  kind: ProductKind;
   piecesPerCake: number | null;
   stockPieces: number;
   parPieces: number | undefined;
@@ -33,6 +36,10 @@ async function products(supabase: Db) {
   }));
 }
 
+// الصوصات بعد الكيك دايماً
+const saucesLast = <T extends { kind: ProductKind }>(a: T, b: T) =>
+  Number(a.kind === "sauce") - Number(b.kind === "sauce");
+
 async function namesOf(supabase: Db, ids: string[]): Promise<Map<string, string>> {
   if (ids.length === 0) return new Map();
   const { data } = await supabase
@@ -45,7 +52,7 @@ async function namesOf(supabase: Db, ids: string[]): Promise<Map<string, string>
 /** الأصناف الفعّالة مع الموجود والحد المطلوب بفرع (للطلب وللإخراج). */
 export async function productsForBranch(
   branchId: string,
-  kind: "cake" | "packaging" = "cake",
+  kinds: ProductKind[] = ["cake"],
 ): Promise<OrderProduct[]> {
   await requireStaff();
   const supabase = await createClient();
@@ -56,10 +63,12 @@ export async function productsForBranch(
   if (error) throw new Error(`Could not load suggestions: ${error.message}`);
   const byId = new Map(data.map((s) => [s.product_id, s]));
   return all
-    .filter((p) => p.isActive && p.kind === kind)
+    .filter((p) => p.isActive && kinds.includes(p.kind))
+    .sort(saucesLast)
     .map((p) => ({
       id: p.id,
       nameEn: p.nameEn,
+      kind: p.kind,
       piecesPerCake: p.piecesPerCake,
       stockPieces: byId.get(p.id)?.stock_pieces ?? 0,
       parPieces: byId.get(p.id)?.par_pieces ?? undefined,
@@ -310,10 +319,10 @@ export async function factoryBatchStock(factoryId: string): Promise<FactoryBatch
   }));
 }
 
-export async function allActiveProducts(kind: "cake" | "packaging" = "cake") {
+export async function allActiveProducts(kinds: ProductKind[] = ["cake"]) {
   await requireStaff();
   const supabase = await createClient();
-  return (await products(supabase)).filter((p) => p.isActive && p.kind === kind);
+  return (await products(supabase)).filter((p) => p.isActive && kinds.includes(p.kind)).sort(saucesLast);
 }
 
 /** إعداد الأدمن: المصنع بيطلّع قطع ولا كيكات كاملة بس. */
@@ -461,7 +470,7 @@ export async function ordersOfDay(date: string): Promise<DaySummary> {
         qtyPieces: l.qty_pieces ?? 0,
       })),
     ),
-    all.filter((p) => p.kind === "cake"),
+    all.filter((p) => p.kind === "cake" || p.kind === "sauce"),
     requests.length,
   );
 }

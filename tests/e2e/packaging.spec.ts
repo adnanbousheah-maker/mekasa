@@ -19,7 +19,7 @@ test("the admin adds a packaging item in settings", async ({ browser }) => {
     await page.goto("/admin/settings?tab=packaging");
     await page.getByRole("textbox", { name: "اسم مادة التغليف" }).fill(name);
     await page.getByRole("button", { name: "+ مادة تغليف" }).click();
-    await expect(page.getByRole("status").filter({ hasText: `انضافت: ${name}` })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: `انضاف: ${name}` })).toBeVisible();
     await expect(page.getByRole("row", { name: new RegExp(name) })).toContainText("0 حبة");
     // ما بتطلع مع أصناف الكيك
     await page.goto("/admin/settings?tab=products");

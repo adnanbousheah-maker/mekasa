@@ -20,7 +20,7 @@ async function PackagingOrder() {
   if (staff.location?.kind !== "branch" || !staff.roles.includes("branch_staff")) {
     return <NotForYou title="طلب تغليف" text="طلب التغليف لموظفين الفروع." />;
   }
-  const products = await productsForBranch(staff.location.id, "packaging");
+  const products = await productsForBranch(staff.location.id, ["packaging"]);
   return (
     <StaffScreen>
       <ScreenHeader title="طلب تغليف" subtitle="اكتب عدد الحبات اللي بدك ياها من مستودع التغليف" />

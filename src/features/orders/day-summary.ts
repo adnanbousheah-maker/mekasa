@@ -11,6 +11,7 @@ export interface DayProduct {
   id: string;
   nameEn: string;
   piecesPerCake: number | null;
+  kind?: string;
 }
 
 export interface DaySummary {

@@ -3,7 +3,11 @@ import { ProductName } from "@/components/ui/ProductName";
 import { PrintButton } from "@/components/ui/PrintButton";
 import { formatLongDate } from "@/lib/time";
 import { formatQuantity } from "@/lib/units";
-import { shiftDate, type DaySummary } from "../day-summary";
+import { shiftDate, type DayProduct, type DaySummary } from "../day-summary";
+
+// الصوصات بالحبة
+const amount = (pieces: number, p: DayProduct) =>
+  p.kind === "sauce" ? `${pieces} حبة` : formatQuantity(pieces, p.piecesPerCake);
 
 type Props = { summary: DaySummary; date: string; today: string; basePath: string; exportHref?: string };
 
@@ -82,12 +86,12 @@ export function DaySummaryTable({ summary, date, today, basePath, exportHref }: 
                     const q = r.byBranch.get(b.id);
                     return (
                       <td key={b.id} className="px-3 py-2 text-center tabular-nums">
-                        {q ? formatQuantity(q, r.product.piecesPerCake) : "—"}
+                        {q ? amount(q, r.product) : "—"}
                       </td>
                     );
                   })}
                   <td className="bg-quiet px-3 py-2 text-center font-bold tabular-nums">
-                    {formatQuantity(r.total, r.product.piecesPerCake)}
+                    {amount(r.total, r.product)}
                   </td>
                 </tr>
               ))}

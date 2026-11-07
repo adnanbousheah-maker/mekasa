@@ -23,7 +23,7 @@ async function Order() {
     return <NotForYou title="طلب من المصنع" text="الطلب من المصنع لموظفين الفروع." />;
   }
   const [products, piecesEnabled] = await Promise.all([
-    productsForBranch(staff.location.id),
+    productsForBranch(staff.location.id, ["cake", "sauce"]),
     factoryLoosePiecesEnabled(),
   ]);
   // الطلبية بتوصل بكرا الصبح

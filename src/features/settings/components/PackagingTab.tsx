@@ -1,7 +1,8 @@
 import { ProductName } from "@/components/ui/ProductName";
-import { setProductActiveAction } from "../actions";
+import { setProductActiveAction, updateProductNameEnAction } from "../actions";
 import type { ProductRow } from "../queries";
-import { NewPackagingItem } from "./NewPackagingItem";
+import { InlineField } from "./InlineField";
+import { NewSimpleItem } from "./NewSimpleItem";
 import { SavedSwitch } from "./SavedSwitch";
 
 type Props = { items: ProductRow[]; stock: Map<string, number>; storeName: string | null };
@@ -16,7 +17,7 @@ export function PackagingTab({ items, stock, storeName }: Props) {
             ? `الفروع بتطلبها من ${storeName}، وأمين التغليف بيطلّعها وبيجرد المستودع. كلها بالحبة.`
             : "ما في مستودع تغليف فعّال."}
         </span>
-        <NewPackagingItem />
+        <NewSimpleItem kind="packaging" />
       </div>
       <div className="scroll-hint overflow-x-auto rounded-2xl border border-line bg-surface">
         <table className="w-full min-w-[480px] border-collapse text-sm">
@@ -44,7 +45,15 @@ export function PackagingTab({ items, stock, storeName }: Props) {
             {items.map((p) => (
               <tr key={p.id} className={`border-t border-line-soft ${p.isActive ? "" : "bg-canvas"}`}>
                 <th scope="row" className="px-3 py-2 text-right font-semibold">
-                  <ProductName name={p.nameEn} />
+                  <span className="sr-only">
+                    <ProductName name={p.nameEn} />
+                  </span>
+                  <InlineField
+                    label={`اسم ${p.nameEn}`}
+                    initial={p.nameEn}
+                    onSave={updateProductNameEnAction.bind(null, p.id)}
+                    className="w-56 font-semibold"
+                  />
                 </th>
                 <td className="px-2 py-2 text-center tabular-nums">{stock.get(p.id) ?? 0} حبة</td>
                 <td className="px-2 py-2 text-center">

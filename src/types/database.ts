@@ -1970,6 +1970,7 @@ export type Database = {
           method: Database["public"]["Enums"]["count_method"];
           photo_path: string | null;
           schedule_id: string | null;
+          scope: string;
           started_at: string;
           status: Database["public"]["Enums"]["count_status"];
         };
@@ -1986,6 +1987,7 @@ export type Database = {
           method: Database["public"]["Enums"]["count_method"];
           photo_path?: string | null;
           schedule_id?: string | null;
+          scope?: string;
           started_at?: string;
           status?: Database["public"]["Enums"]["count_status"];
         };
@@ -2001,6 +2003,7 @@ export type Database = {
           method?: Database["public"]["Enums"]["count_method"];
           photo_path?: string | null;
           schedule_id?: string | null;
+          scope?: string;
           started_at?: string;
           status?: Database["public"]["Enums"]["count_status"];
         };
@@ -2702,6 +2705,7 @@ export type Database = {
           method: Database["public"]["Enums"]["count_method"] | null;
           photo_path: string | null;
           schedule_time: string | null;
+          scope: string | null;
           staff_corrected_lines: number | null;
           started_at: string | null;
         };
@@ -3247,6 +3251,7 @@ export type Database = {
         Returns: string;
       };
       submit_raw_count: { Args: { p_lines: Json; p_started_at?: string }; Returns: string };
+      submit_sauce_count: { Args: { p_lines: Json; p_started_at?: string }; Returns: string };
     };
     Enums: {
       ai_feature: "count_ocr" | "assistant";
@@ -3277,7 +3282,7 @@ export type Database = {
         | "monthly_count_late"
         | "monthly_raw_reminder"
         | "monthly_raw_late";
-      product_kind: "cake" | "packaging";
+      product_kind: "cake" | "packaging" | "sauce";
       raw_movement_type: "opening_balance" | "receipt" | "issue" | "count_adjustment" | "admin_correction";
       request_status: "pending_approval" | "sent" | "dispatched" | "received" | "cancelled";
       sell_mode: "whole_and_pieces" | "pieces_only";
@@ -3422,7 +3427,7 @@ export const Constants = {
         "monthly_raw_reminder",
         "monthly_raw_late",
       ],
-      product_kind: ["cake", "packaging"],
+      product_kind: ["cake", "packaging", "sauce"],
       raw_movement_type: ["opening_balance", "receipt", "issue", "count_adjustment", "admin_correction"],
       request_status: ["pending_approval", "sent", "dispatched", "received", "cancelled"],
       sell_mode: ["whole_and_pieces", "pieces_only"],

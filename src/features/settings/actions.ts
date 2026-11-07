@@ -65,6 +65,16 @@ export async function updateSettingAction(key: string, value: string | boolean):
   return done;
 }
 
+/** الاسم الأساسي (بالإنجليزي متل المنيو، أو أي اسم للتغليف والصوصات). لازم ما يتكرر. */
+export async function updateProductNameEnAction(productId: string, value: string): Promise<SaveResult> {
+  await requireAdmin();
+  if (!idSchema.safeParse(productId).success) return fail("الصنف مش موجود");
+  const name = itemNameSchema.safeParse(value);
+  if (!name.success) return fail(firstIssue(name.error));
+
+  return updateProduct(productId, { name_en: name.data });
+}
+
 export async function updateProductNameArAction(productId: string, value: string): Promise<SaveResult> {
   await requireAdmin();
   if (!idSchema.safeParse(productId).success) return fail("الصنف مش موجود");
@@ -104,6 +114,7 @@ export async function setProductActiveAction(productId: string, active: boolean)
 async function updateProduct(
   productId: string,
   changes: {
+    name_en?: string;
     name_ar?: string | null;
     pieces_per_cake?: number | null;
     is_active?: boolean;
@@ -119,7 +130,8 @@ async function updateProduct(
     .maybeSingle();
   if (error) {
     console.error("updateProduct", error);
-    // pieces_only_has_no_cake_size
+    // pieces_only_has_no_cake_size، أو اسم مكرر
+    if (error.code === "23505") return fail("في صنف بنفس الاسم");
     return fail(error.code === "23514" ? "هالصنف بينباع قطع بس" : SAVE_FAILED);
   }
   if (!data) return fail("الصنف مش موجود");
@@ -169,13 +181,13 @@ export async function createProductAction(
   return { status: "created" };
 }
 
-/** موعد جديد، أو رجعة موعد انشال قبل (الصف نفسه بيرجع فعّال). */
-const packagingNameSchema = z.string().trim().min(1, "اكتب اسم المادة").max(80, "الاسم طويل كثير");
+const itemNameSchema = z.string().trim().min(1, "اكتب الاسم").max(80, "الاسم طويل كثير");
 
-/** مادة تغليف جديدة: بتنعد بالحبة، وبآخر قائمة التغليف. */
-export async function createPackagingItemAction(name: string): Promise<SaveResult> {
+/** مادة تغليف أو صوص جديد: بالحبة، وبآخر القائمة. */
+export async function createSimpleItemAction(kind: "packaging" | "sauce", name: string): Promise<SaveResult> {
   await requireAdmin();
-  const parsed = packagingNameSchema.safeParse(name);
+  if (kind !== "packaging" && kind !== "sauce") return fail("القيمة مش صحيحة");
+  const parsed = itemNameSchema.safeParse(name);
   if (!parsed.success) return fail(firstIssue(parsed.error));
 
   const supabase = await createClient();
@@ -186,23 +198,24 @@ export async function createPackagingItemAction(name: string): Promise<SaveResul
     .limit(1)
     .maybeSingle();
   if (readError) {
-    console.error("createPackagingItem: sort order", readError);
+    console.error("createSimpleItem: sort order", readError);
     return fail(SAVE_FAILED);
   }
   const { error } = await supabase.from("products").insert({
     name_en: parsed.data,
     sell_mode: "pieces_only",
-    kind: "packaging",
+    kind,
     sort_order: (last?.sort_order ?? 0) + 1,
   });
   if (error) {
-    console.error("createPackagingItem", error);
+    console.error("createSimpleItem", kind, error);
     return fail(error.code === "23505" ? "في صنف بنفس الاسم" : SAVE_FAILED);
   }
   refresh();
   return done;
 }
 
+/** موعد جديد، أو رجعة موعد انشال قبل (الصف نفسه بيرجع فعّال). */
 export async function addScheduleTimeAction(locationId: string, time: string): Promise<SaveResult> {
   await requireAdmin();
   if (!idSchema.safeParse(locationId).success) return fail("الموقع مش موجود");

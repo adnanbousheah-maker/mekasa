@@ -4,6 +4,7 @@ import { GeneralTab } from "@/features/settings/components/GeneralTab";
 import { PackagingTab } from "@/features/settings/components/PackagingTab";
 import { ParTab } from "@/features/settings/components/ParTab";
 import { ProductsTab } from "@/features/settings/components/ProductsTab";
+import { SaucesTab } from "@/features/settings/components/SaucesTab";
 import { listReportProducts, minLevels, parLevels, stockByProduct } from "@/features/reports/queries";
 import { MonthlyCountsCard } from "@/features/settings/components/MonthlyCountsCard";
 import { ScheduleCard } from "@/features/settings/components/ScheduleCard";
@@ -19,6 +20,7 @@ import {
 const TABS = [
   { id: "products", label: "الأصناف" },
   { id: "par", label: "الحد المطلوب والأدنى" },
+  { id: "sauces", label: "الصوصات" },
   { id: "packaging", label: "التغليف" },
   { id: "schedule", label: "مواعيد الجرد" },
   { id: "general", label: "عام" },
@@ -126,6 +128,8 @@ async function TabContent({ tab, loc }: { tab: TabId; loc: string | null }) {
   }
 
   if (tab === "general") return <GeneralTab settings={await getSettings()} />;
+
+  if (tab === "sauces") return <SaucesTab items={await listProducts("sauce")} />;
 
   if (tab === "packaging") {
     const [items, store] = await Promise.all([listProducts("packaging"), packagingStore()]);

@@ -23,6 +23,8 @@ export interface DispatchProduct {
   id: string;
   nameEn: string;
   piecesPerCake: number | null;
+  // الصوصات بتطلع من المصنع بالحبة، بدون دفعات
+  kind?: "cake" | "packaging" | "sauce";
 }
 
 export interface DispatchLineInit {
@@ -77,6 +79,9 @@ export function DispatchForm({
   const [error, setError] = useState<string | null>(null);
   const [isSaving, startTransition] = useTransition();
   const isFactory = batches !== null;
+  const isSauce = (productId: string) => byId.get(productId)?.kind === "sauce";
+  // الكيك بالمصنع بس إله دفعات
+  const hasBatches = (l: Line) => isFactory && !isSauce(l.productId);
 
   const pieces = (l: Line) => l.wholeCakes * (byId.get(l.productId)?.piecesPerCake ?? 0) + l.loosePieces;
   const batchesOf = (productId: string) =>
@@ -143,7 +148,7 @@ export function DispatchForm({
           loosePieces: l.loosePieces,
           requestLineId: l.requestLineId,
           batches:
-            isFactory && l.firstDate
+            hasBatches(l) && l.firstDate
               ? allocationOf(l).allocations.map((a) => ({ productionDate: a.productionDate, qty: a.qty }))
               : undefined,
         })),
@@ -158,15 +163,23 @@ export function DispatchForm({
     });
 
   const confirm = () => {
-    if (isFactory && lines.some((l) => pieces(l) > 0 && allocationOf(l).override)) setFefoAlert(true);
+    if (lines.some((l) => hasBatches(l) && pieces(l) > 0 && allocationOf(l).override)) setFefoAlert(true);
     else submit(false);
   };
 
-  const overridden = lines.find((l) => pieces(l) > 0 && allocationOf(l).override);
+  const overridden = lines.find((l) => hasBatches(l) && pieces(l) > 0 && allocationOf(l).override);
   const overriddenOldest = overridden
     ? fefoAllocate(batchesOf(overridden.productId), pieces(overridden)).allocations[0]
     : null;
-  const shortLines = isFactory ? lines.filter((l) => pieces(l) > 0 && allocationOf(l).short > 0) : [];
+  const shortLines = lines.filter((l) => hasBatches(l) && pieces(l) > 0 && allocationOf(l).short > 0);
+  const sauceUnits = lines.filter((l) => isSauce(l.productId)).reduce((n, l) => n + l.loosePieces, 0);
+  const cakeLines = lines.filter((l) => !isSauce(l.productId));
+  const summary = [
+    cakeLines.some((l) => pieces(l) > 0) || sauceUnits === 0 ? linesSummary(cakeLines, packaging) : "",
+    sauceUnits > 0 ? `${sauceUnits} حبة صوص` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const notAdded = products.filter((p) => !lines.some((l) => l.productId === p.id));
 
   return (
@@ -210,6 +223,7 @@ export function DispatchForm({
         {lines.map((l) => {
           const p = byId.get(l.productId);
           if (!p) return null;
+          const byUnit = packaging || p.kind === "sauce";
           const qty = pieces(l);
           const tag = requestVsDispatch(
             l.requestedPieces === null ? (requestId ? 0 : null) : l.requestedPieces,
@@ -235,9 +249,7 @@ export function DispatchForm({
               {l.requestedPieces !== null && (
                 <span className="text-[13px] text-muted">
                   طلبوا:{" "}
-                  {packaging
-                    ? `${l.requestedPieces} حبة`
-                    : formatQuantity(l.requestedPieces, p.piecesPerCake)}
+                  {byUnit ? `${l.requestedPieces} حبة` : formatQuantity(l.requestedPieces, p.piecesPerCake)}
                 </span>
               )}
               <div
@@ -254,8 +266,8 @@ export function DispatchForm({
                 )}
                 {(p.piecesPerCake === null || !cakesOnly) && (
                   <Stepper
-                    label={packaging ? "حبات" : "قطع"}
-                    typed={packaging}
+                    label={byUnit ? "حبات" : "قطع"}
+                    typed={byUnit}
                     value={l.loosePieces}
                     onChange={(v) => update(l.productId, { loosePieces: v })}
                     incrementLabel={`زيد قطعة ${p.nameEn}`}
@@ -263,7 +275,7 @@ export function DispatchForm({
                   />
                 )}
               </div>
-              {isFactory &&
+              {hasBatches(l) &&
                 (stock.length === 0 ? (
                   <span className="text-[13px] font-semibold text-danger-text">
                     ما في ستوك من هالصنف بالمصنع
@@ -340,7 +352,7 @@ export function DispatchForm({
               {error}
             </p>
           )}
-          <span className="text-center text-sm text-muted">{linesSummary(lines, packaging)}</span>
+          <span className="text-center text-sm text-muted">{summary}</span>
           <button
             type="button"
             disabled={

@@ -18,6 +18,7 @@ export function RoundForm({
   requests,
   batches,
   sizes,
+  sauces = [],
   cakesOnly = false,
 }: {
   requests: RequestDoc[];
@@ -26,7 +27,10 @@ export function RoundForm({
   cakesOnly?: boolean;
   // عدد القطع بالكيكة هلا (نفس اللي dispatch_round بتحسب فيه)، مش وقت الطلب
   sizes: Record<string, number | null>;
+  // الصوصات بتطلع بالحبة، بدون دفعات
+  sauces?: string[];
 }) {
+  const isSauce = (productId: string) => sauces.includes(productId);
   const router = useRouter();
   const [qty, setQty] = useState<Record<string, Qty>>(() =>
     Object.fromEntries(
@@ -51,7 +55,7 @@ export function RoundForm({
   const productIds = [...new Set(requests.flatMap((r) => r.lines.map((l) => l.productId)))];
   const allocation = new Map<string, { productionDate: string; qty: number }[]>();
   const short = new Map<string, number>();
-  for (const productId of productIds) {
+  for (const productId of productIds.filter((id) => !isSauce(id))) {
     const ppc = productId in sizes ? sizes[productId] : null;
     const productBatches = batches.filter((b) => b.productId === productId);
     const { byLine, short: missing } = fairAllocate(
@@ -118,12 +122,13 @@ export function RoundForm({
               const q = qty[key] ?? { wholeCakes: 0, loosePieces: 0 };
               const set = (patch: Partial<Qty>) => setQty((all) => ({ ...all, [key]: { ...q, ...patch } }));
               const parts = allocation.get(key) ?? [];
+              const sauce = isSauce(l.productId);
               return (
                 <div key={l.productId} className="flex flex-col gap-2 border-t border-line-soft pt-3">
                   <div className="flex items-center justify-between gap-2">
                     <ProductName name={l.productName} className="font-semibold" />
                     <span className="text-[13px] text-muted">
-                      طلبوا {formatQuantity(l.qtyPieces, l.piecesPerCake)}
+                      طلبوا {sauce ? `${l.qtyPieces} حبة` : formatQuantity(l.qtyPieces, l.piecesPerCake)}
                     </span>
                   </div>
                   <div
@@ -140,7 +145,8 @@ export function RoundForm({
                     )}
                     {(l.piecesPerCake === null || !cakesOnly) && (
                       <Stepper
-                        label="قطع"
+                        label={sauce ? "حبات" : "قطع"}
+                        typed={sauce}
                         value={q.loosePieces}
                         onChange={(v) => set({ loosePieces: v })}
                         incrementLabel={`زيد قطعة ${l.productName} لـ${r.fromName}`}

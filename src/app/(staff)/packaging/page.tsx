@@ -41,7 +41,7 @@ async function Packaging({ searchParams }: { searchParams: SearchParams }) {
   const [{ requests }, { dispatches }, items, stock, low] = await Promise.all([
     loadDocuments({ requests: { supplyingLocationId: store.id, statuses: ["sent"] }, sinceDays: 14 }),
     loadDocuments({ dispatches: { fromLocationId: store.id, statuses: ["in_transit"] }, sinceDays: 14 }),
-    allActiveProducts("packaging"),
+    allActiveProducts(["packaging"]),
     packagingStock(store.id),
     packagingBelowMin(store.id),
   ]);

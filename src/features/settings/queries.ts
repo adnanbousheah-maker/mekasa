@@ -33,7 +33,7 @@ export async function getSettings(): Promise<AppSettings> {
 }
 
 /** كل الأصناف، حتى الموقوفة، بترتيب المنيو. */
-export async function listProducts(kind: "cake" | "packaging" = "cake"): Promise<ProductRow[]> {
+export async function listProducts(kind: "cake" | "packaging" | "sauce" = "cake"): Promise<ProductRow[]> {
   await requireAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase

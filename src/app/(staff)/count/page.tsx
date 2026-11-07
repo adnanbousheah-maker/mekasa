@@ -42,6 +42,7 @@ async function Count() {
           scheduleId={slot?.scheduleId ?? null}
           startedAt={now.toISOString()}
         />
+        <SauceCountLink />
       </StaffScreen>
     );
   }
@@ -107,6 +108,19 @@ async function Count() {
           <span className="text-[15px] leading-relaxed text-muted">اكتب العدد لكل صنف مباشرة على الجوال</span>
         </div>
       </Link>
+      <SauceCountLink />
     </StaffScreen>
+  );
+}
+
+/** جرد الصوصات لحاله (آخر الشهر)، بالحبة. */
+function SauceCountLink() {
+  return (
+    <Link
+      href="/count/sauces"
+      className="flex h-12 items-center justify-center rounded-xl border border-line-strong bg-surface text-[15px]"
+    >
+      جرد الصوصات (آخر الشهر)
+    </Link>
   );
 }

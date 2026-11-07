@@ -331,7 +331,7 @@ export function moreAssistantTools(db: Db, now: Date) {
           .map(({ w, loc, prod }) => ({
             place: loc?.name,
             product: prod?.name,
-            quantity: qty(w.qty_pieces ?? 0, prod?.ppc ?? null, prod?.kind === "packaging"),
+            quantity: qty(w.qty_pieces ?? 0, prod?.ppc ?? null, (prod?.kind ?? "cake") !== "cake"),
             reason: REASON[w.reason] ?? w.reason,
             note: w.reason_note,
             by: names.get(w.recorded_by) ?? null,
@@ -516,9 +516,11 @@ export function moreAssistantTools(db: Db, now: Date) {
               .filter(({ p }) => matches(p?.name, product) || matches(p?.nameAr, product))
               .map(({ v, p }) => ({
                 product: p?.name,
-                par: v.par_pieces ? qty(v.par_pieces, p?.ppc ?? null, p?.kind === "packaging") : null,
+                par: v.par_pieces ? qty(v.par_pieces, p?.ppc ?? null, (p?.kind ?? "cake") !== "cake") : null,
                 min:
-                  v.min_pieces === null ? null : qty(v.min_pieces, p?.ppc ?? null, p?.kind === "packaging"),
+                  v.min_pieces === null
+                    ? null
+                    : qty(v.min_pieces, p?.ppc ?? null, (p?.kind ?? "cake") !== "cake"),
               })),
           })),
           source: "الإعدادات",
@@ -664,8 +666,8 @@ export function moreAssistantTools(db: Db, now: Date) {
             return {
               place: name(b.location_id),
               product: p?.name,
-              have: qty(b.qty_pieces ?? 0, p?.ppc ?? null, p?.kind === "packaging"),
-              min: qty(b.min_pieces ?? 0, p?.ppc ?? null, p?.kind === "packaging"),
+              have: qty(b.qty_pieces ?? 0, p?.ppc ?? null, (p?.kind ?? "cake") !== "cake"),
+              min: qty(b.min_pieces ?? 0, p?.ppc ?? null, (p?.kind ?? "cake") !== "cake"),
             };
           }),
           source: `وضع ${formatLongDate(businessDate(now))} ${formatClock(now)}`,

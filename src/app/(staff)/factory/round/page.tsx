@@ -33,7 +33,7 @@ async function Round() {
       sinceDays: 14,
     }),
     factoryBatchStock(staff.location.id),
-    allActiveProducts(),
+    allActiveProducts(["cake", "sauce"]),
     factoryLoosePiecesEnabled(),
   ]);
   const sizes = Object.fromEntries(products.map((p) => [p.id, p.piecesPerCake]));
@@ -51,6 +51,7 @@ async function Round() {
           requests={[...requests].reverse()}
           batches={batches}
           sizes={sizes}
+          sauces={products.filter((p) => p.kind === "sauce").map((p) => p.id)}
           cakesOnly={!piecesEnabled}
         />
       )}
