@@ -6,6 +6,8 @@ import { ParTab } from "@/features/settings/components/ParTab";
 import { ProductsTab } from "@/features/settings/components/ProductsTab";
 import { SaucesTab } from "@/features/settings/components/SaucesTab";
 import { ListsTab } from "@/features/lists/components/ListsTab";
+import { TasksTab } from "@/features/tasks/components/TasksTab";
+import { listTemplates, taskLocations } from "@/features/tasks/queries";
 import { categoryChoices, listLists, listOptions } from "@/features/lists/queries";
 import { listReportProducts, minLevels, parLevels, stockByProduct } from "@/features/reports/queries";
 import { MonthlyCountsCard } from "@/features/settings/components/MonthlyCountsCard";
@@ -26,6 +28,7 @@ const TABS = [
   { id: "lists", label: "القوائم والتصنيفات" },
   { id: "packaging", label: "التغليف" },
   { id: "schedule", label: "مواعيد الجرد" },
+  { id: "tasks", label: "المهام المتكررة" },
   { id: "general", label: "عام" },
 ] as const;
 
@@ -129,6 +132,11 @@ async function TabContent({ tab, loc, list }: { tab: TabId; loc: string | null; 
         <MonthlyCountsCard rows={monthly} />
       </div>
     );
+  }
+
+  if (tab === "tasks") {
+    const [templates, locations] = await Promise.all([listTemplates(), taskLocations()]);
+    return <TasksTab templates={templates} locations={locations} />;
   }
 
   if (tab === "general") return <GeneralTab settings={await getSettings()} />;

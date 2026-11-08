@@ -6,6 +6,7 @@ import { NotificationBell } from "@/features/notifications/components/Notificati
 import { branchHomeData, factoryHomeData } from "@/features/home/queries";
 import { isPackagingKeeper, packagingStore, pendingPackagingRequests } from "@/features/packaging/queries";
 import { getMonthlyCountsDue, getOpenSlot } from "@/features/reminders/queries";
+import { myTasksToday } from "@/features/tasks/queries";
 
 export default function HomePage() {
   // قراءة الجلسة لازم تكون جوا Suspense (cacheComponents)
@@ -21,12 +22,13 @@ async function Home() {
   if (staff.roles.includes("admin") || staff.roles.includes("general_manager")) redirect("/admin");
   const counts = staff.roles.includes("branch_staff") || staff.roles.includes("storekeeper");
   const location = staff.location;
-  const [slot, monthly, branch, factory, packaging] = await Promise.all([
+  const [slot, monthly, branch, factory, packaging, tasks] = await Promise.all([
     location && counts ? getOpenSlot(location.id) : null,
     getMonthlyCountsDue(staff.roles),
     location?.kind === "branch" ? branchHomeData(location.id) : null,
     location?.kind === "factory" ? factoryHomeData(location.id) : null,
     isPackagingKeeper(staff) ? packagingHome() : null,
+    myTasksToday(staff),
   ]);
   return (
     <StaffHome
@@ -37,6 +39,11 @@ async function Home() {
       branch={branch}
       factory={factory}
       packaging={packaging}
+      tasks={{
+        total: tasks.length,
+        done: tasks.filter((t) => t.status === "done").length,
+        late: tasks.filter((t) => t.status === "late").length,
+      }}
       vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null}
       bell={
         <Suspense fallback={null}>

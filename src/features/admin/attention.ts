@@ -19,6 +19,7 @@ import {
 import { lateLabel } from "@/features/reminders/slots";
 import { formatScheduleTime } from "@/features/settings/schemas";
 import { listStaff } from "@/features/staff/queries";
+import { allTasksToday } from "@/features/tasks/queries";
 import { requireManager } from "@/features/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { businessDate, formatClock, formatLongDate } from "@/lib/time";
@@ -27,7 +28,7 @@ import { formatQuantityCompact } from "@/lib/units";
 // "لازم تتصرف": كل الشي العالق بالنظام بقائمة وحدة، مرتبة حسب الخطورة.
 // نفس القائمة بالنظرة العامة، وبصفحة /admin/attention، والأرقام جنب القائمة الجانبية.
 
-export type AttentionArea = "orders" | "counts" | "stock" | "factory" | "raw" | "staff";
+export type AttentionArea = "orders" | "counts" | "tasks" | "stock" | "factory" | "raw" | "staff";
 export type Alert = {
   area: AttentionArea;
   tone: "danger" | "warn" | "info";
@@ -40,6 +41,7 @@ export type Alert = {
 export const AREA_LABELS: Record<AttentionArea, string> = {
   orders: "الطلب والإخراج",
   counts: "الجرودات",
+  tasks: "المهام المتكررة",
   stock: "الستوك",
   factory: "المصنع والدفعات",
   raw: "المواد الأولية",
@@ -75,6 +77,7 @@ export const loadOverviewData = cache(async () => {
     raw,
     belowMin,
     staff,
+    tasks,
   ] = await Promise.all([
     listReportLocations(),
     listReportProducts(),
@@ -90,6 +93,7 @@ export const loadOverviewData = cache(async () => {
     listRawMaterials(),
     belowMinByLocation(),
     listStaff(),
+    allTasksToday(),
   ]);
   return {
     now,
@@ -108,6 +112,7 @@ export const loadOverviewData = cache(async () => {
     raw,
     belowMin,
     staff,
+    tasks,
   };
 });
 
@@ -216,6 +221,21 @@ export function buildAlerts(data: OverviewData): Alert[] {
         href: `/admin/counts/${c.id}`,
       });
     }
+  }
+  const lateTasks = data.tasks.filter((t) => t.status === "late");
+  for (const locationId of new Set(lateTasks.map((t) => t.locationId))) {
+    const late = lateTasks.filter((t) => t.locationId === locationId);
+    alerts.push({
+      area: "tasks",
+      tone: "warn",
+      title:
+        late.length === 1
+          ? `مهمة "${late[0].title}" متأخرة بـ${late[0].locationName}`
+          : `${late.length} مهام متأخرة بـ${late[0].locationName}`,
+      sub: late.map((t) => `${t.title} (قبل ${t.dueTime})`).join(" · "),
+      action: "شوف",
+      href: "/admin/tasks",
+    });
   }
   for (const loc of belowMin) {
     const n = loc.items.length;

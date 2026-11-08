@@ -18,6 +18,7 @@ import type { BranchHomeData, FactoryHomeData } from "../queries";
 import {
   BoxIcon,
   CartIcon,
+  CheckListIcon,
   ClipboardIcon,
   ListIcon,
   OvenIcon,
@@ -40,6 +41,8 @@ type Props = {
   factory?: FactoryHomeData | null;
   // أمين التغليف (بأي موقع)
   packaging?: { storeName: string; pending: number } | null;
+  // المهام المتكررة لليوم (تنظيف، فحص حرارة…)
+  tasks?: { total: number; done: number; late: number } | null;
 };
 
 /** الرئيسية للفرع (design/branch/Main) وللمصنع (design/factory/FactoryHome). */
@@ -52,6 +55,7 @@ export function StaffHome({
   branch = null,
   factory = null,
   packaging = null,
+  tasks = null,
   bell = null,
 }: Props) {
   const today = businessDate(now);
@@ -93,15 +97,46 @@ export function StaffHome({
 
       {slot && <CountReminder slot={slot} now={now} />}
       {monthly.length > 0 && <MonthlyCountBanner items={monthly} />}
+      {tasks && tasks.total > 0 && <TodayTasksLink {...tasks} />}
 
       {atFactory && <FactoryTasks staff={staff} data={factory} />}
       {atBranch && <BranchTasks data={branch} />}
+      {atBranch && staff.roles.includes("branch_manager") && (
+        <Link
+          href="/branch"
+          className="flex h-14 items-center justify-center gap-2 rounded-[14px] border border-line bg-surface text-base font-semibold"
+        >
+          تقرير الفرع
+        </Link>
+      )}
       {packaging && <PackagingTasks data={packaging} showTitle={staff.location?.kind !== "packaging"} />}
 
       <div className="grow" />
       <EnableNotifications vapidPublicKey={vapidPublicKey} />
       <LogoutButton className="self-center" />
     </main>
+  );
+}
+
+function TodayTasksLink({ total, done, late }: { total: number; done: number; late: number }) {
+  const description =
+    done === total
+      ? "خلصت كلها ✓"
+      : late > 0
+        ? `${done} من ${total} · ${late} متأخرة`
+        : `${done} من ${total}`;
+  return (
+    <TaskLink
+      href="/tasks"
+      title="مهام اليوم"
+      description={description}
+      icon={
+        <span className={late > 0 ? "text-danger" : done === total ? "text-ok" : ""}>
+          <CheckListIcon />
+        </span>
+      }
+      aside={<Badge n={total - done} />}
+    />
   );
 }
 

@@ -5,7 +5,7 @@ import { ProductName } from "@/components/ui/ProductName";
 import { ExportButton, PageHeader } from "@/features/admin/components/AdminBits";
 import { requireManager } from "@/features/auth/session";
 import { addDays } from "@/features/reports/format";
-import { managementReport, totals, type LocationKpis } from "@/features/reports/kpis";
+import { managementReport, tasksReport, totals, type LocationKpis } from "@/features/reports/kpis";
 import { DailyColumns, Delta, StatTile, num } from "@/features/reports/components/ReportBits";
 import { PERIOD_LABELS, PERIOD_PRESETS, resolvePeriod, wasteShare } from "@/features/reports/period";
 import { countDay, formatLongDate } from "@/lib/time";
@@ -30,7 +30,14 @@ async function Reports({ searchParams }: { searchParams: SearchParams }) {
   await requireManager();
   const today = countDay(new Date());
   const period = resolvePeriod(today, one(params.p), one(params.from), one(params.to));
-  const report = await managementReport(period);
+  const [report, tasks] = await Promise.all([managementReport(period), tasksReport(period)]);
+  const taskSum = (rows: typeof tasks.now) => ({
+    expected: rows.reduce((s, r) => s + r.expected, 0),
+    onTime: rows.reduce((s, r) => s + r.onTime, 0),
+    done: rows.reduce((s, r) => s + r.done, 0),
+  });
+  const tasksNow = taskSum(tasks.now);
+  const tasksBefore = taskSum(tasks.before);
   const now = totals(report.locations);
   const before = totals(report.previous);
   const branches = report.locations.filter((l) => l.kind === "branch");
@@ -150,6 +157,13 @@ async function Reports({ searchParams }: { searchParams: SearchParams }) {
           value={onTimeNow === null ? "—" : `${onTimeNow}%`}
           note={`${now.countsOnTime} بوقته من ${now.countsExpected} موعد · قبل: ${onTimeBefore ?? "—"}%`}
         />
+        {(tasksNow.expected > 0 || tasksBefore.expected > 0) && (
+          <StatTile
+            label="المهام المتكررة بوقتها"
+            value={tasksNow.expected ? `${pct(tasksNow.onTime, tasksNow.expected)}%` : "—"}
+            note={`${tasksNow.onTime} بوقتها · ${tasksNow.done} انعملت من ${tasksNow.expected} · قبل: ${pct(tasksBefore.onTime, tasksBefore.expected) ?? "—"}%`}
+          />
+        )}
         <StatTile
           label="فروقات الاستلام"
           value={String(now.receiptDiffs)}

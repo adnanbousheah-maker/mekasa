@@ -1,8 +1,7 @@
 import "server-only";
-import { requireManager } from "@/features/auth/session";
+import { requireManager, requireStaff } from "@/features/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import type { Period } from "./period";
-import { listReportLocations, listReportProducts } from "./queries";
 
 // تقارير الإدارة بالكميات (report_locations / report_products / report_daily).
 
@@ -107,10 +106,68 @@ async function productsFor(
 /** التقرير للفترة، ونفس الأرقام للفترة اللي قبلها للمقارنة. */
 export async function managementReport(period: Period): Promise<ManagementReport> {
   await requireManager();
+  return buildReport(period, null);
+}
+
+export interface TaskKpis {
+  locationId: string;
+  expected: number;
+  done: number;
+  onTime: number;
+}
+
+async function tasksFor(supabase: Db, from: string, to: string): Promise<TaskKpis[]> {
+  const { data, error } = await supabase.rpc("report_tasks", { p_from: from, p_to: to });
+  if (error) throw new Error(`Could not load the task report: ${error.message}`);
+  return data.map((r) => ({
+    locationId: r.location_id,
+    expected: r.expected,
+    done: r.done,
+    onTime: r.on_time,
+  }));
+}
+
+/** الالتزام بالمهام المتكررة لكل موقع (RLS بتحدد المواقع)، والفترة اللي قبل. */
+export async function tasksReport(period: Period): Promise<{ now: TaskKpis[]; before: TaskKpis[] }> {
+  await requireStaff();
   const supabase = await createClient();
-  const [locations, products] = await Promise.all([listReportLocations(), listReportProducts()]);
-  const names = new Map(locations.map((l) => [l.id, { name: l.name, kind: l.kind }]));
-  const productInfo = new Map(products.map((p) => [p.id, { name: p.nameEn, ppc: p.piecesPerCake }]));
+  const [now, before] = await Promise.all([
+    tasksFor(supabase, period.from, period.to),
+    tasksFor(supabase, period.previous.from, period.previous.to),
+  ]);
+  return { now, before };
+}
+
+/** تقرير فرع مسؤول الفرع (نفس الأرقام، لفرعه بس). null إذا مش مسؤول فرع. */
+export async function branchReport(period: Period): Promise<ManagementReport | null> {
+  const staff = await requireStaff();
+  if (!staff.roles.includes("branch_manager") || staff.location?.kind !== "branch") return null;
+  return buildReport(period, staff.location.id);
+}
+
+// الصلاحية عند اللي بينادي (managementReport / branchReport)
+async function buildReport(period: Period, onlyLocation: string | null): Promise<ManagementReport> {
+  const supabase = await createClient();
+  const [locationRows, productRows] = await Promise.all([
+    supabase
+      .from("locations")
+      .select("id, name, kind")
+      .in("kind", ["factory", "branch"])
+      .eq("is_active", true)
+      .order("sort_order"),
+    supabase
+      .from("v_products")
+      .select("id, name_en, effective_pieces_per_cake")
+      .eq("kind", "cake")
+      .order("sort_order"),
+  ]);
+  if (locationRows.error) throw new Error(`Could not load locations: ${locationRows.error.message}`);
+  if (productRows.error) throw new Error(`Could not load products: ${productRows.error.message}`);
+  const locations = locationRows.data.filter((l) => !onlyLocation || l.id === onlyLocation);
+  const names = new Map(locations.map((l) => [l.id, { name: l.name, kind: l.kind as "factory" | "branch" }]));
+  const productInfo = new Map(
+    productRows.data.map((p) => [p.id!, { name: p.name_en!, ppc: p.effective_pieces_per_cake }]),
+  );
 
   const [current, previous, currentProducts, previousProducts, daily] = await Promise.all([
     locationsFor(supabase, period.from, period.to, names),
@@ -126,12 +183,14 @@ export async function managementReport(period: Period): Promise<ManagementReport
     previous,
     products: currentProducts,
     previousProducts,
-    daily: daily.data.map((d) => ({
-      day: d.day,
-      locationId: d.location_id,
-      consumedCakes: Number(d.consumed_cakes),
-      wasteCakes: Number(d.waste_cakes),
-    })),
+    daily: daily.data
+      .filter((d) => names.has(d.location_id))
+      .map((d) => ({
+        day: d.day,
+        locationId: d.location_id,
+        consumedCakes: Number(d.consumed_cakes),
+        wasteCakes: Number(d.waste_cakes),
+      })),
   };
 }
 

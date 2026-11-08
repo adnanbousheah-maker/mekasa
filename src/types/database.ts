@@ -200,6 +200,13 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "alert_log_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
+          {
             foreignKeyName: "alert_log_product_id_fkey";
             columns: ["product_id"];
             isOneToOne: false;
@@ -457,6 +464,13 @@ export type Database = {
             referencedRelation: "locations";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "count_form_versions_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
         ];
       };
       count_schedules: {
@@ -489,6 +503,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "locations";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "count_schedules_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
           },
         ];
       };
@@ -701,6 +722,13 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "dispatches_from_location_id_fkey";
+            columns: ["from_location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
+          {
             foreignKeyName: "dispatches_request_id_fkey";
             columns: ["request_id"];
             isOneToOne: false;
@@ -713,6 +741,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "locations";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "dispatches_to_location_id_fkey";
+            columns: ["to_location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
           },
         ];
       };
@@ -755,6 +790,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "locations";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "locations_parent_location_id_fkey";
+            columns: ["parent_location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
           },
         ];
       };
@@ -919,6 +961,13 @@ export type Database = {
             referencedRelation: "locations";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "monthly_counts_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
         ];
       };
       notification_log: {
@@ -974,6 +1023,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "locations";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notification_log_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
           },
           {
             foreignKeyName: "notification_log_schedule_id_fkey";
@@ -1075,6 +1131,13 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "par_levels_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
+          {
             foreignKeyName: "par_levels_product_id_fkey";
             columns: ["product_id"];
             isOneToOne: false;
@@ -1151,6 +1214,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "locations";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "production_entries_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
           },
           {
             foreignKeyName: "production_entries_recorded_by_fkey";
@@ -1476,6 +1546,13 @@ export type Database = {
             referencedRelation: "locations";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "raw_counts_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
         ];
       };
       raw_material_units: {
@@ -1660,6 +1737,13 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "raw_movements_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
+          {
             foreignKeyName: "raw_movements_material_id_fkey";
             columns: ["material_id"];
             isOneToOne: false;
@@ -1830,6 +1914,13 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "receipts_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
+          {
             foreignKeyName: "receipts_received_by_fkey";
             columns: ["received_by"];
             isOneToOne: false;
@@ -1990,6 +2081,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "locations";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "staff_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
           },
         ];
       };
@@ -2244,6 +2342,13 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "stock_counts_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
+          {
             foreignKeyName: "stock_counts_schedule_id_fkey";
             columns: ["schedule_id"];
             isOneToOne: false;
@@ -2371,6 +2476,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "locations";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_movements_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
           },
           {
             foreignKeyName: "stock_movements_product_id_fkey";
@@ -2627,10 +2739,168 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "stock_requests_requesting_location_id_fkey";
+            columns: ["requesting_location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
+          {
             foreignKeyName: "stock_requests_supplying_location_id_fkey";
             columns: ["supplying_location_id"];
             isOneToOne: false;
             referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_requests_supplying_location_id_fkey";
+            columns: ["supplying_location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
+        ];
+      };
+      task_runs: {
+        Row: {
+          done_at: string;
+          done_by: string;
+          due_date: string;
+          id: string;
+          location_id: string;
+          note: string | null;
+          photo_path: string | null;
+          template_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          done_at?: string;
+          done_by: string;
+          due_date: string;
+          id?: string;
+          location_id: string;
+          note?: string | null;
+          photo_path?: string | null;
+          template_id: string;
+        };
+        Update: {
+          done_at?: string;
+          done_by?: string;
+          due_date?: string;
+          id?: string;
+          location_id?: string;
+          note?: string | null;
+          photo_path?: string | null;
+          template_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "task_runs_done_by_fkey";
+            columns: ["done_by"];
+            isOneToOne: false;
+            referencedRelation: "staff";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "task_runs_done_by_fkey";
+            columns: ["done_by"];
+            isOneToOne: false;
+            referencedRelation: "v_staff_names";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "task_runs_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "task_runs_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
+          {
+            foreignKeyName: "task_runs_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "task_templates";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "task_runs_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["template_id"];
+          },
+        ];
+      };
+      task_templates: {
+        Row: {
+          created_at: string;
+          created_by: string | null;
+          description: string | null;
+          due_time: string;
+          frequency: string;
+          id: string;
+          is_active: boolean;
+          location_ids: string[] | null;
+          month_day: number | null;
+          requires_photo: boolean;
+          role: Database["public"]["Enums"]["app_role"];
+          sort_order: number;
+          title: string;
+          weekdays: number[] | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          due_time?: string;
+          frequency?: string;
+          id?: string;
+          is_active?: boolean;
+          location_ids?: string[] | null;
+          month_day?: number | null;
+          requires_photo?: boolean;
+          role?: Database["public"]["Enums"]["app_role"];
+          sort_order?: number;
+          title: string;
+          weekdays?: number[] | null;
+        };
+        Update: {
+          created_at?: string;
+          created_by?: string | null;
+          description?: string | null;
+          due_time?: string;
+          frequency?: string;
+          id?: string;
+          is_active?: boolean;
+          location_ids?: string[] | null;
+          month_day?: number | null;
+          requires_photo?: boolean;
+          role?: Database["public"]["Enums"]["app_role"];
+          sort_order?: number;
+          title?: string;
+          weekdays?: number[] | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "task_templates_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "staff";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "task_templates_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "v_staff_names";
             referencedColumns: ["id"];
           },
         ];
@@ -2711,6 +2981,13 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "waste_records_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
+          {
             foreignKeyName: "waste_records_product_id_fkey";
             columns: ["product_id"];
             isOneToOne: false;
@@ -2787,6 +3064,13 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "par_levels_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
+          {
             foreignKeyName: "par_levels_product_id_fkey";
             columns: ["product_id"];
             isOneToOne: false;
@@ -2834,6 +3118,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "locations";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_movements_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
           },
           {
             foreignKeyName: "stock_movements_product_id_fkey";
@@ -2911,6 +3202,13 @@ export type Database = {
             referencedRelation: "locations";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "stock_counts_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
         ];
       };
       v_count_list: {
@@ -2956,6 +3254,13 @@ export type Database = {
             referencedRelation: "locations";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "stock_counts_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
         ];
       };
       v_count_slots_today: {
@@ -2976,6 +3281,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "locations";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "count_schedules_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
           },
         ];
       };
@@ -3029,6 +3341,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "locations";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_movements_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
           },
         ];
       };
@@ -3128,6 +3447,13 @@ export type Database = {
             referencedRelation: "locations";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "monthly_counts_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
         ];
       };
       v_products: {
@@ -3205,6 +3531,13 @@ export type Database = {
             referencedRelation: "locations";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "raw_movements_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
         ];
       };
       v_staff_names: {
@@ -3232,6 +3565,13 @@ export type Database = {
             referencedRelation: "locations";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "staff_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
         ];
       };
       v_stock_by_product: {
@@ -3249,6 +3589,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "locations";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_movements_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
           },
           {
             foreignKeyName: "stock_movements_product_id_fkey";
@@ -3312,6 +3659,13 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "stock_movements_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
+          {
             foreignKeyName: "stock_movements_product_id_fkey";
             columns: ["product_id"];
             isOneToOne: false;
@@ -3337,6 +3691,44 @@ export type Database = {
             columns: ["product_id"];
             isOneToOne: false;
             referencedRelation: "v_products_before_shelf_life";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      v_tasks_today: {
+        Row: {
+          description: string | null;
+          done_at: string | null;
+          done_by: string | null;
+          due_at: string | null;
+          due_date: string | null;
+          due_time: string | null;
+          location_id: string | null;
+          location_name: string | null;
+          note: string | null;
+          photo_path: string | null;
+          requires_photo: boolean | null;
+          role: Database["public"]["Enums"]["app_role"] | null;
+          run_id: string | null;
+          sort_order: number | null;
+          status: string | null;
+          template_id: string | null;
+          title: string | null;
+        };
+        ComputedFields: never;
+        Relationships: [
+          {
+            foreignKeyName: "task_runs_done_by_fkey";
+            columns: ["done_by"];
+            isOneToOne: false;
+            referencedRelation: "staff";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "task_runs_done_by_fkey";
+            columns: ["done_by"];
+            isOneToOne: false;
+            referencedRelation: "v_staff_names";
             referencedColumns: ["id"];
           },
         ];
@@ -3379,6 +3771,13 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "dispatches_from_location_id_fkey";
+            columns: ["from_location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
+          {
             foreignKeyName: "dispatches_request_id_fkey";
             columns: ["request_id"];
             isOneToOne: false;
@@ -3391,6 +3790,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "locations";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "dispatches_to_location_id_fkey";
+            columns: ["to_location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
           },
         ];
       };
@@ -3453,6 +3859,10 @@ export type Database = {
         }[];
       };
       cancel_request: { Args: { p_request_id: string }; Returns: undefined };
+      complete_task: {
+        Args: { p_note?: string; p_photo_path?: string; p_template_id: string };
+        Returns: string;
+      };
       count_breakdown: {
         Args: { p_count_id: string };
         Returns: {
@@ -3595,6 +4005,15 @@ export type Database = {
           product_id: string;
           received_pieces: number;
           waste_pieces: number;
+        }[];
+      };
+      report_tasks: {
+        Args: { p_from: string; p_to: string };
+        Returns: {
+          done: number;
+          expected: number;
+          location_id: string;
+          on_time: number;
         }[];
       };
       submit_count: {

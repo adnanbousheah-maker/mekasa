@@ -7,7 +7,7 @@ select tests.create_staff('44444444-0000-4000-8000-000000000004', 'عدنان', 
 
 select results_eq(
   $$ select id, public from storage.buckets order by id $$,
-  $$ values ('count-photos', false), ('invoices', false), ('product-images', false), ('waste-photos', false) $$,
+  $$ values ('count-photos', false), ('invoices', false), ('product-images', false), ('task-photos', false), ('waste-photos', false) $$,
   'all buckets exist and none is public'
 );
 

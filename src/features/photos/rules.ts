@@ -1,4 +1,4 @@
-export const PHOTO_BUCKETS = ["count-photos", "waste-photos", "invoices"] as const;
+export const PHOTO_BUCKETS = ["count-photos", "waste-photos", "invoices", "task-photos"] as const;
 export type PhotoBucket = (typeof PHOTO_BUCKETS)[number];
 
 export const PHOTO_MAX_BYTES = 3.5 * 1024 * 1024;

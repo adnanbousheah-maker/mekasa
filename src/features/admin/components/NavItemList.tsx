@@ -43,6 +43,12 @@ const GROUPS: { title: string | null; items: Item[] }[] = [
       },
       { href: "/admin/waste", label: "التالف", icon: "M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" },
       {
+        href: "/admin/tasks",
+        label: "المهام المتكررة",
+        icon: "M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17M11 6h9M11 12h9M11 18h9",
+        badge: "tasks",
+      },
+      {
         href: "/admin/factory",
         label: "المصنع والدفعات",
         icon: "M3 21V9l6 4V9l6 4V5h6v16z",

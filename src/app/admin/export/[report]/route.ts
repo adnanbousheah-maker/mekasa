@@ -34,6 +34,7 @@ import { loadDocuments, ordersOfDay } from "@/features/orders/queries";
 import { IMPORT_HEADERS, packagingLabel } from "@/features/raw/import";
 import { listRawMaterials, recentRawMoves } from "@/features/raw/queries";
 import { listStaff } from "@/features/staff/queries";
+import { allTasksToday, recentTaskRuns } from "@/features/tasks/queries";
 import { ROLE_LABELS } from "@/features/staff/roles";
 import { buildWorkbook, excelResponse, sheet, type ExcelSheet } from "@/lib/excel";
 import { businessDate, formatClock } from "@/lib/time";
@@ -353,6 +354,39 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             { header: "السبب", value: (r) => r.reasonName },
             { header: "ملاحظة", value: (r) => r.note, width: 30 },
             { header: "مين", value: (r) => r.recordedBy },
+            { header: "صورة", value: (r) => (r.photoPath ? "نعم" : "") },
+          ],
+        }),
+      ];
+      break;
+    }
+    case "tasks": {
+      const [today, runs] = await Promise.all([allTasksToday(), recentTaskRuns(500)]);
+      const STATUS = { done: "انعملت", late: "متأخرة", open: "لسا" } as const;
+      sheets = [
+        sheet({
+          name: "مهام اليوم",
+          rows: today,
+          columns: [
+            { header: "الموقع", value: (r: (typeof today)[number]) => r.locationName },
+            { header: "المهمة", value: (r) => r.title, width: 28 },
+            { header: "قبل الساعة", value: (r) => r.dueTime },
+            { header: "الحالة", value: (r) => STATUS[r.status] },
+            { header: "مين", value: (r) => r.doneBy ?? "" },
+            { header: "الساعة", value: (r) => r.doneAt ?? "" },
+            { header: "ملاحظة", value: (r) => r.note ?? "", width: 30 },
+          ],
+        }),
+        sheet({
+          name: "اللي انعمل",
+          rows: runs,
+          columns: [
+            { header: "اليوم", value: (r: (typeof runs)[number]) => r.dueDate },
+            { header: "الوقت", value: (r) => r.doneAt },
+            { header: "الموقع", value: (r) => r.locationName },
+            { header: "المهمة", value: (r) => r.title, width: 28 },
+            { header: "مين", value: (r) => r.doneBy },
+            { header: "ملاحظة", value: (r) => r.note ?? "", width: 30 },
             { header: "صورة", value: (r) => (r.photoPath ? "نعم" : "") },
           ],
         }),
