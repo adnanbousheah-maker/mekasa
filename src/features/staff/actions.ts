@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { refresh } from "next/cache";
 import { z } from "zod";
 import { normalizePhone } from "@/features/auth/phone";
+import { normalizeUsername } from "@/features/auth/username";
 import { authEmailFor, derivePassword, generatePin, pinLengthFor } from "@/features/auth/pin";
 import { requireAdmin } from "@/features/auth/session";
 import { serverEnv } from "@/lib/server-env";
@@ -24,6 +25,7 @@ export type ActiveResult = { status: "error"; message: string } | { status: "don
 const staffSchema = z.object({
   fullName: z.string().trim().min(1, "اكتب اسم الموظف").max(80, "الاسم طويل كثير"),
   phone: z.string().trim().min(1, "اكتب رقم الجوال"),
+  username: z.string().trim().max(30, "اسم المستخدم طويل كثير"),
   locationId: z.union([z.uuid(), z.literal("")]),
   roles: z.array(z.enum(ROLES as [Role, ...Role[]])),
 });
@@ -34,12 +36,20 @@ const staffIdSchema = z.uuid();
 const BANNED_FOREVER = "876000h";
 const SAVE_FAILED = "ما انحفظ. جرب كمان مرة.";
 
-type Validated = { fullName: string; phone: string; locationId: string | null; roles: Role[] };
+type Validated = {
+  fullName: string;
+  phone: string;
+  // null = بدون اسم مستخدم (الدخول بالرقم بس)
+  username: string | null;
+  locationId: string | null;
+  roles: Role[];
+};
 
 async function validateStaffForm(formData: FormData): Promise<{ error: string } | { data: Validated }> {
   const parsed = staffSchema.safeParse({
     fullName: formData.get("fullName"),
     phone: formData.get("phone"),
+    username: formData.get("username") ?? "",
     locationId: formData.get("locationId") ?? "",
     roles: formData.getAll("roles"),
   });
@@ -47,6 +57,11 @@ async function validateStaffForm(formData: FormData): Promise<{ error: string } 
 
   const phone = normalizePhone(parsed.data.phone);
   if (!phone) return { error: "رقم الجوال مش صحيح. مثال: 079 123 4567" };
+
+  const username = parsed.data.username ? normalizeUsername(parsed.data.username) : null;
+  if (parsed.data.username && !username) {
+    return { error: "اسم المستخدم بالإنجليزي: حروف وأرقام ونقطة أو _، من 3 لـ 30، وبيبلش بحرف" };
+  }
 
   const locationId = parsed.data.locationId || null;
   let locationKind: LocationKind | null = null;
@@ -65,18 +80,19 @@ async function validateStaffForm(formData: FormData): Promise<{ error: string } 
   const problem = roleLocationProblem(parsed.data.roles, locationKind);
   if (problem) return { error: problem };
 
-  return { data: { fullName: parsed.data.fullName, phone, locationId, roles: parsed.data.roles } };
+  return { data: { fullName: parsed.data.fullName, phone, username, locationId, roles: parsed.data.roles } };
 }
 
 function saveErrorMessage(code: string | undefined): string {
   if (code === "23505") return "هالرقم مسجل لموظف ثاني";
+  if (code === "username_taken") return "اسم المستخدم مأخوذ لموظف ثاني";
   if (code === "23514") return "لازم يضل أدمن فعّال واحد على الأقل";
   return SAVE_FAILED;
 }
 
 async function saveStaff(staffId: string, data: Validated) {
   const supabase = await createClient();
-  return supabase.rpc("admin_save_staff", {
+  const saved = await supabase.rpc("admin_save_staff", {
     p_staff_id: staffId,
     p_full_name: data.fullName,
     p_phone: data.phone,
@@ -84,6 +100,14 @@ async function saveStaff(staffId: string, data: Validated) {
     p_location_id: data.locationId ?? undefined,
     p_roles: data.roles,
   });
+  if (saved.error) return saved;
+  const named = await supabase.rpc("admin_set_staff_username", {
+    p_staff_id: staffId,
+    p_username: data.username ?? "",
+  });
+  // 23505 هون = اسم المستخدم مأخوذ (مش الرقم)
+  if (named.error?.code === "23505") return { error: { ...named.error, code: "username_taken" } };
+  return named;
 }
 
 /**

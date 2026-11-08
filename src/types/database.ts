@@ -1732,6 +1732,7 @@ export type Database = {
           phone: string;
           requires_admin_reset: boolean;
           updated_at: string;
+          username: string | null;
         };
         ComputedFields: never;
         Insert: {
@@ -1747,6 +1748,7 @@ export type Database = {
           phone: string;
           requires_admin_reset?: boolean;
           updated_at?: string;
+          username?: string | null;
         };
         Update: {
           created_at?: string;
@@ -1761,6 +1763,7 @@ export type Database = {
           phone?: string;
           requires_admin_reset?: boolean;
           updated_at?: string;
+          username?: string | null;
         };
         Relationships: [
           {
@@ -3121,6 +3124,7 @@ export type Database = {
         Returns: undefined;
       };
       admin_set_staff_active: { Args: { p_active: boolean; p_staff_id: string }; Returns: undefined };
+      admin_set_staff_username: { Args: { p_staff_id: string; p_username: string }; Returns: undefined };
       amman_today: { Args: Record<PropertyKey, never>; Returns: string };
       auth_record_login_success: { Args: { p_attempt_id: number; p_staff_id: string }; Returns: undefined };
       auth_reserve_login_attempt: {

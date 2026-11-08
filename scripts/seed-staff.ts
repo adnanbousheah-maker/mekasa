@@ -90,6 +90,8 @@ async function main() {
       id,
       full_name: person.fullName,
       phone: person.phone,
+      // اسم مستخدم تجريبي من الرقم: user1 … user6
+      username: `user${person.phone.slice(-1)}`,
       location_id: locationId(person.locationCode),
     });
     if (staffError) throw staffError;

@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { LOGIN_FAILED_MESSAGE, MIN_FAILURE_RESPONSE_MS, waitUntilElapsed } from "./lockout";
 import { normalizePhone } from "./phone";
 import { authEmailFor, derivePassword } from "./pin";
+import { loginIdentifier } from "./username";
 
 export type LoginState = { error: string } | undefined;
 
@@ -21,7 +22,7 @@ const loginSchema = z.object({
 const TRY_AGAIN = "صار خطأ. جرب كمان مرة، وإذا ضل، احكي مع المدير.";
 
 /**
- * الدخول برقم الجوال والرمز، كله على السيرفر.
+ * الدخول برقم الجوال أو اسم المستخدم والرمز، كله على السيرفر.
  * 1. auth_reserve_login_attempt بتسجل المحاولة وبتحسبها غلط قبل الفحص (بقفل على صف الموظف)،
  *    فالطلبات المتزامنة ما بتتخطى القفل.
  * 2. إذا الحساب مفتوح، بنفحص الرمز بكلمة السر المشتقة.
@@ -31,16 +32,16 @@ const TRY_AGAIN = "صار خطأ. جرب كمان مرة، وإذا ضل، اح�
 export async function login(_previous: LoginState, formData: FormData): Promise<LoginState> {
   const startedAt = Date.now();
   const parsed = loginSchema.safeParse({ phone: formData.get("phone"), pin: formData.get("pin") });
-  if (!parsed.success) return { error: "اكتب رقم الجوال والرمز" };
+  if (!parsed.success) return { error: "اكتب رقم الجوال أو اسم المستخدم، والرمز" };
 
-  const phone = normalizePhone(parsed.data.phone);
-  if (!phone) return { error: "رقم الجوال مش صحيح. مثال: 079 123 4567" };
+  const identifier = loginIdentifier(parsed.data.phone, normalizePhone);
+  if (!identifier) return { error: "اكتب رقم جوال (مثال: 079 123 4567) أو اسم المستخدم بالإنجليزي" };
 
   let signedIn = false;
   try {
     const admin = createAdminClient();
     const { data: attempt, error } = await admin
-      .rpc("auth_reserve_login_attempt", { p_phone: phone, p_ip: await clientIp() })
+      .rpc("auth_reserve_login_attempt", { p_phone: identifier, p_ip: await clientIp() })
       .single();
     if (error) throw error;
 

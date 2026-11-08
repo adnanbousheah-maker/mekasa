@@ -7,6 +7,7 @@ export interface StaffRow {
   id: string;
   fullName: string;
   phone: string;
+  username: string | null;
   isActive: boolean;
   lastLoginAt: string | null;
   isLocked: boolean;
@@ -21,12 +22,13 @@ export interface LocationOption {
 }
 
 const STAFF_COLUMNS =
-  "id, full_name, phone, is_active, last_login_at, locked_until, requires_admin_reset, location:locations(id, name, kind), staff_roles!staff_roles_staff_id_fkey(role)";
+  "id, full_name, phone, username, is_active, last_login_at, locked_until, requires_admin_reset, location:locations(id, name, kind), staff_roles!staff_roles_staff_id_fkey(role)";
 
 type StaffRecord = {
   id: string;
   full_name: string;
   phone: string;
+  username: string | null;
   is_active: boolean;
   last_login_at: string | null;
   locked_until: string | null;
@@ -40,6 +42,7 @@ function toStaffRow(record: StaffRecord, now: Date): StaffRow {
     id: record.id,
     fullName: record.full_name,
     phone: record.phone,
+    username: record.username,
     isActive: record.is_active,
     lastLoginAt: record.last_login_at,
     isLocked:

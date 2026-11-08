@@ -22,14 +22,16 @@ export function LoginForm() {
     >
       <div className="flex w-full flex-col gap-2">
         <label htmlFor="phone" className="text-sm text-muted">
-          رقم الجوال
+          رقم الجوال أو اسم المستخدم
         </label>
         <input
           id="phone"
           name="phone"
-          type="tel"
-          inputMode="tel"
-          autoComplete="tel"
+          type="text"
+          autoComplete="username"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           dir="ltr"
           placeholder="079 123 4567"
           value={phone}

@@ -26,11 +26,17 @@ test("branch staff sign in to their branch home and sign out", async ({ page }) 
   await expectOnLogin(page);
 });
 
+test("staff can sign in with a username instead of the phone", async ({ page }) => {
+  // seed-staff بيعطي كل موظف تجريبي user + آخر رقم من جواله
+  await signIn(page, "User2", BRANCH.pin);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(BRANCH.name);
+});
+
 test.describe("wrong PIN", () => {
   test.afterEach(async () => clearLock(BRANCH.e164));
 
   // (Next عنده عنصر alert ثاني للتنقل، فمنفتش عن النص)
-  const failure = /رقم الجوال أو الرمز غلط. بعد 5 محاولات غلط/;
+  const failure = /الاسم أو الرقم أو الرمز غلط. بعد 5 محاولات غلط/;
 
   test("explains the lock rule without revealing anything", async ({ page }) => {
     await signIn(page, BRANCH.phone, "7391");
@@ -71,6 +77,8 @@ test.describe("staff management", () => {
     await page.goto("/admin/staff/new");
     await page.getByLabel("الاسم").fill("موظف اختبار");
     await page.getByLabel("رقم الجوال").fill(phone.local);
+    const username = `t${phone.local.slice(-7)}`;
+    await page.getByLabel("اسم المستخدم (اختياري)").fill(username.toUpperCase());
     await page.getByLabel("الموقع").selectOption({ label: "الصويفية" });
     await page.getByRole("checkbox", { name: /موظف فرع/ }).check();
     await page.getByRole("button", { name: "أضف الموظف" }).click();
@@ -89,7 +97,8 @@ test.describe("staff management", () => {
       baseURL: "http://localhost:3000",
     });
     const staffPage = await staffContext.newPage();
-    await signIn(staffPage, phone.local, pin);
+    // باسم المستخدم (بأي حروف)
+    await signIn(staffPage, username, pin);
     await expect(staffPage.getByRole("heading", { level: 1 })).toContainText("موظف");
 
     // الأدمن بيوقفه

@@ -49,6 +49,7 @@ async function Staff() {
                   <span className="text-[17px] font-semibold">{s.fullName}</span>
                   <span dir="ltr" className="text-right text-xs text-muted">
                     {maskPhone(s.phone)}
+                    {s.username && ` · ${s.username}`}
                   </span>
                 </span>
                 <StatusChip isActive={s.isActive} isLocked={s.isLocked} />
@@ -107,6 +108,7 @@ async function Staff() {
                     <span className="block">{s.fullName}</span>
                     <span dir="ltr" className="block text-right text-xs font-normal text-muted">
                       {maskPhone(s.phone)}
+                      {s.username && ` · ${s.username}`}
                     </span>
                   </th>
                   <td className="px-2 py-3">{s.location?.name ?? "كل المواقع"}</td>

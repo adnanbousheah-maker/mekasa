@@ -9,7 +9,14 @@ import { PinNotice } from "./PinNotice";
 
 type Props = {
   locations: LocationOption[];
-  existing?: { id: string; fullName: string; phone: string; locationId: string | null; roles: Role[] };
+  existing?: {
+    id: string;
+    fullName: string;
+    phone: string;
+    username: string | null;
+    locationId: string | null;
+    roles: Role[];
+  };
 };
 
 const field =
@@ -22,6 +29,7 @@ export function StaffForm({ locations, existing }: Props) {
   // الحقول controlled مشان ما تنمسح إذا رجع خطأ
   const [fullName, setFullName] = useState(existing?.fullName ?? "");
   const [phone, setPhone] = useState(existing?.phone ?? "");
+  const [username, setUsername] = useState(existing?.username ?? "");
   const [locationId, setLocationId] = useState(existing?.locationId ?? "");
   const [roles, setRoles] = useState<Role[]>(existing?.roles ?? []);
 
@@ -79,6 +87,25 @@ export function StaffForm({ locations, existing }: Props) {
           onChange={(e) => setPhone(e.target.value)}
           className={`${field} text-right`}
         />
+      </label>
+
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-semibold">اسم المستخدم (اختياري)</span>
+        <input
+          name="username"
+          dir="ltr"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          maxLength={30}
+          placeholder="ahmad"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className={`${field} text-right`}
+        />
+        <span className="text-[13px] text-muted">
+          الموظف بيدخل فيه أو برقم جواله. بالإنجليزي: حروف وأرقام ونقطة أو _.
+        </span>
       </label>
 
       <label className="flex flex-col gap-1.5">

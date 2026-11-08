@@ -21,7 +21,7 @@ function serviceClient() {
 
 export async function signIn(page: Page, phone: string, pin: string) {
   await page.goto("/login");
-  await page.getByLabel("رقم الجوال").fill(phone);
+  await page.getByLabel("رقم الجوال أو اسم المستخدم").fill(phone);
   for (const digit of pin) {
     await page.getByRole("button", { name: digit, exact: true }).click();
   }

@@ -23,6 +23,7 @@ async function EditStaff({ params }: { params: Promise<{ id: string }> }) {
           id: staff.id,
           fullName: staff.fullName,
           phone: formatPhone(staff.phone),
+          username: staff.username,
           locationId: staff.location?.id ?? null,
           roles: staff.roles,
         }}

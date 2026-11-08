@@ -15,7 +15,7 @@ export const LOCKOUT = {
  * من الرسالة إذا الرقم مسجل عنا.
  */
 export const LOGIN_FAILED_MESSAGE =
-  `رقم الجوال أو الرمز غلط. بعد ${LOCKOUT.timedLockAfter} محاولات غلط الحساب بينقفل ` +
+  `الاسم أو الرقم أو الرمز غلط. بعد ${LOCKOUT.timedLockAfter} محاولات غلط الحساب بينقفل ` +
   `${LOCKOUT.timedLockMinutes} دقيقة، وإذا ضل مقفول احكي مع المدير.`;
 
 /** كل رد فاشل بياخذ هالوقت على الأقل، مشان سرعة الرد ما تكشف إذا الرقم موجود. */
