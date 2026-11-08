@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { setMonthlyCountActiveAction, setMonthlyCountTimeAction } from "../actions";
 import type { MonthlyCountRow } from "../queries";
 import { SavedSwitch } from "./SavedSwitch";
@@ -16,12 +16,16 @@ function TimeField({ row }: { row: MonthlyCountRow }) {
   const [error, setError] = useState<string | null>(null);
   const [justSaved, setJustSaved] = useState(false);
   const [isSaving, startTransition] = useTransition();
+  const pending = useRef<string | null>(null);
   const label = `ساعة جرد آخر الشهر: ${whatOf(row)} · ${row.locationName}`;
 
   const save = () => {
-    if (!value || value === saved) return;
+    // Enter وبعدها الخروج من الخانة كانوا يحفظوا مرتين مع بعض: مرة وحدة لكل قيمة
+    if (!value || value === saved || pending.current === value) return;
+    pending.current = value;
     startTransition(async () => {
       const result = await setMonthlyCountTimeAction(row.locationId, row.scope, value);
+      pending.current = null;
       if (result.status === "error") setError(result.message);
       else {
         setError(null);

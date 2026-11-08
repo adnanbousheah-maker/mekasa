@@ -15,7 +15,10 @@ export const wasteSchema = z
     productId: z.uuid("اختار الصنف"),
     unit: z.enum(["cake", "piece"]),
     qty: z.number().int().min(1, "الكمية لازم تكون 1 على الأقل").max(999, "الكمية كبيرة كثير"),
-    reason: z.enum(WASTE_REASONS, "اختار السبب"),
+    // السبب خيار من قائمة "أسباب التالف" (الأدمن بيديرها)
+    reasonId: z.uuid("اختار السبب"),
+    // الخيار بدو ملاحظة؟ (من القائمة، وقاعدة البيانات بتفحص كمان)
+    requiresNote: z.boolean().default(false),
     note: z.string().trim().max(200, "الملاحظة طويلة كثير").default(""),
     productionDate: z
       .string()
@@ -24,7 +27,7 @@ export const wasteSchema = z
       .default(null),
     photoPath: z.string().min(1).max(300).nullable().default(null),
   })
-  .refine((w) => w.reason !== "other" || w.note.length > 0, {
+  .refine((w) => !w.requiresNote || w.note.length > 0, {
     message: "اكتب شو صار",
     path: ["note"],
   });

@@ -3,6 +3,8 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { StaffLoading, StaffScreen } from "@/components/ui/StaffScreen";
 import { requireStaff } from "@/features/auth/session";
 import { listCountProducts, listFactoryBatches } from "@/features/counts/queries";
+import { listOptions } from "@/features/lists/queries";
+import { usableOptions } from "@/features/lists/types";
 import { WasteForm } from "@/features/waste/components/WasteForm";
 import { createClient } from "@/lib/supabase/server";
 import { recentDates } from "@/lib/day-number";
@@ -31,7 +33,13 @@ async function Waste() {
     );
   }
 
-  const products = await listCountProducts();
+  const [products, reasonOptions] = await Promise.all([listCountProducts(), listOptions("waste_reasons")]);
+  const reasons = usableOptions(reasonOptions, staff.roles).map((r) => ({
+    id: r.id,
+    name: r.name,
+    icon: r.icon,
+    requiresNote: r.requiresNote,
+  }));
   let factory: { batches: Awaited<ReturnType<typeof listFactoryBatches>>; dates: string[] } | undefined;
   if (location.kind === "factory") {
     const supabase = await createClient();
@@ -51,7 +59,7 @@ async function Waste() {
         title="تسجيل تالف"
         subtitle={location.kind === "factory" ? location.name : `فرع ${location.name}`}
       />
-      <WasteForm key={new Date().toISOString()} products={products} factory={factory} />
+      <WasteForm key={new Date().toISOString()} products={products} reasons={reasons} factory={factory} />
     </StaffScreen>
   );
 }

@@ -18,7 +18,6 @@ import { IMPORT_HEADERS, packagingLabel } from "@/features/raw/import";
 import { listRawMaterials, recentRawMoves } from "@/features/raw/queries";
 import { listStaff } from "@/features/staff/queries";
 import { ROLE_LABELS } from "@/features/staff/roles";
-import { WASTE_REASON_LABELS } from "@/features/waste/schemas";
 import { buildWorkbook, excelResponse, sheet, type ExcelSheet } from "@/lib/excel";
 import { businessDate, formatClock } from "@/lib/time";
 
@@ -229,7 +228,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             { header: "الكمية", value: (r) => r.enteredQty },
             { header: "الوحدة", value: (r) => (r.enteredUnit === "cake" ? "كيكة" : "قطعة") },
             { header: "بالقطع", value: (r) => r.qtyPieces },
-            { header: "السبب", value: (r) => WASTE_REASON_LABELS[r.reason] },
+            { header: "السبب", value: (r) => r.reasonName },
             { header: "ملاحظة", value: (r) => r.note, width: 30 },
             { header: "مين", value: (r) => r.recordedBy },
             { header: "صورة", value: (r) => (r.photoPath ? "نعم" : "") },

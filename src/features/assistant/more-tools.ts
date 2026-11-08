@@ -309,7 +309,7 @@ export function moreAssistantTools(db: Db, now: Date) {
           db
             .from("waste_records")
             .select(
-              "location_id, product_id, qty_pieces, reason, reason_note, recorded_by, occurred_at, batch:batches(production_date)",
+              "location_id, product_id, qty_pieces, reason, reason_note, recorded_by, occurred_at, batch:batches(production_date), reason_option:lookup_options(name)",
             )
             .gte("occurred_at", p.fromIso)
             .lt("occurred_at", p.toIso)
@@ -332,8 +332,8 @@ export function moreAssistantTools(db: Db, now: Date) {
             place: loc?.name,
             product: prod?.name,
             quantity: qty(w.qty_pieces ?? 0, prod?.ppc ?? null, (prod?.kind ?? "cake") !== "cake"),
-            reason: REASON[w.reason] ?? w.reason,
-            note: w.reason_note,
+            reason: w.reason_option?.name ?? REASON[w.reason] ?? w.reason,
+            note: w.reason_note?.startsWith("[سبب] ") ? null : w.reason_note,
             by: names.get(w.recorded_by) ?? null,
             when: when(w.occurred_at, now),
             batch_date: w.batch?.production_date ?? null,

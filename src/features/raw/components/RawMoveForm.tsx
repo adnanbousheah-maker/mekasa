@@ -16,9 +16,12 @@ const chip = (on: boolean) =>
 /** design/factory/RawMove: استلام من مورد أو صرف للإنتاج، بأي وحدة مع التحويل. */
 export function RawMoveForm({
   materials,
+  suppliers = [],
   initialKind,
 }: {
   materials: RawMaterialRow[];
+  // الموردين من القائمة (الأدمن بيديرها)
+  suppliers?: string[];
   initialKind: "receipt" | "issue";
 }) {
   const router = useRouter();
@@ -166,10 +169,31 @@ export function RawMoveForm({
 
       {kind === "receipt" && (
         <div className="flex flex-col gap-3">
+          {suppliers.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[15px] font-semibold">المورد (اختياري)</span>
+              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="المورد">
+                {suppliers.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    role="radio"
+                    aria-checked={supplier === name}
+                    onClick={() => setSupplier(supplier === name ? "" : name)}
+                    className={`min-h-12 rounded-xl px-3.5 text-[15px] ${supplier === name ? "border-2 border-ink bg-quiet font-semibold" : "border border-line-strong bg-surface"}`}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <label className="flex flex-col gap-1.5">
-            <span className="text-[15px] font-semibold">المورد (اختياري)</span>
+            <span className="text-[15px] font-semibold">
+              {suppliers.length > 0 ? "مورد ثاني (اكتبه)" : "المورد (اختياري)"}
+            </span>
             <input
-              value={supplier}
+              value={suppliers.includes(supplier) ? "" : supplier}
               maxLength={80}
               onChange={(e) => setSupplier(e.target.value)}
               placeholder="اسم المورد"

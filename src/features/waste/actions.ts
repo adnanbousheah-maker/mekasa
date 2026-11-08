@@ -17,12 +17,12 @@ export async function recordWasteAction(input: WasteInput): Promise<WasteResult>
   const w = parsed.data;
 
   const supabase = await createClient();
-  const { error } = await supabase.rpc("record_waste", {
+  const { error } = await supabase.rpc("log_waste", {
     p_location_id: staff.location.id,
     p_product_id: w.productId,
     p_unit: w.unit,
     p_qty: w.qty,
-    p_reason: w.reason,
+    p_reason_id: w.reasonId,
     p_note: w.note || undefined,
     p_production_date: w.productionDate ?? undefined,
     p_photo_path: w.photoPath ?? undefined,
@@ -30,11 +30,13 @@ export async function recordWasteAction(input: WasteInput): Promise<WasteResult>
   if (error) {
     console.error("recordWaste", error);
     const message =
-      error.code === "23514"
-        ? "في معلومة ناقصة أو مش منطقية"
-        : error.code === "42501"
-          ? "ما إلك صلاحية تسجل تالف هون"
-          : "ما انسجل التالف. جرب كمان مرة.";
+      error.hint === "note_required"
+        ? "اكتب شو صار"
+        : error.code === "23514"
+          ? "في معلومة ناقصة أو مش منطقية"
+          : error.code === "42501"
+            ? "ما إلك صلاحية تسجل تالف هون"
+            : "ما انسجل التالف. جرب كمان مرة.";
     return { status: "error", message };
   }
   // بدون refresh(): الفورم بينعمل من جديد مع كل رسم للصفحة (key)، فالـ refresh كان يمسح

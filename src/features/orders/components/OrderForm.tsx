@@ -62,6 +62,14 @@ export function OrderForm({
         .filter(Boolean)
         .join(" · ");
   const firstSauce = visible.find((p) => p.kind === "sauce")?.id;
+  // عنوان لكل تصنيف (إذا الأدمن حط تصنيفات): أول صنف من كل تصنيف
+  const grouped = !packaging && visible.some((p) => p.kind !== "sauce" && p.category);
+  const categoryStarts = new Set(
+    visible
+      .filter((p) => p.kind !== "sauce")
+      .filter((p, i, list) => i === 0 || list[i - 1].category !== p.category)
+      .map((p) => p.id),
+  );
   const update = (id: string, key: "wholeCakes" | "loosePieces", value: number) =>
     setRows((r) => ({ ...r, [id]: { ...r[id], [key]: value } }));
 
@@ -168,6 +176,14 @@ export function OrderForm({
               )}
             </li>
           );
+          if (grouped && categoryStarts.has(p.id)) {
+            return [
+              <li key={`category-${p.id}`} className="pt-2">
+                <h2 className="text-lg font-bold">{p.category ?? "بدون تصنيف"}</h2>
+              </li>,
+              item,
+            ];
+          }
           if (p.id !== firstSauce) return item;
           return [
             <li key="sauces-title" className="pt-3">

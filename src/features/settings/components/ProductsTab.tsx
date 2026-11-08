@@ -12,10 +12,16 @@ import { SELL_MODE_LABELS } from "../schemas";
 import { InlineField } from "./InlineField";
 import { NewProductDialog } from "./NewProductDialog";
 import { SavedSwitch } from "./SavedSwitch";
+import { CategorySelect, type CategoryChoice } from "@/features/lists/components/CategorySelect";
 
-type Props = { products: ProductRow[]; defaultPieces: number; defaultShelfLife: number };
+type Props = {
+  products: ProductRow[];
+  defaultPieces: number;
+  defaultShelfLife: number;
+  categories: CategoryChoice[];
+};
 
-export function ProductsTab({ products, defaultPieces, defaultShelfLife }: Props) {
+export function ProductsTab({ products, defaultPieces, defaultShelfLife, categories }: Props) {
   return (
     <section className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -36,7 +42,7 @@ export function ProductsTab({ products, defaultPieces, defaultShelfLife }: Props
       </div>
 
       <div className="scroll-hint overflow-x-auto rounded-2xl border border-line bg-surface">
-        <table className="w-full min-w-[720px] border-collapse text-sm">
+        <table className="w-full min-w-[860px] border-collapse text-sm">
           <thead>
             <tr className="bg-table-head text-table-head-text">
               <th scope="col" className="px-2 py-3 text-right font-semibold">
@@ -44,6 +50,9 @@ export function ProductsTab({ products, defaultPieces, defaultShelfLife }: Props
               </th>
               <th scope="col" className="px-2 py-3 text-right font-semibold">
                 الاسم بالعربي
+              </th>
+              <th scope="col" className="px-2 py-3 font-semibold">
+                التصنيف
               </th>
               <th scope="col" className="px-2 py-3 font-semibold">
                 النوع
@@ -80,6 +89,15 @@ export function ProductsTab({ products, defaultPieces, defaultShelfLife }: Props
                     placeholder="اختياري"
                     onSave={updateProductNameArAction.bind(null, p.id)}
                     className="w-40"
+                  />
+                </td>
+                <td className="px-2 py-2 text-center">
+                  <CategorySelect
+                    target="product"
+                    itemId={p.id}
+                    itemName={p.nameEn}
+                    value={p.categoryId}
+                    choices={categories}
                   />
                 </td>
                 <td className="px-2 py-2 text-center">

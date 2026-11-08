@@ -5,6 +5,8 @@ import { PackagingTab } from "@/features/settings/components/PackagingTab";
 import { ParTab } from "@/features/settings/components/ParTab";
 import { ProductsTab } from "@/features/settings/components/ProductsTab";
 import { SaucesTab } from "@/features/settings/components/SaucesTab";
+import { ListsTab } from "@/features/lists/components/ListsTab";
+import { categoryChoices, listLists, listOptions } from "@/features/lists/queries";
 import { listReportProducts, minLevels, parLevels, stockByProduct } from "@/features/reports/queries";
 import { MonthlyCountsCard } from "@/features/settings/components/MonthlyCountsCard";
 import { ScheduleCard } from "@/features/settings/components/ScheduleCard";
@@ -21,6 +23,7 @@ const TABS = [
   { id: "products", label: "الأصناف" },
   { id: "par", label: "الحد المطلوب والأدنى" },
   { id: "sauces", label: "الصوصات" },
+  { id: "lists", label: "القوائم والتصنيفات" },
   { id: "packaging", label: "التغليف" },
   { id: "schedule", label: "مواعيد الجرد" },
   { id: "general", label: "عام" },
@@ -51,6 +54,7 @@ async function Settings({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const tab = pickTab(params.tab);
   const loc = typeof params.loc === "string" ? params.loc : null;
+  const list = typeof params.list === "string" ? params.list : null;
 
   return (
     <>
@@ -69,14 +73,14 @@ async function Settings({ searchParams }: { searchParams: SearchParams }) {
       </div>
       <div role="tabpanel" aria-label={TABS.find((t) => t.id === tab)?.label}>
         <Suspense key={tab} fallback={<span className="text-muted">لحظة…</span>}>
-          <TabContent tab={tab} loc={loc} />
+          <TabContent tab={tab} loc={loc} list={list} />
         </Suspense>
       </div>
     </>
   );
 }
 
-async function TabContent({ tab, loc }: { tab: TabId; loc: string | null }) {
+async function TabContent({ tab, loc, list }: { tab: TabId; loc: string | null; list: string | null }) {
   if (tab === "par") {
     const [locations, cakes, packaging, par, min, stock] = await Promise.all([
       listMinLevelLocations(),
@@ -129,7 +133,20 @@ async function TabContent({ tab, loc }: { tab: TabId; loc: string | null }) {
 
   if (tab === "general") return <GeneralTab settings={await getSettings()} />;
 
-  if (tab === "sauces") return <SaucesTab items={await listProducts("sauce")} />;
+  if (tab === "lists") {
+    const lists = await listLists();
+    const current = lists.find((l) => l.key === list) ?? lists[0];
+    if (!current) return <p className="text-muted">ما في قوائم.</p>;
+    return <ListsTab lists={lists} current={current} options={await listOptions(current.key)} />;
+  }
+
+  if (tab === "sauces") {
+    const [items, categories] = await Promise.all([
+      listProducts("sauce"),
+      categoryChoices("product_categories"),
+    ]);
+    return <SaucesTab items={items} categories={categories} />;
+  }
 
   if (tab === "packaging") {
     const [items, store] = await Promise.all([listProducts("packaging"), packagingStore()]);
@@ -137,12 +154,17 @@ async function TabContent({ tab, loc }: { tab: TabId; loc: string | null }) {
     return <PackagingTab items={items} stock={stock} storeName={store?.name ?? null} />;
   }
 
-  const [products, settings] = await Promise.all([listProducts(), getSettings()]);
+  const [products, settings, categories] = await Promise.all([
+    listProducts(),
+    getSettings(),
+    categoryChoices("product_categories"),
+  ]);
   return (
     <ProductsTab
       products={products}
       defaultPieces={settings.default_pieces_per_cake}
       defaultShelfLife={settings.factory_shelf_life_days}
+      categories={categories}
     />
   );
 }

@@ -23,7 +23,6 @@ import {
   type Range,
 } from "@/features/reports/format";
 import { listReportLocations, listWaste } from "@/features/reports/queries";
-import { WASTE_REASON_LABELS, WASTE_REASONS } from "@/features/waste/schemas";
 import type { DayNumber } from "@/lib/day-number";
 import { formatClock, formatLongDate } from "@/lib/time";
 import { countWord, formatQuantityCompact } from "@/lib/units";
@@ -64,9 +63,9 @@ async function Waste({ searchParams }: { searchParams: SearchParams }) {
     .filter((r) => locations.find((l) => l.id === r.locationId)?.kind === "branch")
     .reduce((s, r) => s + r.qtyPieces, 0);
   const ratio = percent(branchPieces, dispatchedPieces);
-  const reasonCounts = WASTE_REASONS.map((reason) => ({
+  const reasonCounts = [...new Set(rows.map((r) => r.reasonName))].map((reason) => ({
     reason,
-    n: rows.filter((r) => r.reason === reason).length,
+    n: rows.filter((r) => r.reasonName === reason).length,
   }));
   const top = [...reasonCounts].sort((a, b) => b.n - a.n)[0];
   const byLocation = locations.map((l) => ({
@@ -112,7 +111,7 @@ async function Waste({ searchParams }: { searchParams: SearchParams }) {
         />
         <Kpi
           label="أكثر سبب"
-          value={top && top.n > 0 ? WASTE_REASON_LABELS[top.reason] : "—"}
+          value={top && top.n > 0 ? top.reason : "—"}
           note={top && top.n > 0 ? `${top.n} من ${rows.length}` : undefined}
         />
       </div>
@@ -169,7 +168,7 @@ async function Waste({ searchParams }: { searchParams: SearchParams }) {
                     {formatQuantityCompact(r.qtyPieces, r.piecesPerCake)}
                   </td>
                   <td className={tdClass}>
-                    {WASTE_REASON_LABELS[r.reason]}
+                    {r.reasonName}
                     {r.note ? ` · ${r.note}` : ""}
                     <span className="block text-xs text-muted">{r.recordedBy}</span>
                   </td>

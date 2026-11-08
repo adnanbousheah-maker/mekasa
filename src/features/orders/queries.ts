@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { recentDates } from "@/lib/day-number";
 import { businessDate } from "@/lib/time";
 import { shiftDate, summarizeDay, type DaySummary } from "./day-summary";
+import { treeOrder } from "@/features/lists/types";
 
 export type ProductKind = "cake" | "packaging" | "sauce";
 
@@ -11,6 +12,8 @@ export interface OrderProduct {
   id: string;
   nameEn: string;
   kind: ProductKind;
+  // التصنيف من القائمة (null = بدون)
+  category: string | null;
   piecesPerCake: number | null;
   stockPieces: number;
   parPieces: number | undefined;
@@ -21,19 +24,47 @@ export interface OrderProduct {
 type Db = Awaited<ReturnType<typeof createClient>>;
 
 async function products(supabase: Db) {
-  const { data, error } = await supabase
-    .from("v_products")
-    .select("id, name_en, effective_pieces_per_cake, is_active, kind, effective_shelf_life_days")
-    .order("sort_order");
+  const [{ data, error }, { data: cats }, { data: categories }] = await Promise.all([
+    supabase
+      .from("v_products")
+      .select("id, name_en, effective_pieces_per_cake, is_active, kind, effective_shelf_life_days")
+      .order("sort_order"),
+    supabase.from("products").select("id, category_id"),
+    supabase
+      .from("lookup_options")
+      .select("id, name, parent_id, sort_order")
+      .eq("list_key", "product_categories"),
+  ]);
   if (error) throw new Error(`Could not load products: ${error.message}`);
-  return data.map((p) => ({
-    id: p.id!,
-    nameEn: p.name_en!,
-    piecesPerCake: p.effective_pieces_per_cake,
-    isActive: p.is_active!,
-    kind: p.kind!,
-    shelfLifeDays: p.effective_shelf_life_days ?? 7,
-  }));
+  const categoryOf = new Map((cats ?? []).map((c) => [c.id, c.category_id]));
+  const ordered = treeOrder(
+    (categories ?? []).map((c) => ({
+      id: c.id,
+      name: c.name,
+      parentId: c.parent_id,
+      sortOrder: c.sort_order,
+    })),
+  );
+  const rank = new Map(ordered.map((c, i) => [c.id, i]));
+  const nameOf = new Map(ordered.map((c) => [c.id, c.name]));
+  const list = data.map((p) => {
+    const categoryId = categoryOf.get(p.id!) ?? null;
+    return {
+      id: p.id!,
+      nameEn: p.name_en!,
+      piecesPerCake: p.effective_pieces_per_cake,
+      isActive: p.is_active!,
+      kind: p.kind!,
+      shelfLifeDays: p.effective_shelf_life_days ?? 7,
+      category: categoryId ? (nameOf.get(categoryId) ?? null) : null,
+      categoryRank: categoryId ? (rank.get(categoryId) ?? 999) : 999,
+    };
+  });
+  // حسب التصنيف (بترتيب القائمة)، والصنف بدون تصنيف بالآخر. الترتيب جوا التصنيف متل المنيو.
+  return list
+    .map((p, i) => ({ p, i }))
+    .sort((a, b) => a.p.categoryRank - b.p.categoryRank || a.i - b.i)
+    .map((x) => x.p);
 }
 
 // الصوصات بعد الكيك دايماً
@@ -69,6 +100,7 @@ export async function productsForBranch(
       id: p.id,
       nameEn: p.nameEn,
       kind: p.kind,
+      category: p.category,
       piecesPerCake: p.piecesPerCake,
       stockPieces: byId.get(p.id)?.stock_pieces ?? 0,
       parPieces: byId.get(p.id)?.par_pieces ?? undefined,

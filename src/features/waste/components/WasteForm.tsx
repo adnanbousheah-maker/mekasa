@@ -9,10 +9,14 @@ import type { CountProduct, FactoryBatch } from "@/features/counts/queries";
 import { PhotoPicker } from "@/features/photos/components/PhotoPicker";
 import { DAY_NAMES, dayNumberOf } from "@/lib/day-number";
 import { recordWasteAction } from "../actions";
-import { WASTE_REASON_LABELS, WASTE_REASONS, wasteSubmitLabel, type WasteReason } from "../schemas";
+import { wasteSubmitLabel } from "../schemas";
+
+export type WasteReasonOption = { id: string; name: string; icon: string | null; requiresNote: boolean };
 
 type Props = {
   products: CountProduct[];
+  // أسباب التالف من القائمة (الفعّالة والمسموحة لدور الموظف)
+  reasons: WasteReasonOption[];
   // المصنع بس: الدفعات اللي إلها ستوك، والتواريخ الممكنة
   factory?: { batches: FactoryBatch[]; dates: string[] };
 };
@@ -21,12 +25,13 @@ const segment = (on: boolean) =>
   `h-10 rounded-[9px] text-[15px] ${on ? "bg-surface font-semibold shadow-sm" : "text-muted"}`;
 
 /** design/branch/Waste: صنف، كمية (كيكة أو قطعة)، سبب، صورة اختيارية. */
-export function WasteForm({ products, factory }: Props) {
+export function WasteForm({ products, reasons, factory }: Props) {
   const [productId, setProductId] = useState<string | null>(null);
   const [picking, setPicking] = useState(false);
   const [unit, setUnit] = useState<"cake" | "piece">("cake");
   const [qty, setQty] = useState(1);
-  const [reason, setReason] = useState<WasteReason>("expired");
+  const [reasonId, setReasonId] = useState<string | null>(reasons[0]?.id ?? null);
+  const reason = reasons.find((r) => r.id === reasonId) ?? null;
   const [note, setNote] = useState("");
   const [productionDate, setProductionDate] = useState<string | null>(null);
   const [photoPath, setPhotoPath] = useState<string | null>(null);
@@ -47,7 +52,7 @@ export function WasteForm({ products, factory }: Props) {
     setProductId(null);
     setQty(1);
     setUnit("cake");
-    setReason("expired");
+    setReasonId(reasons[0]?.id ?? null);
     setNote("");
     setProductionDate(null);
     setPhotoPath(null);
@@ -57,13 +62,16 @@ export function WasteForm({ products, factory }: Props) {
   const submit = () => {
     if (!product) return setError("اختار الصنف");
     if (factory && !productionDate) return setError("اختار رقم الدفعة");
+    if (!reason) return setError("اختار السبب");
+    if (reason.requiresNote && !note.trim()) return setError("اكتب شو صار");
     setError(null);
     startTransition(async () => {
       const result = await recordWasteAction({
         productId: product.id,
         unit: effectiveUnit,
         qty,
-        reason,
+        reasonId: reason.id,
+        requiresNote: reason.requiresNote,
         note,
         productionDate,
         photoPath,
@@ -224,20 +232,22 @@ export function WasteForm({ products, factory }: Props) {
       <div className="flex flex-col gap-2">
         <span className="text-[15px] font-semibold">السبب</span>
         <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="السبب">
-          {WASTE_REASONS.map((r) => (
+          {reasons.map((r) => (
             <button
-              key={r}
+              key={r.id}
               type="button"
               role="radio"
-              aria-checked={reason === r}
-              onClick={() => setReason(r)}
-              className={`h-[52px] rounded-xl text-base ${reason === r ? "border-2 border-ink bg-quiet font-semibold" : "border border-line-strong bg-surface"}`}
+              aria-checked={reasonId === r.id}
+              aria-label={r.name}
+              onClick={() => setReasonId(r.id)}
+              className={`min-h-[52px] rounded-xl px-1.5 text-base leading-tight ${reasonId === r.id ? "border-2 border-ink bg-quiet font-semibold" : "border border-line-strong bg-surface"}`}
             >
-              {WASTE_REASON_LABELS[r]}
+              {r.icon && <span aria-hidden="true">{r.icon} </span>}
+              {r.name}
             </button>
           ))}
         </div>
-        {reason === "other" && (
+        {reason?.requiresNote && (
           <input
             aria-label="شو صار؟"
             placeholder="شو صار؟"

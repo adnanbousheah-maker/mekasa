@@ -304,7 +304,9 @@ export function assistantTools(db: Db, now: Date) {
         const { locations, products } = await lookups(db);
         const { data } = await db
           .from("waste_records")
-          .select("location_id, product_id, qty_pieces, reason, occurred_at")
+          .select(
+            "location_id, product_id, qty_pieces, reason, occurred_at, reason_option:lookup_options(name)",
+          )
           .gte("occurred_at", new Date(`${from}T00:00:00+03:00`).toISOString())
           .lt("occurred_at", new Date(new Date(`${to}T00:00:00+03:00`).getTime() + 86_400_000).toISOString());
         const reasons = { expired: "انتهت", broken: "انكسرت", other: "غيره" } as const;
@@ -318,7 +320,7 @@ export function assistantTools(db: Db, now: Date) {
               product: p?.name,
               quantity: formatQuantity(w.qty_pieces ?? 0, p?.ppc ?? null),
               pieces: w.qty_pieces,
-              reason: reasons[w.reason],
+              reason: w.reason_option?.name ?? reasons[w.reason],
               at: when(w.occurred_at, now),
             };
           }),

@@ -385,6 +385,9 @@ export interface WasteRow {
   enteredQty: number;
   qtyPieces: number;
   reason: "expired" | "broken" | "other";
+  // اسم السبب من القائمة (بيتبع إعادة التسمية)
+  reasonName: string;
+  reasonColor: string | null;
   note: string | null;
   photoPath: string | null;
   recordedBy: string;
@@ -403,7 +406,7 @@ export async function listWaste(
     supabase
       .from("waste_records")
       .select(
-        "id, occurred_at, location_id, product_id, entered_unit, entered_qty, qty_pieces, pieces_per_cake_snapshot, reason, reason_note, photo_path, recorded_by, batch:batches(day_number)",
+        "id, occurred_at, location_id, product_id, entered_unit, entered_qty, qty_pieces, pieces_per_cake_snapshot, reason, reason_note, photo_path, recorded_by, batch:batches(day_number), reason_option:lookup_options(name, color)",
       )
       .gte("occurred_at", fromInstant)
       .order("occurred_at", { ascending: false }),
@@ -417,7 +420,11 @@ export async function listWaste(
       .gte("occurred_at", fromInstant),
   ]);
   if (error) fail("waste", error);
-  const names = await staffNames(data.map((w) => w.recorded_by));
+  const [names, { data: reasonOptions }] = await Promise.all([
+    staffNames(data.map((w) => w.recorded_by)),
+    supabase.from("lookup_options").select("code, name, color").eq("list_key", "waste_reasons"),
+  ]);
+  const byCode = new Map((reasonOptions ?? []).filter((o) => o.code).map((o) => [o.code!, o]));
   const locationNames = new Map(locations.map((l) => [l.id, l.name]));
   const productNames = new Map(products.map((p) => [p.id, p.nameEn]));
   return {
@@ -434,7 +441,11 @@ export async function listWaste(
       enteredQty: w.entered_qty,
       qtyPieces: w.qty_pieces ?? 0,
       reason: w.reason,
-      note: w.reason_note,
+      // السجلات القديمة بدون خيار: الاسم من رمزها
+      reasonName: w.reason_option?.name ?? byCode.get(w.reason)?.name ?? w.reason,
+      reasonColor: w.reason_option?.color ?? byCode.get(w.reason)?.color ?? null,
+      // الملاحظة التلقائية لسبب من القائمة ما إلها معنى (الاسم بيبين لحاله)
+      note: w.reason_note?.startsWith("[سبب] ") ? null : w.reason_note,
       photoPath: w.photo_path,
       recordedBy: names.get(w.recorded_by) ?? "",
       dayNumber: w.batch?.day_number ?? null,

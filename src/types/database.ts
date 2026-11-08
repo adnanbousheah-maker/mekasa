@@ -783,6 +783,108 @@ export type Database = {
         };
         Relationships: [];
       };
+      lookup_lists: {
+        Row: {
+          allows_children: boolean;
+          allows_roles: boolean;
+          description: string | null;
+          key: string;
+          name: string;
+          sort_order: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          allows_children?: boolean;
+          allows_roles?: boolean;
+          description?: string | null;
+          key: string;
+          name: string;
+          sort_order?: number;
+        };
+        Update: {
+          allows_children?: boolean;
+          allows_roles?: boolean;
+          description?: string | null;
+          key?: string;
+          name?: string;
+          sort_order?: number;
+        };
+        Relationships: [];
+      };
+      lookup_options: {
+        Row: {
+          allowed_roles: Database["public"]["Enums"]["app_role"][] | null;
+          code: string | null;
+          color: string | null;
+          created_at: string;
+          description: string | null;
+          icon: string | null;
+          id: string;
+          is_active: boolean;
+          list_key: string;
+          name: string;
+          parent_id: string | null;
+          requires_note: boolean;
+          sort_order: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          allowed_roles?: Database["public"]["Enums"]["app_role"][] | null;
+          code?: string | null;
+          color?: string | null;
+          created_at?: string;
+          description?: string | null;
+          icon?: string | null;
+          id?: string;
+          is_active?: boolean;
+          list_key: string;
+          name: string;
+          parent_id?: string | null;
+          requires_note?: boolean;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          allowed_roles?: Database["public"]["Enums"]["app_role"][] | null;
+          code?: string | null;
+          color?: string | null;
+          created_at?: string;
+          description?: string | null;
+          icon?: string | null;
+          id?: string;
+          is_active?: boolean;
+          list_key?: string;
+          name?: string;
+          parent_id?: string | null;
+          requires_note?: boolean;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lookup_options_list_key_fkey";
+            columns: ["list_key"];
+            isOneToOne: false;
+            referencedRelation: "lookup_lists";
+            referencedColumns: ["key"];
+          },
+          {
+            foreignKeyName: "lookup_options_parent_id_fkey";
+            columns: ["parent_id"];
+            isOneToOne: false;
+            referencedRelation: "lookup_options";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lookup_options_parent_id_fkey";
+            columns: ["parent_id"];
+            isOneToOne: false;
+            referencedRelation: "v_lookup_options";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       monthly_counts: {
         Row: {
           created_at: string;
@@ -1152,6 +1254,7 @@ export type Database = {
       };
       products: {
         Row: {
+          category_id: string | null;
           created_at: string;
           id: string;
           image_path: string | null;
@@ -1167,6 +1270,7 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          category_id?: string | null;
           created_at?: string;
           id?: string;
           image_path?: string | null;
@@ -1181,6 +1285,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          category_id?: string | null;
           created_at?: string;
           id?: string;
           image_path?: string | null;
@@ -1194,7 +1299,22 @@ export type Database = {
           sort_order?: number;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "lookup_options";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "products_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "v_lookup_options";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       push_subscriptions: {
         Row: {
@@ -1398,6 +1518,7 @@ export type Database = {
       raw_materials: {
         Row: {
           base_unit: string;
+          category_id: string | null;
           code: string | null;
           created_at: string;
           id: string;
@@ -1410,6 +1531,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           base_unit: string;
+          category_id?: string | null;
           code?: string | null;
           created_at?: string;
           id?: string;
@@ -1421,6 +1543,7 @@ export type Database = {
         };
         Update: {
           base_unit?: string;
+          category_id?: string | null;
           code?: string | null;
           created_at?: string;
           id?: string;
@@ -1430,7 +1553,22 @@ export type Database = {
           sort_order?: number;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "raw_materials_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "lookup_options";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "raw_materials_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "v_lookup_options";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       raw_movements: {
         Row: {
@@ -1448,6 +1586,7 @@ export type Database = {
           raw_count_line_id: string | null;
           recorded_at: string;
           supplier_name: string | null;
+          supplier_option_id: string | null;
         };
         ComputedFields: never;
         Insert: {
@@ -1465,6 +1604,7 @@ export type Database = {
           raw_count_line_id?: string | null;
           recorded_at?: string;
           supplier_name?: string | null;
+          supplier_option_id?: string | null;
         };
         Update: {
           correction_audit_id?: number | null;
@@ -1481,6 +1621,7 @@ export type Database = {
           raw_count_line_id?: string | null;
           recorded_at?: string;
           supplier_name?: string | null;
+          supplier_option_id?: string | null;
         };
         Relationships: [
           {
@@ -1537,6 +1678,20 @@ export type Database = {
             columns: ["raw_count_line_id"];
             isOneToOne: false;
             referencedRelation: "raw_count_lines";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "raw_movements_supplier_option_id_fkey";
+            columns: ["supplier_option_id"];
+            isOneToOne: false;
+            referencedRelation: "lookup_options";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "raw_movements_supplier_option_id_fkey";
+            columns: ["supplier_option_id"];
+            isOneToOne: false;
+            referencedRelation: "v_lookup_options";
             referencedColumns: ["id"];
           },
         ];
@@ -2495,6 +2650,7 @@ export type Database = {
           qty_pieces: number | null;
           reason: Database["public"]["Enums"]["waste_reason"];
           reason_note: string | null;
+          reason_option_id: string | null;
           recorded_by: string;
         };
         ComputedFields: never;
@@ -2512,6 +2668,7 @@ export type Database = {
           qty_pieces?: never;
           reason: Database["public"]["Enums"]["waste_reason"];
           reason_note?: string | null;
+          reason_option_id?: string | null;
           recorded_by: string;
         };
         Update: {
@@ -2528,6 +2685,7 @@ export type Database = {
           qty_pieces?: never;
           reason?: Database["public"]["Enums"]["waste_reason"];
           reason_note?: string | null;
+          reason_option_id?: string | null;
           recorded_by?: string;
         };
         Relationships: [
@@ -2578,6 +2736,20 @@ export type Database = {
             columns: ["product_id"];
             isOneToOne: false;
             referencedRelation: "v_products_before_shelf_life";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "waste_records_reason_option_id_fkey";
+            columns: ["reason_option_id"];
+            isOneToOne: false;
+            referencedRelation: "lookup_options";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "waste_records_reason_option_id_fkey";
+            columns: ["reason_option_id"];
+            isOneToOne: false;
+            referencedRelation: "v_lookup_options";
             referencedColumns: ["id"];
           },
           {
@@ -2856,6 +3028,83 @@ export type Database = {
             columns: ["location_id"];
             isOneToOne: false;
             referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      v_lookup_options: {
+        Row: {
+          allowed_roles: Database["public"]["Enums"]["app_role"][] | null;
+          code: string | null;
+          color: string | null;
+          created_at: string | null;
+          description: string | null;
+          icon: string | null;
+          id: string | null;
+          is_active: boolean | null;
+          list_key: string | null;
+          name: string | null;
+          parent_id: string | null;
+          requires_note: boolean | null;
+          sort_order: number | null;
+          updated_at: string | null;
+          usage_count: number | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          allowed_roles?: Database["public"]["Enums"]["app_role"][] | null;
+          code?: string | null;
+          color?: string | null;
+          created_at?: string | null;
+          description?: string | null;
+          icon?: string | null;
+          id?: string | null;
+          is_active?: boolean | null;
+          list_key?: string | null;
+          name?: string | null;
+          parent_id?: string | null;
+          requires_note?: boolean | null;
+          sort_order?: number | null;
+          updated_at?: string | null;
+          usage_count?: never;
+        };
+        Update: {
+          allowed_roles?: Database["public"]["Enums"]["app_role"][] | null;
+          code?: string | null;
+          color?: string | null;
+          created_at?: string | null;
+          description?: string | null;
+          icon?: string | null;
+          id?: string | null;
+          is_active?: boolean | null;
+          list_key?: string | null;
+          name?: string | null;
+          parent_id?: string | null;
+          requires_note?: boolean | null;
+          sort_order?: number | null;
+          updated_at?: string | null;
+          usage_count?: never;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lookup_options_list_key_fkey";
+            columns: ["list_key"];
+            isOneToOne: false;
+            referencedRelation: "lookup_lists";
+            referencedColumns: ["key"];
+          },
+          {
+            foreignKeyName: "lookup_options_parent_id_fkey";
+            columns: ["parent_id"];
+            isOneToOne: false;
+            referencedRelation: "lookup_options";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lookup_options_parent_id_fkey";
+            columns: ["parent_id"];
+            isOneToOne: false;
+            referencedRelation: "v_lookup_options";
             referencedColumns: ["id"];
           },
         ];
@@ -3152,6 +3401,7 @@ export type Database = {
         Returns: undefined;
       };
       admin_decide_request: { Args: { p_approve: boolean; p_request_id: string }; Returns: undefined };
+      admin_delete_option: { Args: { p_option_id: string }; Returns: undefined };
       admin_import_raw_count: { Args: { p_rows: Json; p_started_at?: string }; Returns: string };
       admin_record_pin_reset: { Args: { p_staff_id: string }; Returns: undefined };
       admin_resolve_receipt_line: {
@@ -3261,6 +3511,19 @@ export type Database = {
         Returns: string;
       };
       dispatch_round: { Args: { p_round: Json }; Returns: string[] };
+      log_waste: {
+        Args: {
+          p_location_id: string;
+          p_note?: string;
+          p_photo_path?: string;
+          p_product_id: string;
+          p_production_date?: string;
+          p_qty: number;
+          p_reason_id: string;
+          p_unit: Database["public"]["Enums"]["entry_unit"];
+        };
+        Returns: string;
+      };
       mark_notifications_read: { Args: { p_ids?: number[] }; Returns: number };
       monthly_count_done: {
         Args: { p_day: string; p_location_id: string; p_scope: string; p_slot_at: string };

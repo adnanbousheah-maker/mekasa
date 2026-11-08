@@ -4,9 +4,10 @@ import type { ProductRow } from "../queries";
 import { InlineField } from "./InlineField";
 import { NewSimpleItem } from "./NewSimpleItem";
 import { SavedSwitch } from "./SavedSwitch";
+import { CategorySelect, type CategoryChoice } from "@/features/lists/components/CategorySelect";
 
 /** الصوصات (بالحبة): الفروع بتطلبها من المصنع مع الكيك، وبتنعدّ بجرد آخر الشهر. */
-export function SaucesTab({ items }: { items: ProductRow[] }) {
+export function SaucesTab({ items, categories }: { items: ProductRow[]; categories: CategoryChoice[] }) {
   return (
     <section className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -27,6 +28,9 @@ export function SaucesTab({ items }: { items: ProductRow[] }) {
                 الاسم الثاني
               </th>
               <th scope="col" className="px-2 py-3 font-semibold">
+                التصنيف
+              </th>
+              <th scope="col" className="px-2 py-3 font-semibold">
                 فعّال
               </th>
             </tr>
@@ -34,7 +38,7 @@ export function SaucesTab({ items }: { items: ProductRow[] }) {
           <tbody>
             {items.length === 0 && (
               <tr>
-                <td colSpan={3} className="px-3 py-4 text-center text-muted">
+                <td colSpan={4} className="px-3 py-4 text-center text-muted">
                   ما في صوصات لسا. ضيف أول صوص من فوق.
                 </td>
               </tr>
@@ -59,6 +63,15 @@ export function SaucesTab({ items }: { items: ProductRow[] }) {
                     placeholder="اختياري"
                     onSave={updateProductNameArAction.bind(null, p.id)}
                     className="w-44"
+                  />
+                </td>
+                <td className="px-2 py-2 text-center">
+                  <CategorySelect
+                    target="product"
+                    itemId={p.id}
+                    itemName={p.nameEn}
+                    value={p.categoryId}
+                    choices={categories}
                   />
                 </td>
                 <td className="px-2 py-2 text-center">

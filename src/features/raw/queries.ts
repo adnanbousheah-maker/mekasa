@@ -3,6 +3,7 @@ import { requireStaff } from "@/features/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
 export interface RawMaterialRow {
+  categoryId: string | null;
   id: string;
   code: string | null;
   name: string;
@@ -24,7 +25,7 @@ export async function listRawMaterials(includeInactive = false): Promise<RawMate
   let materials = supabase
     .from("raw_materials")
     .select(
-      "id, code, name, base_unit, min_qty, is_active, raw_material_units(id, unit_name, factor_to_base)",
+      "id, code, name, base_unit, min_qty, is_active, category_id, raw_material_units(id, unit_name, factor_to_base)",
     )
     .order("sort_order")
     .order("name");
@@ -48,6 +49,7 @@ export async function listRawMaterials(includeInactive = false): Promise<RawMate
       id: m.id,
       code: m.code,
       name: m.name,
+      categoryId: m.category_id,
       baseUnit: m.base_unit,
       minQty: Number(m.min_qty),
       isActive: m.is_active,
@@ -93,7 +95,7 @@ export async function recentRawMoves(limit = 30): Promise<RawMove[]> {
   const { data, error } = await supabase
     .from("raw_movements")
     .select(
-      "id, occurred_at, movement_type, qty_base, entered_qty, supplier_name, invoice_photo_path, created_by, material:raw_materials(name, base_unit), unit:raw_material_units(unit_name)",
+      "id, occurred_at, movement_type, qty_base, entered_qty, supplier_name, invoice_photo_path, created_by, material:raw_materials(name, base_unit), unit:raw_material_units(unit_name), supplier_option:lookup_options(name)",
     )
     .order("occurred_at", { ascending: false })
     .limit(limit);
@@ -112,7 +114,8 @@ export async function recentRawMoves(limit = 30): Promise<RawMove[]> {
     qtyBase: Number(m.qty_base),
     enteredQty: m.entered_qty === null ? null : Number(m.entered_qty),
     unitName: m.unit?.unit_name ?? null,
-    supplierName: m.supplier_name,
+    // اسم المورد الحالي من القائمة (بيتبع إعادة التسمية)
+    supplierName: m.supplier_option?.name ?? m.supplier_name,
     hasInvoice: !!m.invoice_photo_path,
     invoicePath: m.invoice_photo_path,
     by: (m.created_by && nameOf.get(m.created_by)) || "",

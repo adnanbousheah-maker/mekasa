@@ -15,6 +15,8 @@ async function openSettings(page: Page, tab?: string) {
   await page.waitForURL((url) => url.pathname !== "/login");
   await page.goto(tab ? `/admin/settings?tab=${tab}` : "/admin/settings");
   await expect(page.getByRole("heading", { name: "الإعدادات" })).toBeVisible();
+  // نستنى الصفحة تخلص تحميل (الكتابة قبل ما React يمسك الخانات بتضيع)
+  await page.waitForLoadState("networkidle");
 }
 
 async function saveField(page: Page, label: string, value: string) {
@@ -122,6 +124,7 @@ test("the monthly count: every place has one, and the admin sets its time", asyn
   await time.press("Enter");
   await expect(monthly.getByRole("status").filter({ hasText: "انحفظ" })).toBeVisible();
   await page.reload();
+  await page.waitForLoadState("networkidle");
   await expect(monthly.getByLabel("ساعة جرد آخر الشهر: الكيك · دابوق")).toHaveValue("00:40");
 
   const dabouq = monthly.getByRole("switch", { name: "جرد آخر الشهر: الكيك · دابوق" });

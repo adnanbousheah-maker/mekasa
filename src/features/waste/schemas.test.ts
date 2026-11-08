@@ -2,36 +2,33 @@ import { describe, expect, it } from "vitest";
 import { wasteSchema, wasteSubmitLabel } from "./schemas";
 
 const productId = "11111111-1111-4111-8111-111111111111";
+const reasonId = "22222222-2222-4222-8222-222222222222";
 
 describe("wasteSchema", () => {
   it("accepts a simple branch waste with defaults", () => {
-    expect(wasteSchema.parse({ productId, unit: "cake", qty: 2, reason: "broken" })).toEqual({
+    expect(wasteSchema.parse({ productId, unit: "cake", qty: 2, reasonId })).toEqual({
       productId,
       unit: "cake",
       qty: 2,
-      reason: "broken",
+      reasonId,
+      requiresNote: false,
       note: "",
       productionDate: null,
       photoPath: null,
     });
   });
 
-  it("needs a note when the reason is other", () => {
-    const result = wasteSchema.safeParse({ productId, unit: "piece", qty: 1, reason: "other", note: "  " });
-    expect(result.error?.issues[0]?.message).toBe("اكتب شو صار");
-    expect(
-      wasteSchema.safeParse({ productId, unit: "piece", qty: 1, reason: "other", note: "وقعت" }).success,
-    ).toBe(true);
+  it("needs a note when the reason asks for one", () => {
+    const base = { productId, unit: "piece" as const, qty: 1, reasonId, requiresNote: true };
+    expect(wasteSchema.safeParse({ ...base, note: "  " }).error?.issues[0]?.message).toBe("اكتب شو صار");
+    expect(wasteSchema.safeParse({ ...base, note: "وقعت" }).success).toBe(true);
   });
 
   it("rejects zero, missing product and a bad date", () => {
-    expect(wasteSchema.safeParse({ productId, unit: "cake", qty: 0, reason: "broken" }).success).toBe(false);
-    expect(wasteSchema.safeParse({ productId: "", unit: "cake", qty: 1, reason: "broken" }).success).toBe(
-      false,
-    );
+    expect(wasteSchema.safeParse({ productId, unit: "cake", qty: 0, reasonId }).success).toBe(false);
+    expect(wasteSchema.safeParse({ productId: "", unit: "cake", qty: 1, reasonId }).success).toBe(false);
     expect(
-      wasteSchema.safeParse({ productId, unit: "cake", qty: 1, reason: "broken", productionDate: "23/10" })
-        .success,
+      wasteSchema.safeParse({ productId, unit: "cake", qty: 1, reasonId, productionDate: "23/10" }).success,
     ).toBe(false);
   });
 });

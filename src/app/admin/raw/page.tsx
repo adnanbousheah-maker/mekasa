@@ -7,6 +7,8 @@ import { RawImportButton } from "@/features/raw/components/RawImport";
 import { amount, daysLeftLabel, daysTone } from "@/features/raw/logic";
 import { listRawMaterials, recentRawMoves } from "@/features/raw/queries";
 import { InlineField } from "@/features/settings/components/InlineField";
+import { CategorySelect } from "@/features/lists/components/CategorySelect";
+import { categoryChoices } from "@/features/lists/queries";
 import { SavedSwitch } from "@/features/settings/components/SavedSwitch";
 import { setMaterialActiveAction, updateMaterialMinAction } from "@/features/raw/actions";
 import { canEdit, requireManager } from "@/features/auth/session";
@@ -35,7 +37,12 @@ const TONE = { danger: "text-danger-text", warn: "text-warn-text", ok: "text-ok-
 async function Raw() {
   const editor = canEdit(await requireManager());
   await connection();
-  const [materials, moves] = await Promise.all([listRawMaterials(true), recentRawMoves(20)]);
+  const [materials, moves, categories] = await Promise.all([
+    listRawMaterials(true),
+    recentRawMoves(20),
+    categoryChoices("raw_categories"),
+  ]);
+  const categoryName = new Map(categories.map((c) => [c.id, c.name]));
   const today = businessDate(new Date());
   const when = (at: string) => {
     const d = businessDate(new Date(at));
@@ -56,11 +63,12 @@ async function Raw() {
         }
       />
       <div className="scroll-hint overflow-x-auto rounded-2xl border border-line bg-surface">
-        <table className="w-full min-w-[860px] border-collapse text-sm">
+        <table className="w-full min-w-[1000px] border-collapse text-sm">
           <thead>
             <tr className="bg-table-head text-table-head-text">
               {[
                 "المادة",
+                "التصنيف",
                 "الموجود",
                 "الحد الأدنى",
                 "صرف يومي",
@@ -91,6 +99,21 @@ async function Raw() {
                       </span>
                     )}
                   </th>
+                  <td className="px-3 py-2.5 text-center">
+                    {editor ? (
+                      <CategorySelect
+                        target="raw"
+                        itemId={m.id}
+                        itemName={m.name}
+                        value={m.categoryId}
+                        choices={categories}
+                      />
+                    ) : (
+                      <span className="text-[13px] text-muted">
+                        {(m.categoryId && categoryName.get(m.categoryId)) || "—"}
+                      </span>
+                    )}
+                  </td>
                   <td className="px-3 py-2.5 text-center font-semibold tabular-nums">
                     {amount(m.qty, m.baseUnit)}
                   </td>

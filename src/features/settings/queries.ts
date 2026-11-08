@@ -15,6 +15,7 @@ export interface ProductRow {
   // null = مدة الحياة العامة
   shelfLifeDays: number | null;
   isActive: boolean;
+  categoryId: string | null;
 }
 
 export interface ScheduleLocation {
@@ -38,7 +39,7 @@ export async function listProducts(kind: "cake" | "packaging" | "sauce" = "cake"
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("products")
-    .select("id, name_en, name_ar, sell_mode, pieces_per_cake, shelf_life_days, is_active")
+    .select("id, name_en, name_ar, sell_mode, pieces_per_cake, shelf_life_days, is_active, category_id")
     .eq("kind", kind)
     .order("sort_order")
     .order("name_en");
@@ -51,6 +52,7 @@ export async function listProducts(kind: "cake" | "packaging" | "sauce" = "cake"
     piecesPerCake: p.pieces_per_cake,
     shelfLifeDays: p.shelf_life_days,
     isActive: p.is_active,
+    categoryId: p.category_id,
   }));
 }
 

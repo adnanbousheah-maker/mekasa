@@ -20,7 +20,6 @@ import {
 } from "@/features/reports/queries";
 import { listStaff } from "@/features/staff/queries";
 import { ROLE_LABELS } from "@/features/staff/roles";
-import { WASTE_REASON_LABELS } from "@/features/waste/schemas";
 import { businessDate, formatClock, formatLongDate } from "@/lib/time";
 import { countWord, formatQuantity, formatQuantityCompact } from "@/lib/units";
 
@@ -314,7 +313,7 @@ async function Location({ params }: { params: Params }) {
               >
                 <span>
                   <ProductName name={w.productName} className="font-semibold" />{" "}
-                  <span className="text-muted">· {WASTE_REASON_LABELS[w.reason]}</span>
+                  <span className="text-muted">· {w.reasonName}</span>
                 </span>
                 <span className="text-sm text-muted">
                   {formatQuantityCompact(w.qtyPieces, w.piecesPerCake)} ·{" "}
