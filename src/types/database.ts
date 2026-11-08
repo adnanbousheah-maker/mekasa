@@ -3555,6 +3555,48 @@ export type Database = {
         };
         Returns: string;
       };
+      report_daily: {
+        Args: { p_from: string; p_to: string };
+        Returns: {
+          consumed_cakes: number;
+          consumed_loose: number;
+          day: string;
+          location_id: string;
+          waste_cakes: number;
+        }[];
+      };
+      report_locations: {
+        Args: { p_from: string; p_to: string };
+        Returns: {
+          consumed_cakes: number;
+          consumed_loose: number;
+          counts_done: number;
+          counts_expected: number;
+          counts_on_time: number;
+          dispatched_cakes: number;
+          dispatched_loose: number;
+          impossible_lines: number;
+          location_id: string;
+          produced_cakes: number;
+          produced_loose: number;
+          receipt_diffs: number;
+          receipt_lines: number;
+          received_cakes: number;
+          received_loose: number;
+          waste_cakes: number;
+          waste_loose: number;
+        }[];
+      };
+      report_products: {
+        Args: { p_from: string; p_to: string };
+        Returns: {
+          consumed_pieces: number;
+          produced_pieces: number;
+          product_id: string;
+          received_pieces: number;
+          waste_pieces: number;
+        }[];
+      };
       submit_count: {
         Args: {
           p_form_version_id?: string;

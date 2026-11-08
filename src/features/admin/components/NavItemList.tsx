@@ -68,9 +68,15 @@ const GROUPS: { title: string | null; items: Item[] }[] = [
     ],
   },
   {
+    title: "التقارير",
+    items: [
+      { href: "/admin/reports", label: "تقارير الإدارة", icon: "M4 20V10M10 20V4M16 20v-7M22 20H2" },
+      { href: "/admin/audit", label: "سجل التعديلات", icon: "M12 8v4l3 2M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5" },
+    ],
+  },
+  {
     title: "الإدارة",
     items: [
-      { href: "/admin/audit", label: "سجل التعديلات", icon: "M12 8v4l3 2M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5" },
       {
         href: "/admin/staff",
         label: "الموظفين والأدوار",

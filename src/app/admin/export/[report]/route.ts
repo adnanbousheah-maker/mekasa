@@ -12,6 +12,9 @@ import {
   stockByProduct,
 } from "@/features/reports/queries";
 import { auditFilterFrom } from "@/features/audit/filter";
+import { managementReport, totals } from "@/features/reports/kpis";
+import { resolvePeriod, wasteShare } from "@/features/reports/period";
+import { countDay } from "@/lib/time";
 import { listAudit } from "@/features/audit/queries";
 import { loadDocuments, ordersOfDay } from "@/features/orders/queries";
 import { IMPORT_HEADERS, packagingLabel } from "@/features/raw/import";
@@ -35,6 +38,95 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   let sheets: ExcelSheet<any>[];
 
   switch (report) {
+    case "management": {
+      // تقارير الإدارة بنفس الفترة (بالكيكات)
+      const period = resolvePeriod(
+        countDay(new Date()),
+        search.get("p") ?? undefined,
+        search.get("from") ?? undefined,
+        search.get("to") ?? undefined,
+      );
+      const report = await managementReport(period);
+      const now = totals(report.locations);
+      const before = totals(report.previous);
+      const r1 = (n: number) => Math.round(n * 10) / 10;
+      const kpis = [
+        ["الاستهلاك بالفروع (كيكة)", now.consumed, before.consumed],
+        ["التالف (كيكة)", now.waste, before.waste],
+        [
+          "نسبة التالف بالفروع %",
+          wasteShare(now.consumed, now.branchWaste) ?? "",
+          wasteShare(before.consumed, before.branchWaste) ?? "",
+        ],
+        ["الإنتاج (كيكة)", now.produced, before.produced],
+        ["طلع للفروع (كيكة)", now.dispatched, before.dispatched],
+        ["استلمت الفروع (كيكة)", now.received, before.received],
+        ["مواعيد الجرد", now.countsExpected, before.countsExpected],
+        ["الجرد بوقته", now.countsOnTime, before.countsOnTime],
+        ["فروقات الاستلام", now.receiptDiffs, before.receiptDiffs],
+        ["أرقام مستحيلة", now.impossible, before.impossible],
+      ] as const;
+      sheets = [
+        sheet({
+          name: "المؤشرات",
+          rows: [...kpis],
+          columns: [
+            { header: "المؤشر", value: (k) => k[0], width: 28 },
+            { header: `${period.from} – ${period.to}`, value: (k) => k[1], width: 22 },
+            { header: `${period.previous.from} – ${period.previous.to}`, value: (k) => k[2], width: 22 },
+          ],
+        }),
+        sheet({
+          name: "المواقع",
+          rows: report.locations,
+          columns: [
+            { header: "الموقع", value: (l) => l.name, width: 18 },
+            { header: "الاستهلاك", value: (l) => l.consumedCakes },
+            { header: "التالف", value: (l) => l.wasteCakes },
+            { header: "نسبة التالف %", value: (l) => wasteShare(l.consumedCakes, l.wasteCakes) ?? "" },
+            { header: "المستلم", value: (l) => l.receivedCakes },
+            { header: "الإنتاج", value: (l) => l.producedCakes },
+            { header: "طلع", value: (l) => l.dispatchedCakes },
+            { header: "مواعيد الجرد", value: (l) => l.countsExpected },
+            { header: "انعمل", value: (l) => l.countsDone },
+            { header: "بوقته", value: (l) => l.countsOnTime },
+            { header: "فروقات الاستلام", value: (l) => l.receiptDiffs },
+            { header: "أرقام مستحيلة", value: (l) => l.impossibleLines },
+          ],
+        }),
+        sheet({
+          name: "الأصناف",
+          rows: report.products.filter((p) => p.consumed || p.waste || p.produced),
+          columns: [
+            { header: "الصنف", value: (p) => p.name, width: 26 },
+            { header: "قطع بالكيكة", value: (p) => p.piecesPerCake ?? "قطع بس" },
+            { header: "الاستهلاك (قطع)", value: (p) => p.consumed },
+            {
+              header: "الاستهلاك (كيكة)",
+              value: (p) => (p.piecesPerCake ? r1(p.consumed / p.piecesPerCake) : ""),
+            },
+            { header: "التالف (قطع)", value: (p) => p.waste },
+            { header: "نسبة التالف %", value: (p) => wasteShare(p.consumed, p.waste) ?? "" },
+            { header: "الإنتاج (قطع)", value: (p) => p.produced },
+          ],
+        }),
+        sheet({
+          name: "يومي",
+          rows: report.daily,
+          columns: [
+            { header: "اليوم", value: (d) => d.day, width: 14 },
+            {
+              header: "الموقع",
+              value: (d) => report.locations.find((l) => l.id === d.locationId)?.name ?? "",
+              width: 16,
+            },
+            { header: "الاستهلاك (كيكة)", value: (d) => d.consumedCakes },
+            { header: "التالف (كيكة)", value: (d) => d.wasteCakes },
+          ],
+        }),
+      ];
+      return excelResponse(await buildWorkbook(sheets), `mekasa-management-${period.from}-${period.to}`);
+    }
     case "audit": {
       // سجل التعديلات بنفس فلاتر الصفحة (كل الصفحات لحد 2000 سطر)
       const filter = auditFilterFrom(search);
