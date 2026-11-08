@@ -13,7 +13,11 @@ import { InlineField } from "@/features/settings/components/InlineField";
 import { CategorySelect } from "@/features/lists/components/CategorySelect";
 import { categoryChoices } from "@/features/lists/queries";
 import { SavedSwitch } from "@/features/settings/components/SavedSwitch";
-import { setMaterialActiveAction, updateMaterialMinAction } from "@/features/raw/actions";
+import {
+  setMaterialActiveAction,
+  updateMaterialMinAction,
+  updateMaterialNameAction,
+} from "@/features/raw/actions";
 import { canEdit, requireManager } from "@/features/auth/session";
 import { DAY_NAMES, dayNumberOf } from "@/lib/day-number";
 import { businessDate, formatClock } from "@/lib/time";
@@ -117,7 +121,16 @@ async function Raw({ searchParams }: { searchParams: SearchParams }) {
                   className={`border-t border-line-soft ${m.belowMin && m.isActive ? "bg-warn-soft" : ""} ${m.isActive ? "" : "opacity-60"}`}
                 >
                   <th scope="row" className="px-3 py-2.5 text-right font-semibold">
-                    {m.name}
+                    {editor ? (
+                      <InlineField
+                        label={`اسم ${m.name}`}
+                        initial={m.name}
+                        onSave={updateMaterialNameAction.bind(null, m.id)}
+                        className="w-44"
+                      />
+                    ) : (
+                      m.name
+                    )}
                     {m.code && (
                       <span dir="ltr" className="ms-2 text-xs font-normal text-muted">
                         {m.code}

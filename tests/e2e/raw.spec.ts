@@ -55,8 +55,14 @@ test.describe("admin", () => {
     await expect(dialog).toBeHidden();
     const row = page.getByRole("row", { name: new RegExp(name) });
     await expect(row).toContainText("علبة = 0.5 كيلو");
-    await row.getByRole("switch", { name: `${name} فعّالة` }).click();
-    await expect(row.getByRole("switch")).toHaveAttribute("aria-checked", "false");
+    // تعديل الاسم
+    const renamed = `${name} بلدي`;
+    await row.getByLabel(`اسم ${name}`).fill(renamed);
+    await row.getByLabel(`اسم ${name}`).press("Enter");
+    const renamedRow = page.getByRole("row", { name: new RegExp(renamed) });
+    await expect(renamedRow.getByLabel(`اسم ${renamed}`)).toHaveValue(renamed);
+    await renamedRow.getByRole("switch", { name: `${renamed} فعّالة` }).click();
+    await expect(renamedRow.getByRole("switch")).toHaveAttribute("aria-checked", "false");
     expect((await page.request.get("/admin/export/raw")).status()).toBe(200);
   });
 

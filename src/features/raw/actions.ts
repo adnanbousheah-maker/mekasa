@@ -117,6 +117,19 @@ export async function updateMaterialMinAction(materialId: string, value: string)
   return { status: "done" };
 }
 
+/** اسم المادة (الأدمن). التاريخ مربوط بالرقم، فالحركات القديمة بتبين بالاسم الجديد. */
+export async function updateMaterialNameAction(materialId: string, value: string): Promise<RawResult> {
+  await requireAdmin();
+  const name = z.string().trim().min(1, "اكتب الاسم").max(80, "الاسم طويل كثير").safeParse(value);
+  if (!idSchema.safeParse(materialId).success) return fail("المادة مش موجودة");
+  if (!name.success) return fail(name.error.issues[0]?.message ?? "اكتب الاسم");
+  const supabase = await createClient();
+  const { error } = await supabase.from("raw_materials").update({ name: name.data }).eq("id", materialId);
+  if (error) return fail(error.code === "23505" ? "في مادة بنفس الاسم" : "ما انحفظ");
+  refresh();
+  return { status: "done" };
+}
+
 export async function addUnitAction(
   materialId: string,
   unitName: string,
