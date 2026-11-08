@@ -1,3 +1,5 @@
+import { FilterForm } from "@/features/admin/components/FilterForm";
+import { applyCountsFilter, countsFilter, toQuery } from "@/features/reports/filters";
 import Link from "next/link";
 import { Suspense } from "react";
 import { AdminLoading } from "@/components/ui/AdminLoading";
@@ -26,23 +28,65 @@ export default function CountsPage({ searchParams }: { searchParams: SearchParam
 }
 
 async function Counts({ searchParams }: { searchParams: SearchParams }) {
-  const params = await searchParams;
-  const locations = await listReportLocations();
-  const location = locations.find((l) => l.id === params.location)?.id ?? "";
-  const counts = await listCounts({ locationId: location || undefined });
+  const f = countsFilter(await searchParams);
+  const filtered = Boolean(f.from || f.to || f.method || f.issues || f.who);
+  const [locations, all] = await Promise.all([
+    listReportLocations(),
+    listCounts({
+      locationId: f.location || undefined,
+      from: f.from || undefined,
+      to: f.to || undefined,
+      method: f.method || undefined,
+      limit: filtered ? 500 : 100,
+    }),
+  ]);
+  const location = f.location;
+  const counts = applyCountsFilter(all, f);
+  const query = toQuery({ ...f });
 
   return (
     <>
       <PageHeader
         title="الجرودات"
         subtitle="كل جرد مؤكد، مع الاستهلاك والأرقام المستحيلة"
-        actions={<ExportButton href={`/admin/export/counts${location ? `?location=${location}` : ""}`} />}
+        actions={<ExportButton href={`/admin/export/counts${query ? `?${query}` : ""}`} />}
       />
       <FilterLinks
         label="الموقع"
         current={location}
-        hrefFor={(v) => (v ? `/admin/counts?location=${v}` : "/admin/counts")}
+        hrefFor={(v) => {
+          const q = toQuery({ ...f, location: v });
+          return q ? `/admin/counts?${q}` : "/admin/counts";
+        }}
         options={[{ value: "", label: "الكل" }, ...locations.map((l) => ({ value: l.id, label: l.name }))]}
+      />
+      <FilterForm
+        action="/admin/counts"
+        hidden={location ? { location } : {}}
+        resetHref={location ? `/admin/counts?location=${location}` : "/admin/counts"}
+        fields={[
+          { kind: "date", name: "from", label: "من", value: f.from },
+          { kind: "date", name: "to", label: "لـ", value: f.to },
+          {
+            kind: "select",
+            name: "method",
+            label: "الطريقة",
+            value: f.method,
+            options: [
+              { value: "manual", label: "يدوي" },
+              { value: "photo", label: "بالصورة" },
+            ],
+          },
+          {
+            kind: "select",
+            name: "who",
+            label: "مين جرد",
+            value: f.who,
+            options: [...new Set(all.map((c) => c.countedBy))].sort().map((n) => ({ value: n, label: n })),
+          },
+          { kind: "check", name: "issues", label: "فيها أرقام مستحيلة أو تصحيحات", value: f.issues },
+        ]}
+        count={{ shown: counts.length, total: all.length }}
       />
       {/* الجوال: كرت لكل جرد بيفتح تفاصيله */}
       <ul aria-label="الجرودات" className="flex flex-col gap-2.5 md:hidden">

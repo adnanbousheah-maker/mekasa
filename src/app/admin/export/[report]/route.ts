@@ -1,6 +1,6 @@
 import { type NextRequest } from "next/server";
 import { canReadAll, getCurrentStaff } from "@/features/auth/session";
-import { addDays, parseRange, toCakes } from "@/features/reports/format";
+import { addDays, toCakes } from "@/features/reports/format";
 import {
   consumptionSince,
   factoryMatrix,
@@ -9,9 +9,23 @@ import {
   listReportLocations,
   listReportProducts,
   listWaste,
+  parLevels,
   stockByProduct,
 } from "@/features/reports/queries";
 import { auditFilterFrom } from "@/features/audit/filter";
+import { listOptions } from "@/features/lists/queries";
+import {
+  applyCountsFilter,
+  belowPar,
+  matches,
+  applyRawFilter,
+  applyStaffFilter,
+  applyWasteFilter,
+  countsFilter,
+  rawFilter,
+  staffFilter,
+  wasteFilter,
+} from "@/features/reports/filters";
 import { managementReport, totals } from "@/features/reports/kpis";
 import { resolvePeriod, wasteShare } from "@/features/reports/period";
 import { countDay } from "@/lib/time";
@@ -211,16 +225,25 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
     case "stock": {
       const use = search.get("view") === "use";
-      const [locations, products, source] = await Promise.all([
+      const q = (search.get("q") ?? "").slice(0, 60);
+      const low = !use && search.get("low") === "1";
+      const [locations, products, source, stockNow, par] = await Promise.all([
         listReportLocations(),
         listReportProducts(),
         use ? consumptionSince(addDays(today, -6)) : stockByProduct(),
+        low ? stockByProduct() : Promise.resolve(new Map<string, Map<string, number>>()),
+        low ? parLevels() : Promise.resolve(new Map<string, Map<string, number>>()),
       ]);
       const columns = use ? locations.filter((l) => l.kind === "branch") : locations;
       sheets = [
         sheet({
           name: use ? "استهلاك 7 أيام" : "الستوك",
-          rows: products.filter((p) => p.isActive || source.has(p.id)),
+          rows: products.filter(
+            (p) =>
+              (p.isActive || source.has(p.id)) &&
+              matches(q, p.nameEn) &&
+              (!low || belowPar(p.id, stockNow, par, locations)),
+          ),
           columns: [
             { header: "الصنف", value: (p: (typeof products)[number]) => p.nameEn, width: 28 },
             { header: "قطع بالكيكة", value: (p) => p.piecesPerCake ?? "قطع بس" },
@@ -241,11 +264,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       break;
     }
     case "counts": {
-      const location = search.get("location");
-      const counts = await listCounts({
-        locationId: location && UUID.test(location) ? location : undefined,
-        limit: 1000,
-      });
+      const cf = countsFilter(search);
+      const counts = applyCountsFilter(
+        await listCounts({
+          locationId: cf.location || undefined,
+          from: cf.from || undefined,
+          to: cf.to || undefined,
+          method: cf.method || undefined,
+          limit: 1000,
+        }),
+        cf,
+      );
       sheets = [
         sheet({
           name: "الجرودات",
@@ -307,7 +336,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       break;
     }
     case "waste": {
-      const { rows } = await listWaste(parseRange(search.get("range")));
+      const wf = wasteFilter(search);
+      const rows = applyWasteFilter((await listWaste(wf.range)).rows, wf);
       sheets = [
         sheet({
           name: "التالف",
@@ -400,7 +430,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       break;
     }
     case "raw": {
-      const [materials, moves] = await Promise.all([listRawMaterials(true), recentRawMoves(1000)]);
+      const [allMaterials, moves, rawCategories] = await Promise.all([
+        listRawMaterials(true),
+        recentRawMoves(1000),
+        listOptions("raw_categories"),
+      ]);
+      const parentOf = new Map(rawCategories.map((c) => [c.id, c.parentId]));
+      const materials = applyRawFilter(allMaterials, rawFilter(search), (id) => parentOf.get(id) ?? null);
       sheets = [
         sheet({
           name: "المواد الأولية",
@@ -439,7 +475,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       break;
     }
     case "staff": {
-      const rows = await listStaff();
+      const rows = applyStaffFilter(await listStaff(), staffFilter(search));
       sheets = [
         sheet({
           name: "الموظفين",

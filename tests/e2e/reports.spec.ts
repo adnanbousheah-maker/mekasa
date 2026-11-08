@@ -53,8 +53,8 @@ test.describe("admin dashboards", () => {
     // الستوك
     await page.getByRole("link", { name: "الستوك والاستهلاك" }).click();
     await expect(page.getByRole("heading", { name: "الستوك والاستهلاك" })).toBeVisible();
-    await page.getByLabel("بحث").fill("flan");
-    await page.getByLabel("بحث").press("Enter");
+    await page.getByRole("searchbox", { name: "الصنف" }).fill("flan");
+    await page.getByRole("searchbox", { name: "الصنف" }).press("Enter");
     await expect(page.getByRole("row", { name: /Flan/ })).toContainText("2 ك · 0 ق");
     await expect(page.getByRole("row", { name: /Latte/ })).toHaveCount(0);
 

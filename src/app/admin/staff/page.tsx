@@ -1,3 +1,6 @@
+import { FilterForm } from "@/features/admin/components/FilterForm";
+import { applyStaffFilter, staffFilter, toQuery } from "@/features/reports/filters";
+import { listWorkLocations } from "@/features/staff/queries";
 import { Suspense } from "react";
 import { AdminLoading } from "@/components/ui/AdminLoading";
 import Link from "next/link";
@@ -9,11 +12,16 @@ import { listStaff } from "@/features/staff/queries";
 import { ROLE_DESCRIPTIONS, ROLE_LABELS, ROLES } from "@/features/staff/roles";
 import { formatLastSeen } from "@/lib/time";
 
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
 // design/admin/AdminStaff.dc.html
-async function Staff() {
+async function Staff({ searchParams }: { searchParams: SearchParams }) {
   // إدارة الموظفين للأدمن بس
   const me = await requireAdmin();
-  const staff = await listStaff();
+  const f = staffFilter(await searchParams);
+  const [everyone, locations] = await Promise.all([listStaff(), listWorkLocations()]);
+  const staff = applyStaffFilter(everyone, f);
+  const query = toQuery({ ...f });
   const now = new Date();
   const activeCount = (role: (typeof ROLES)[number]) =>
     staff.filter((s) => s.isActive && s.roles.includes(role)).length;
@@ -28,7 +36,7 @@ async function Staff() {
           </span>
         </div>
         <div className="flex flex-wrap gap-2">
-          <ExportButton href="/admin/export/staff" />
+          <ExportButton href={`/admin/export/staff${query ? `?${query}` : ""}`} />
           <Link
             href="/admin/staff/new"
             className="inline-flex h-11 items-center rounded-[10px] bg-ink px-4 text-sm font-semibold text-white"
@@ -37,6 +45,44 @@ async function Staff() {
           </Link>
         </div>
       </header>
+      <FilterForm
+        action="/admin/staff"
+        fields={[
+          {
+            kind: "text",
+            name: "q",
+            label: "الاسم أو الجوال أو اسم المستخدم",
+            value: f.q,
+            placeholder: "دوّر…",
+          },
+          {
+            kind: "select",
+            name: "location",
+            label: "الموقع",
+            value: f.location,
+            options: locations.map((l) => ({ value: l.id, label: l.name })),
+          },
+          {
+            kind: "select",
+            name: "role",
+            label: "الدور",
+            value: f.role,
+            options: ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] })),
+          },
+          {
+            kind: "select",
+            name: "status",
+            label: "الحالة",
+            value: f.status,
+            options: [
+              { value: "active", label: "نشط" },
+              { value: "inactive", label: "موقوف" },
+              { value: "locked", label: "مقفول" },
+            ],
+          },
+        ]}
+        count={{ shown: staff.length, total: everyone.length }}
+      />
 
       <div className="flex flex-wrap items-start gap-4">
         {/* بالجوال: كرت لكل موظف والأزرار تحته (الجدول ما بيوسع) */}
@@ -171,10 +217,10 @@ function StatusChip({ isActive, isLocked }: { isActive: boolean; isLocked: boole
   return <span className={`rounded-[10px] px-2.5 py-0.5 text-xs font-semibold ${tone}`}>{label}</span>;
 }
 
-export default function StaffPage() {
+export default function StaffPage({ searchParams }: { searchParams: SearchParams }) {
   return (
     <Suspense fallback={<AdminLoading />}>
-      <Staff />
+      <Staff searchParams={searchParams} />
     </Suspense>
   );
 }

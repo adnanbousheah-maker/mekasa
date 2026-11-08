@@ -210,7 +210,13 @@ async function staffNames(ids: string[]): Promise<Map<string, string>> {
 }
 
 export async function listCounts(
-  filter: { locationId?: string; limit?: number } = {},
+  filter: {
+    locationId?: string;
+    limit?: number;
+    from?: string;
+    to?: string;
+    method?: "manual" | "photo";
+  } = {},
 ): Promise<CountListRow[]> {
   const supabase = await db();
   let query = supabase
@@ -219,6 +225,9 @@ export async function listCounts(
     .order("started_at", { ascending: false })
     .limit(filter.limit ?? 100);
   if (filter.locationId) query = query.eq("location_id", filter.locationId);
+  if (filter.from) query = query.gte("business_date", filter.from);
+  if (filter.to) query = query.lte("business_date", filter.to);
+  if (filter.method) query = query.eq("method", filter.method);
   // كل المواقع (مش بس الفروع والمصنع)، مشان جرد مستودع التغليف يبين باسمه
   const [{ data, error }, { data: locations }] = await Promise.all([
     query,

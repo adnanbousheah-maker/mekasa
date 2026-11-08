@@ -94,6 +94,16 @@ const GROUPS: { title: string | null; items: Item[] }[] = [
   },
 ];
 
+/** كل صفحات الإدارة (للبحث العام وآخر الصفحات). */
+export const NAV_PAGES = GROUPS.flatMap((g) =>
+  g.items.map((i) => ({
+    href: i.href,
+    label: i.label,
+    group: g.title ?? "",
+    adminOnly: Boolean(i.adminOnly),
+  })),
+);
+
 function NavIcon({ d }: { d: string }) {
   return (
     <svg

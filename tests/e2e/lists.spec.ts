@@ -59,7 +59,7 @@ test("the admin adds a waste reason and the branch uses it", async ({ browser })
     await expect(again.getByRole("row", { name: new RegExp(renamed) }).getByText("انحفظ")).toBeVisible();
     await expect(again.getByRole("button", { name: `احذف ${renamed}` })).toHaveCount(0);
     await again.goto("/admin/waste");
-    await expect(again.getByText(renamed).first()).toBeVisible();
+    await expect(again.getByRole("cell", { name: new RegExp(renamed) }).first()).toBeVisible();
   } finally {
     await again.close();
   }

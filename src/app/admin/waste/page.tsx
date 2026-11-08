@@ -1,3 +1,5 @@
+import { FilterForm } from "@/features/admin/components/FilterForm";
+import { applyWasteFilter, toQuery, wasteFilter } from "@/features/reports/filters";
 import { Suspense } from "react";
 import { AdminLoading } from "@/components/ui/AdminLoading";
 import { DayBadge } from "@/components/ui/DayBadge";
@@ -14,14 +16,7 @@ import {
   thClass,
 } from "@/features/admin/components/AdminBits";
 import { signedPhotoUrl } from "@/features/photos/queries";
-import {
-  RANGE_LABELS,
-  parseRange,
-  percent,
-  toCakes,
-  totalCakesAndPieces,
-  type Range,
-} from "@/features/reports/format";
+import { RANGE_LABELS, percent, toCakes, totalCakesAndPieces, type Range } from "@/features/reports/format";
 import { listReportLocations, listWaste } from "@/features/reports/queries";
 import type { DayNumber } from "@/lib/day-number";
 import { formatClock, formatLongDate } from "@/lib/time";
@@ -45,11 +40,15 @@ export default function WastePage({ searchParams }: { searchParams: SearchParams
 }
 
 async function Waste({ searchParams }: { searchParams: SearchParams }) {
-  const range = parseRange((await searchParams).range);
-  const [{ from, rows, dispatchedPieces }, locations] = await Promise.all([
+  const f = wasteFilter(await searchParams);
+  const range = f.range;
+  const [{ from, rows: all, dispatchedPieces }, locations] = await Promise.all([
     listWaste(range),
     listReportLocations(),
   ]);
+  const rows = applyWasteFilter(all, f);
+  const query = toQuery({ ...f });
+  const keep = (extra: Record<string, string>) => toQuery({ ...f, ...extra });
   const photos = new Map(
     await Promise.all(
       rows
@@ -88,15 +87,45 @@ async function Waste({ searchParams }: { searchParams: SearchParams }) {
             <FilterLinks
               label="الفترة"
               current={range}
-              hrefFor={(v) => `/admin/waste?range=${v}`}
+              hrefFor={(v) => `/admin/waste?${keep({ range: v })}`}
               options={(["today", "week", "month"] as Range[]).map((r) => ({
                 value: r,
                 label: RANGE_LABELS[r],
               }))}
             />
-            <ExportButton href={`/admin/export/waste?range=${range}`} />
+            <ExportButton href={`/admin/export/waste?${query}`} />
           </>
         }
+      />
+      <FilterForm
+        action="/admin/waste"
+        hidden={{ range }}
+        fields={[
+          {
+            kind: "select",
+            name: "location",
+            label: "الموقع",
+            value: f.location,
+            options: locations.map((l) => ({ value: l.id, label: l.name })),
+          },
+          {
+            kind: "select",
+            name: "reason",
+            label: "السبب",
+            value: f.reason,
+            options: [...new Set(all.map((r) => r.reasonName))].sort().map((r) => ({ value: r, label: r })),
+          },
+          {
+            kind: "select",
+            name: "who",
+            label: "مين سجّل",
+            value: f.who,
+            options: [...new Set(all.map((r) => r.recordedBy))].sort().map((r) => ({ value: r, label: r })),
+          },
+          { kind: "text", name: "q", label: "الصنف أو الملاحظة", value: f.q, placeholder: "دوّر…" },
+        ]}
+        resetHref={`/admin/waste?range=${range}`}
+        count={{ shown: rows.length, total: all.length }}
       />
       <div className="flex flex-wrap gap-3">
         <Kpi

@@ -1,3 +1,5 @@
+import { FilterForm } from "@/features/admin/components/FilterForm";
+import { belowPar, matches, param, toQuery } from "@/features/reports/filters";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { AdminLoading } from "@/components/ui/AdminLoading";
@@ -38,7 +40,8 @@ async function Stock({ searchParams }: { searchParams: SearchParams }) {
   // التاريخ لكل طلب (cacheComponents)
   await connection();
   const view = params.view === "use" ? "use" : "stock";
-  const q = typeof params.q === "string" ? params.q.trim().toLowerCase() : "";
+  const q = param(params, "q").slice(0, 60);
+  const low = view === "stock" && param(params, "low") === "1";
   const today = businessDate(new Date());
 
   const [locations, products, stock, par, use] = await Promise.all([
@@ -51,16 +54,20 @@ async function Stock({ searchParams }: { searchParams: SearchParams }) {
   const columns = view === "use" ? locations.filter((l) => l.kind === "branch") : locations;
   const source = view === "use" ? use : stock;
   const rows = products.filter(
-    (p) => (p.isActive || source.has(p.id)) && (!q || p.nameEn.toLowerCase().includes(q)),
+    (p) =>
+      (p.isActive || source.has(p.id)) &&
+      matches(q, p.nameEn) &&
+      (!low || belowPar(p.id, stock, par, locations)),
   );
-  const href = (v: string) => `/admin/stock?view=${v}${q ? `&q=${encodeURIComponent(q)}` : ""}`;
+  const href = (v: string) => `/admin/stock?${toQuery({ view: v, q, low: v === "stock" && low })}`;
+  const query = toQuery({ view, q, low });
 
   return (
     <>
       <PageHeader
         title="الستوك والاستهلاك"
         subtitle="حسب آخر جرد بكل موقع، مع الحركات اللي صارت بعده"
-        actions={<ExportButton href={`/admin/export/stock?view=${view}`} />}
+        actions={<ExportButton href={`/admin/export/stock?${query}`} />}
       />
       <div className="flex flex-wrap items-center gap-3">
         <FilterLinks
@@ -72,17 +79,7 @@ async function Stock({ searchParams }: { searchParams: SearchParams }) {
             { value: "use", label: "استهلاك آخر 7 أيام" },
           ]}
         />
-        <form className="flex h-10 items-center gap-2 rounded-[10px] border border-line-strong bg-surface px-3">
-          <input type="hidden" name="view" value={view} />
-          <input
-            type="search"
-            name="q"
-            defaultValue={q}
-            placeholder="دوّر على صنف"
-            aria-label="بحث"
-            className="w-44 bg-transparent text-sm outline-none"
-          />
-        </form>
+
         <span className="flex flex-wrap items-center gap-3 text-[13px] text-muted">
           <span>ك = كيكة · ق = قطعة</span>
           {view === "stock" && (
@@ -94,6 +91,25 @@ async function Stock({ searchParams }: { searchParams: SearchParams }) {
         </span>
       </div>
 
+      <FilterForm
+        action="/admin/stock"
+        hidden={{ view }}
+        resetHref={`/admin/stock?view=${view}`}
+        fields={[
+          { kind: "text", name: "q", label: "الصنف", value: q, placeholder: "دوّر على صنف" },
+          ...(view === "stock"
+            ? [
+                {
+                  kind: "check" as const,
+                  name: "low",
+                  label: "تحت الحد المطلوب بفرع واحد على الأقل",
+                  value: low,
+                },
+              ]
+            : []),
+        ]}
+        count={{ shown: rows.length, total: products.filter((p) => p.isActive || source.has(p.id)).length }}
+      />
       {/* الجوال: كرت لكل صنف بدل الجدول العريض */}
       <ul aria-label="الأصناف" className="flex flex-col gap-2.5 md:hidden">
         {rows.length === 0 && (

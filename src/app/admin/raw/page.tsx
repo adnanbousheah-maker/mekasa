@@ -1,3 +1,6 @@
+import { FilterForm } from "@/features/admin/components/FilterForm";
+import { listOptions } from "@/features/lists/queries";
+import { applyRawFilter, rawFilter, toQuery } from "@/features/reports/filters";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { AdminLoading } from "@/components/ui/AdminLoading";
@@ -15,11 +18,13 @@ import { canEdit, requireManager } from "@/features/auth/session";
 import { DAY_NAMES, dayNumberOf } from "@/lib/day-number";
 import { businessDate, formatClock } from "@/lib/time";
 
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
 // design/admin/AdminRaw.dc.html
-export default function AdminRawPage() {
+export default function AdminRawPage({ searchParams }: { searchParams: SearchParams }) {
   return (
     <Suspense fallback={<AdminLoading />}>
-      <Raw />
+      <Raw searchParams={searchParams} />
     </Suspense>
   );
 }
@@ -34,14 +39,19 @@ const KIND = {
 
 const TONE = { danger: "text-danger-text", warn: "text-warn-text", ok: "text-ok-text" } as const;
 
-async function Raw() {
+async function Raw({ searchParams }: { searchParams: SearchParams }) {
   const editor = canEdit(await requireManager());
+  const f = rawFilter(await searchParams);
   await connection();
-  const [materials, moves, categories] = await Promise.all([
+  const [allMaterials, moves, categories, rawOptions] = await Promise.all([
     listRawMaterials(true),
     recentRawMoves(20),
     categoryChoices("raw_categories"),
+    listOptions("raw_categories"),
   ]);
+  const parentOf = new Map(rawOptions.map((c) => [c.id, c.parentId]));
+  const materials = applyRawFilter(allMaterials, f, (id) => parentOf.get(id) ?? null);
+  const query = toQuery({ ...f });
   const categoryName = new Map(categories.map((c) => [c.id, c.name]));
   const today = businessDate(new Date());
   const when = (at: string) => {
@@ -56,11 +66,26 @@ async function Raw() {
         subtitle="الأيام المتبقية محسوبة من معدل الصرف بآخر 14 يوم"
         actions={
           <>
-            <ExportButton href="/admin/export/raw" />
+            <ExportButton href={`/admin/export/raw${query ? `?${query}` : ""}`} />
             {editor && <RawImportButton />}
             {editor && <NewMaterialButton />}
           </>
         }
+      />
+      <FilterForm
+        action="/admin/raw"
+        fields={[
+          { kind: "text", name: "q", label: "الاسم أو الكود", value: f.q, placeholder: "طحين، R01…" },
+          {
+            kind: "select",
+            name: "category",
+            label: "التصنيف",
+            value: f.category,
+            options: categories.map((c) => ({ value: c.id, label: c.depth ? `↳ ${c.name}` : c.name })),
+          },
+          { kind: "check", name: "low", label: "تحت الحد الأدنى بس", value: f.low },
+        ]}
+        count={{ shown: materials.length, total: allMaterials.length }}
       />
       <div className="scroll-hint overflow-x-auto rounded-2xl border border-line bg-surface">
         <table className="w-full min-w-[1000px] border-collapse text-sm">
