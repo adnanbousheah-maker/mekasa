@@ -82,6 +82,15 @@
   }
 }
 
+/* أي صندوق بيتمرر للجنب لازم يكون relative: وإلا العناصر المخفية (sr-only، absolute) جوا الجدول
+   بتطلع برّاه وبتعرّض الصفحة كلها على الجوال (العرض بالـ RTL بيتمدد لليسار). */
+@layer base {
+  .overflow-x-auto,
+  .overflow-auto {
+    position: relative;
+  }
+}
+
 /* الجداول العريضة بلوحة الإدارة على الجوال: تلميح إنه الجدول بيتمرر للجنب */
 @media (max-width: 767px) {
   .scroll-hint::before {

@@ -104,7 +104,10 @@ export function SearchPalette({ isAdmin }: { isAdmin: boolean }) {
       >
         <span aria-hidden="true">⌕</span>
         <span className="grow text-right">بحث</span>
-        <kbd className="hidden rounded border border-line px-1.5 text-[11px] lg:inline" dir="ltr">
+        <kbd
+          className="hidden rounded border border-line px-1.5 text-[11px] pointer-fine:lg:inline"
+          dir="ltr"
+        >
           Ctrl K
         </kbd>
       </button>
@@ -112,38 +115,51 @@ export function SearchPalette({ isAdmin }: { isAdmin: boolean }) {
         ref={dialog}
         aria-label="بحث بالنظام"
         onClose={() => setOpen(false)}
-        className="m-auto mt-[10vh] w-[min(560px,calc(100vw-32px))] rounded-2xl border border-line bg-surface p-0 text-ink backdrop:bg-black/40"
+        // كبسة برا الصندوق (على الخلفية) بتسكّر، أسهل من Esc على الجوال
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setOpen(false);
+        }}
+        className="m-auto mt-4 w-[min(560px,calc(100vw-32px))] rounded-2xl border border-line bg-surface p-0 text-ink backdrop:bg-black/40 sm:mt-[10vh]"
       >
         <div className="flex flex-col">
-          <input
-            ref={input}
-            type="search"
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value);
-              setActive(0);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                setActive((a) => Math.min(a + 1, items.length - 1));
-              } else if (e.key === "ArrowUp") {
-                e.preventDefault();
-                setActive((a) => Math.max(a - 1, 0));
-              } else if (e.key === "Escape") {
-                // خانة البحث بتمسح النص بـ Escape بدل ما تسكّر: نسكّر إحنا
-                e.preventDefault();
-                setOpen(false);
-              } else if (e.key === "Enter") {
-                e.preventDefault();
-                go(items[active]);
-              }
-            }}
-            placeholder="دوّر على صفحة، صنف، موظف، فرع، مادة…"
-            aria-label="اكتب للبحث"
-            aria-controls="search-results"
-            className="h-14 border-b border-line bg-transparent px-4 text-base outline-none"
-          />
+          <div className="flex items-center border-b border-line">
+            <input
+              ref={input}
+              type="search"
+              value={q}
+              onChange={(e) => {
+                setQ(e.target.value);
+                setActive(0);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "ArrowDown") {
+                  e.preventDefault();
+                  setActive((a) => Math.min(a + 1, items.length - 1));
+                } else if (e.key === "ArrowUp") {
+                  e.preventDefault();
+                  setActive((a) => Math.max(a - 1, 0));
+                } else if (e.key === "Escape") {
+                  // خانة البحث بتمسح النص بـ Escape بدل ما تسكّر: نسكّر إحنا
+                  e.preventDefault();
+                  setOpen(false);
+                } else if (e.key === "Enter") {
+                  e.preventDefault();
+                  go(items[active]);
+                }
+              }}
+              placeholder="دوّر على صفحة، صنف، موظف، فرع، مادة…"
+              aria-label="اكتب للبحث"
+              aria-controls="search-results"
+              className="h-14 min-w-0 grow bg-transparent px-4 text-base outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="h-12 shrink-0 px-4 text-[15px] font-semibold text-muted"
+            >
+              سكّر
+            </button>
+          </div>
           <ul
             id="search-results"
             role="listbox"
@@ -167,7 +183,7 @@ export function SearchPalette({ isAdmin }: { isAdmin: boolean }) {
                 aria-selected={i === active}
                 onMouseEnter={() => setActive(i)}
                 onClick={() => go(item)}
-                className={`flex cursor-pointer items-center justify-between gap-3 rounded-xl px-3 py-2.5 ${i === active ? "bg-quiet" : ""}`}
+                className={`flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-xl px-3 py-2.5 active:bg-quiet ${i === active ? "pointer-fine:bg-quiet" : ""}`}
               >
                 <span dir="auto" className="font-semibold">
                   {item.label}
@@ -176,7 +192,8 @@ export function SearchPalette({ isAdmin }: { isAdmin: boolean }) {
               </li>
             ))}
           </ul>
-          <div className="flex justify-between border-t border-line px-4 py-2 text-[11px] text-muted">
+          {/* تلميح الكيبورد للابتوب بس (الجوال ما فيه أسهم ولا Esc) */}
+          <div className="hidden justify-between border-t border-line px-4 py-2 text-[11px] text-muted pointer-fine:flex">
             <span>↑↓ للتنقل · Enter للفتح · Esc للإغلاق</span>
             {isSearching && <span>عم يدوّر…</span>}
           </div>
