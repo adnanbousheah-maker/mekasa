@@ -1,5 +1,5 @@
 import { type NextRequest } from "next/server";
-import { getCurrentStaff } from "@/features/auth/session";
+import { canReadAll, getCurrentStaff } from "@/features/auth/session";
 import { addDays, parseRange, toCakes } from "@/features/reports/format";
 import {
   consumptionSince,
@@ -11,6 +11,8 @@ import {
   listWaste,
   stockByProduct,
 } from "@/features/reports/queries";
+import { auditFilterFrom } from "@/features/audit/filter";
+import { listAudit } from "@/features/audit/queries";
 import { loadDocuments, ordersOfDay } from "@/features/orders/queries";
 import { IMPORT_HEADERS, packagingLabel } from "@/features/raw/import";
 import { listRawMaterials, recentRawMoves } from "@/features/raw/queries";
@@ -25,7 +27,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // تصدير Excel لكل جداول لوحة الأدمن: /admin/export/{stock|counts|count|waste|staff}
 export async function GET(request: NextRequest, { params }: { params: Promise<{ report: string }> }) {
   const staff = await getCurrentStaff();
-  if (!staff?.roles.includes("admin")) return new Response("forbidden", { status: 403 });
+  if (!staff || !canReadAll(staff)) return new Response("forbidden", { status: 403 });
 
   const { report } = await params;
   const search = request.nextUrl.searchParams;
@@ -34,6 +36,39 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   let sheets: ExcelSheet<any>[];
 
   switch (report) {
+    case "audit": {
+      // سجل التعديلات بنفس فلاتر الصفحة (كل الصفحات لحد 2000 سطر)
+      const filter = auditFilterFrom(search);
+      const rows = [];
+      for (let page = 0; page < 40; page += 1) {
+        const chunk = await listAudit({ ...filter, page });
+        rows.push(...chunk.rows);
+        if (!chunk.more) break;
+      }
+      sheets = [
+        sheet({
+          name: "سجل التعديلات",
+          rows,
+          columns: [
+            {
+              header: "الوقت",
+              value: (r) => `${businessDate(new Date(r.at))} ${formatClock(new Date(r.at))}`,
+              width: 18,
+            },
+            { header: "مين", value: (r) => r.who, width: 16 },
+            { header: "العملية", value: (r) => `${r.action} ${r.what}`, width: 22 },
+            { header: "العنصر", value: (r) => r.item ?? "", width: 24 },
+            {
+              header: "التغيير",
+              value: (r) => r.changes.map((c) => `${c.field}: ${c.from} ← ${c.to}`).join(" | "),
+              width: 60,
+            },
+            { header: "السبب", value: (r) => r.reason ?? "", width: 30 },
+          ],
+        }),
+      ];
+      return excelResponse(await buildWorkbook(sheets), `mekasa-audit-${today}`);
+    }
     case "raw-template": {
       // قالب جرد المواد: كل المواد الفعّالة، والكمية فاضية (src/features/raw/import.ts)
       const materials = (await listRawMaterials()).filter((m) => m.isActive);

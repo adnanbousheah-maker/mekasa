@@ -4,7 +4,7 @@ import { Suspense, type ReactNode } from "react";
 import { AdminLoading } from "@/components/ui/AdminLoading";
 import { ProductName } from "@/components/ui/ProductName";
 import { PageHeader } from "@/features/admin/components/AdminBits";
-import { requireAdmin } from "@/features/auth/session";
+import { requireManager } from "@/features/auth/session";
 import { listAdminLocations, locationItems, nearExpiryAt } from "@/features/locations/queries";
 import { REQUEST_STATUS_LABELS } from "@/features/orders/components/OrderBits";
 import { linesSummary } from "@/features/orders/logic";
@@ -54,7 +54,7 @@ const linkClass = "text-sm font-semibold text-info-text underline-offset-2 hover
 
 async function Location({ params }: { params: Params }) {
   const { id } = await params;
-  await requireAdmin();
+  await requireManager();
   await connection();
   const locations = await listAdminLocations();
   const loc = locations.find((l) => l.id === id);

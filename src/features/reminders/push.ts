@@ -5,22 +5,36 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { PushMessage } from "./subscription";
 
 /**
- * بيبعت إشعار لكل أجهزة هالموظفين. الاشتراكات الميتة (404/410) بتنحذف.
- * بيرجع عدد الأجهزة اللي وصلها.
+ * بيحفظ الإشعار بمركز الإشعارات لكل موظف (حتى لو ما عنده Push)، وبعدين بيبعته لكل أجهزتهم.
+ * الاشتراكات الميتة (404/410) بتنحذف. بيرجع عدد الأجهزة اللي وصلها.
  */
 export async function sendPushToStaff(staffIds: string[], message: PushMessage): Promise<number> {
+  const ids = [...new Set(staffIds)];
+  if (ids.length === 0) return 0;
+  const db = createAdminClient();
+
+  const { error: inboxError } = await db.from("notifications").insert(
+    ids.map((staffId) => ({
+      staff_id: staffId,
+      kind: (message.tag ?? "alert").replace(/-.*$/, "").slice(0, 40) || "alert",
+      title: message.title.slice(0, 120),
+      body: message.body.slice(0, 500),
+      url: message.url.startsWith("/") && !message.url.startsWith("//") ? message.url : null,
+    })),
+  );
+  // الإشعار بيضل ينبعت Push حتى لو الحفظ فشل
+  if (inboxError) console.error("notifications: could not save", inboxError);
+
   const env = pushEnv();
   if (!env) {
     console.warn("push: VAPID keys are missing, nothing was sent");
     return 0;
   }
-  if (staffIds.length === 0) return 0;
 
-  const db = createAdminClient();
   const { data: subs, error } = await db
     .from("push_subscriptions")
     .select("id, endpoint, p256dh, auth_key")
-    .in("staff_id", staffIds);
+    .in("staff_id", ids);
   if (error) throw new Error(`Could not load push subscriptions: ${error.message}`);
 
   const payload = JSON.stringify(message);

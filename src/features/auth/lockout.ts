@@ -1,11 +1,11 @@
-// قفل الحساب (CLAUDE.md): 5 غلط ← 15 دقيقة، 10 غلط ← لحد ما الأدمن يعطي رمز جديد، وحد لكل IP.
+// قفل الحساب (CLAUDE.md): كل 5 غلط قفل أطول (15 دقيقة، ساعة، يوم) وإشعار للأدمن من الثاني، وحد لكل IP.
+// ما في قفل دائم: حدا بيعرف رقم موظف ما بيقدر يقفله للأبد.
 // التنفيذ بقاعدة البيانات (auth_reserve_login_attempt) مشان الطلبات المتزامنة ما تتخطاه.
 // هالأرقام لازم تطابق اللي هناك.
 
 export const LOCKOUT = {
   timedLockAfter: 5,
   timedLockMinutes: 15,
-  adminResetAfter: 10,
   ipFailureLimit: 20,
   ipWindowMinutes: 15,
 } as const;
@@ -16,7 +16,7 @@ export const LOCKOUT = {
  */
 export const LOGIN_FAILED_MESSAGE =
   `الاسم أو الرقم أو الرمز غلط. بعد ${LOCKOUT.timedLockAfter} محاولات غلط الحساب بينقفل ` +
-  `${LOCKOUT.timedLockMinutes} دقيقة، وإذا ضل مقفول احكي مع المدير.`;
+  `${LOCKOUT.timedLockMinutes} دقيقة (وبعدها أطول). إذا نسيت الرمز احكي مع المدير.`;
 
 /** كل رد فاشل بياخذ هالوقت على الأقل، مشان سرعة الرد ما تكشف إذا الرقم موجود. */
 export const MIN_FAILURE_RESPONSE_MS = 1500;

@@ -45,3 +45,14 @@ describe("ROLE_LABELS", () => {
     expect(ROLE_LABELS.storekeeper).toBe("أمين المستودع");
   });
 });
+
+describe("manager roles", () => {
+  it("lets the general manager have no location", () => {
+    expect(roleLocationProblem(["general_manager"], null)).toBeNull();
+  });
+
+  it("keeps a branch manager at a branch", () => {
+    expect(roleLocationProblem(["branch_manager"], "branch")).toBeNull();
+    expect(roleLocationProblem(["branch_manager"], "factory")).toBe("مسؤول فرع لازم يكون بفرع");
+  });
+});

@@ -2,8 +2,8 @@ import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import { Logo } from "@/components/ui/Logo";
 import { LogoutButton } from "@/features/auth/components/LogoutButton";
-import { ActiveNavItems } from "./ActiveNavItems";
 import { NavItemList } from "./NavItemList";
+import { NavWithCounts } from "./NavWithCounts";
 
 // design/admin/AdminNav.dc.html. بالجوال: سطر فوق (اللوجو والمساعد والخروج) وسطر روابط بيتمرر،
 // مشان الصفحة تبين على طول. باللابتوب: قائمة جنب الصفحة.
@@ -30,7 +30,7 @@ export function AdminNav({ footer }: { footer: ReactNode }) {
 
       <div className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-1 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
         <Suspense fallback={<NavItemList pathname={null} />}>
-          <ActiveNavItems />
+          <NavWithCounts />
         </Suspense>
       </div>
 

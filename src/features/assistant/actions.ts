@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { underAiQuota } from "@/features/ai/quota";
-import { requireAdmin } from "@/features/auth/session";
+import { requireManager } from "@/features/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { ASSISTANT_MODEL, runAssistant, type AssistantTurn } from "./run";
@@ -21,7 +21,7 @@ const askSchema = z.object({
  * بـ service role لأنه ما في policy كتابة عليهم للتطبيق).
  */
 export async function askAssistantAction(input: z.input<typeof askSchema>): Promise<AskResult> {
-  const admin = await requireAdmin();
+  const admin = await requireManager();
   const parsed = askSchema.safeParse(input);
   if (!parsed.success)
     return { status: "error", message: parsed.error.issues[0]?.message ?? "السؤال مش صحيح" };

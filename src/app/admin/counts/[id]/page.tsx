@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { AdminLoading } from "@/components/ui/AdminLoading";
 import { ExportButton, Kpi, PageHeader } from "@/features/admin/components/AdminBits";
+import { canEdit, requireManager } from "@/features/auth/session";
 import { CountLinesTable } from "@/features/reports/components/CountLinesTable";
 import { cakesLabel } from "@/features/reports/format";
 import { getCountDetail } from "@/features/reports/queries";
@@ -95,6 +96,7 @@ async function CountDetail({ params }: { params: Params }) {
           lines={lines}
           isOpening={c.isOpening}
           isFactory={detail.locationKind === "factory"}
+          canEdit={canEdit(await requireManager())}
         />
       </div>
 

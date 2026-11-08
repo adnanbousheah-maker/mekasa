@@ -3,7 +3,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { AdminLoading } from "@/components/ui/AdminLoading";
 import { PageHeader } from "@/features/admin/components/AdminBits";
-import { requireAdmin } from "@/features/auth/session";
+import { requireManager } from "@/features/auth/session";
 import { listAdminLocations } from "@/features/locations/queries";
 import { loadDocuments } from "@/features/orders/queries";
 import { belowMinByLocation, lastCountByLocation } from "@/features/reports/queries";
@@ -22,7 +22,7 @@ export default function LocationsPage() {
 }
 
 async function Locations() {
-  await requireAdmin();
+  await requireManager();
   await connection();
   const [locations, below, lastCounts, staff, docs] = await Promise.all([
     listAdminLocations(),

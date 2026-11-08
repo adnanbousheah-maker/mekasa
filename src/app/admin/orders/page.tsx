@@ -8,7 +8,7 @@ import { ApproveRequest, ResolveDifference } from "@/features/orders/components/
 import { REQUEST_STATUS_LABELS, dayLabel } from "@/features/orders/components/OrderBits";
 import { linesSummary, receiptDifference, requestVsDispatch } from "@/features/orders/logic";
 import { loadDocuments, type DispatchDoc, type RequestDoc } from "@/features/orders/queries";
-import { requireAdmin } from "@/features/auth/session";
+import { canEdit, requireManager } from "@/features/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { formatClock } from "@/lib/time";
 import { formatQuantityCompact } from "@/lib/units";
@@ -48,7 +48,7 @@ function hasOpenDifference(d: DispatchDoc): boolean {
 
 async function Orders({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
-  await requireAdmin();
+  const editor = canEdit(await requireManager());
   await connection();
   const supabase = await createClient();
   const [{ requests, dispatches }, { data: settings }] = await Promise.all([
@@ -144,7 +144,7 @@ async function Orders({ searchParams }: { searchParams: SearchParams }) {
             </Link>
           ))}
         </section>
-        {selected && <MoveDetail move={selected} chosen={typeof params.id === "string"} />}
+        {selected && <MoveDetail move={selected} chosen={typeof params.id === "string"} editor={editor} />}
       </div>
     </>
   );
@@ -169,7 +169,7 @@ function titleOf(m: Move): string {
 }
 
 // بالجوال: الطلب اللي انكبس عليه (chosen) بيطلع فوق القائمة
-function MoveDetail({ move, chosen }: { move: Move; chosen: boolean }) {
+function MoveDetail({ move, chosen, editor }: { move: Move; chosen: boolean; editor: boolean }) {
   const { request: r, dispatch: d } = move;
   const productIds = [
     ...new Set([...(r?.lines ?? []).map((l) => l.productId), ...(d?.lines ?? []).map((l) => l.productId)]),
@@ -320,8 +320,8 @@ function MoveDetail({ move, chosen }: { move: Move; chosen: boolean }) {
             .join("، ")}
         </p>
       )}
-      {r?.status === "pending_approval" && <ApproveRequest requestId={r.id} />}
-      {openDiffLines.length > 0 && (
+      {editor && r?.status === "pending_approval" && <ApproveRequest requestId={r.id} />}
+      {editor && openDiffLines.length > 0 && (
         <ResolveDifference lineIds={openDiffLines.map((l) => l.received!.lineId)} />
       )}
       {r && r.status !== "pending_approval" && (

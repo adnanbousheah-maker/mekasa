@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { AdminLoading } from "@/components/ui/AdminLoading";
 import Link from "next/link";
 import { ExportButton } from "@/features/admin/components/AdminBits";
-import { getCurrentStaff } from "@/features/auth/session";
+import { requireAdmin } from "@/features/auth/session";
 import { maskPhone } from "@/features/auth/phone";
 import { StaffRowActions } from "@/features/staff/components/StaffRowActions";
 import { listStaff } from "@/features/staff/queries";
@@ -11,7 +11,9 @@ import { formatLastSeen } from "@/lib/time";
 
 // design/admin/AdminStaff.dc.html
 async function Staff() {
-  const [staff, me] = await Promise.all([listStaff(), getCurrentStaff()]);
+  // إدارة الموظفين للأدمن بس
+  const me = await requireAdmin();
+  const staff = await listStaff();
   const now = new Date();
   const activeCount = (role: (typeof ROLES)[number]) =>
     staff.filter((s) => s.isActive && s.roles.includes(role)).length;

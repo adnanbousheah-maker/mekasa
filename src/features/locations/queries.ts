@@ -1,5 +1,5 @@
 import "server-only";
-import { requireAdmin } from "@/features/auth/session";
+import { requireManager } from "@/features/auth/session";
 import { createClient } from "@/lib/supabase/server";
 
 export interface AdminLocation {
@@ -12,7 +12,7 @@ const KIND_RANK: Record<AdminLocation["kind"], number> = { branch: 0, factory: 1
 
 /** الفروع أول، وبعدين المصنع ومستودع التغليف (بدون خانة المرتجعات). */
 export async function listAdminLocations(): Promise<AdminLocation[]> {
-  await requireAdmin();
+  await requireManager();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("locations")
@@ -32,7 +32,7 @@ export interface LocationItem {
 
 /** أصناف الموقع: التغليف للمستودع، والكيك للباقي. */
 export async function locationItems(kind: AdminLocation["kind"]): Promise<LocationItem[]> {
-  await requireAdmin();
+  await requireManager();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_products")
@@ -46,7 +46,7 @@ export async function locationItems(kind: AdminLocation["kind"]): Promise<Locati
 
 /** الأصناف اللي قربت تخلص مدتها بالفرع. */
 export async function nearExpiryAt(locationId: string): Promise<Set<string>> {
-  await requireAdmin();
+  await requireManager();
   const supabase = await createClient();
   const { data } = await supabase
     .from("v_branch_stock_age")

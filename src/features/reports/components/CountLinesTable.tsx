@@ -9,14 +9,20 @@ import type { DayNumber } from "@/lib/day-number";
 import { formatQuantityCompact } from "@/lib/units";
 import type { BreakdownLine } from "../queries";
 
-type Props = { lines: BreakdownLine[]; isOpening: boolean; isFactory: boolean };
+type Props = {
+  lines: BreakdownLine[];
+  isOpening: boolean;
+  isFactory: boolean;
+  // المدير العام بيشوف بس
+  canEdit?: boolean;
+};
 
 type Edit = { wholeCakes: string; loosePieces: string };
 
 const cell = "px-3 py-2.5 text-center tabular-nums whitespace-nowrap";
 
 /** design/admin/AdminCounts: أرقام الجرد، والتعديل بسبب إجباري (للأدمن). */
-export function CountLinesTable({ lines, isOpening, isFactory }: Props) {
+export function CountLinesTable({ lines, isOpening, isFactory, canEdit = true }: Props) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [edits, setEdits] = useState<Record<string, Edit>>({});
@@ -83,16 +89,18 @@ export function CountLinesTable({ lines, isOpening, isFactory }: Props) {
         ) : (
           <span />
         )}
-        <button
-          type="button"
-          onClick={() => {
-            setEditing((e) => !e);
-            setError(null);
-          }}
-          className="h-10 rounded-[10px] border border-line-strong bg-surface px-3.5 text-sm font-semibold"
-        >
-          {editing ? "إلغاء التعديل" : "تعديل الأرقام"}
-        </button>
+        {canEdit && (
+          <button
+            type="button"
+            onClick={() => {
+              setEditing((e) => !e);
+              setError(null);
+            }}
+            className="h-10 rounded-[10px] border border-line-strong bg-surface px-3.5 text-sm font-semibold"
+          >
+            {editing ? "إلغاء التعديل" : "تعديل الأرقام"}
+          </button>
+        )}
       </div>
       <div className="overflow-x-auto rounded-2xl border border-line bg-surface">
         <table className="w-full min-w-[720px] border-collapse text-sm">

@@ -68,15 +68,33 @@ select is(
   true, 'the successful attempt is marked as such'
 );
 
--- ─── بعد 10: لحد ما الأدمن يعطي رمز جديد ─────────────────────────────
+-- ─── القفل المتدرّج: كل 5 غلط قفل أطول، ومن الثاني إشعار للأدمن ─────────
 
+select tests.create_staff('88888888-0000-4000-8000-000000000009', 'أدمن', '962791111119', null, '{admin}');
 update public.staff set failed_pin_attempts = 9, locked_until = null where phone = '962791111111';
 select is(pg_temp.attempt('962791111111'), 'verify', 'the tenth attempt is still checked');
-select is(
-  (select requires_admin_reset from public.staff where phone = '962791111111'), true,
-  'the tenth wrong attempt needs the admin'
+select ok(
+  (select locked_until between now() + interval '59 minutes' and now() + interval '61 minutes'
+   from public.staff where phone = '962791111111'),
+  'the tenth wrong attempt locks for an hour'
 );
-select is(pg_temp.attempt('962791111111'), 'blocked', 'after ten, every attempt is blocked');
+select is(
+  (select requires_admin_reset from public.staff where phone = '962791111111'), false,
+  'nobody is locked for good: a stranger cannot shut a colleague out'
+);
+select is(
+  (select count(*)::int from public.notifications
+   where staff_id = '88888888-0000-4000-8000-000000000009' and kind = 'account_locked'),
+  1, 'the admin is told about the long lock'
+);
+select is(pg_temp.attempt('962791111111'), 'blocked', 'still blocked during the hour');
+update public.staff set failed_pin_attempts = 14, locked_until = null where phone = '962791111111';
+select pg_temp.attempt('962791111111');
+select ok(
+  (select locked_until > now() + interval '23 hours' from public.staff where phone = '962791111111'),
+  'from the fifteenth on, a day'
+);
+update public.staff set failed_pin_attempts = 0, locked_until = null where phone = '962791111111';
 
 -- ─── الموقوف ─────────────────────────────────────────────────────────
 

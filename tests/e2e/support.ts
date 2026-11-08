@@ -9,8 +9,10 @@ export const BRANCH_JBH = { phone: "0790000003", pin: "1470", name: "رنا" };
 export const BRANCH_DBQ = { phone: "0790000004", pin: "3690", name: "خالد" };
 export const FACTORY = { phone: "0790000005", pin: "1593", name: "سامر" };
 export const PACKAGING = { phone: "0790000006", pin: "4826", name: "مازن" };
+export const MANAGER = { phone: "0790000007", pin: "5172", name: "سليم" };
+export const BRANCH_MANAGER = { phone: "0790000008", pin: "6284", name: "هالة" };
 
-function serviceClient() {
+export function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw new Error("Supabase env is missing (.env.local)");

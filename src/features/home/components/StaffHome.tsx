@@ -34,6 +34,8 @@ type Props = {
   // آخر يوم بالشهر: جرد شهري لكل شي
   monthly?: MonthlyCountDue[];
   vapidPublicKey?: string | null;
+  // الجرس (مركز الإشعارات)
+  bell?: ReactNode;
   branch?: BranchHomeData | null;
   factory?: FactoryHomeData | null;
   // أمين التغليف (بأي موقع)
@@ -50,6 +52,7 @@ export function StaffHome({
   branch = null,
   factory = null,
   packaging = null,
+  bell = null,
 }: Props) {
   const today = businessDate(now);
   const day = dayNumberOf(today);
@@ -63,8 +66,11 @@ export function StaffHome({
       <header className="flex flex-col gap-1">
         <div className="flex items-center justify-between">
           <Logo priority />
-          <span className="flex items-center gap-1.5 text-sm text-muted">
-            {formatLongDate(today)} · يوم <DayBadge day={day} size="sm" />
+          <span className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 text-sm text-muted">
+              {formatLongDate(today)} · يوم <DayBadge day={day} size="sm" />
+            </span>
+            {bell}
           </span>
         </div>
         <h1 className="mt-2 text-[26px] leading-tight font-bold">

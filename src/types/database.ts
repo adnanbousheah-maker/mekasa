@@ -889,6 +889,55 @@ export type Database = {
           },
         ];
       };
+      notifications: {
+        Row: {
+          body: string | null;
+          created_at: string;
+          id: number;
+          kind: string;
+          read_at: string | null;
+          staff_id: string;
+          title: string;
+          url: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          body?: string | null;
+          created_at?: string;
+          id?: never;
+          kind: string;
+          read_at?: string | null;
+          staff_id: string;
+          title: string;
+          url?: string | null;
+        };
+        Update: {
+          body?: string | null;
+          created_at?: string;
+          id?: never;
+          kind?: string;
+          read_at?: string | null;
+          staff_id?: string;
+          title?: string;
+          url?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notifications_staff_id_fkey";
+            columns: ["staff_id"];
+            isOneToOne: false;
+            referencedRelation: "staff";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notifications_staff_id_fkey";
+            columns: ["staff_id"];
+            isOneToOne: false;
+            referencedRelation: "v_staff_names";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       par_levels: {
         Row: {
           location_id: string;
@@ -3212,6 +3261,7 @@ export type Database = {
         Returns: string;
       };
       dispatch_round: { Args: { p_round: Json }; Returns: string[] };
+      mark_notifications_read: { Args: { p_ids?: number[] }; Returns: number };
       monthly_count_done: {
         Args: { p_day: string; p_location_id: string; p_scope: string; p_slot_at: string };
         Returns: boolean;
@@ -3259,7 +3309,14 @@ export type Database = {
     };
     Enums: {
       ai_feature: "count_ocr" | "assistant";
-      app_role: "admin" | "branch_staff" | "dispatcher" | "storekeeper" | "packaging_keeper";
+      app_role:
+        | "admin"
+        | "branch_staff"
+        | "dispatcher"
+        | "storekeeper"
+        | "packaging_keeper"
+        | "general_manager"
+        | "branch_manager";
       count_method: "manual" | "photo";
       count_status: "draft" | "confirmed";
       discrepancy_resolution: "waste" | "review" | "resolved";
@@ -3402,7 +3459,15 @@ export const Constants = {
   public: {
     Enums: {
       ai_feature: ["count_ocr", "assistant"],
-      app_role: ["admin", "branch_staff", "dispatcher", "storekeeper", "packaging_keeper"],
+      app_role: [
+        "admin",
+        "branch_staff",
+        "dispatcher",
+        "storekeeper",
+        "packaging_keeper",
+        "general_manager",
+        "branch_manager",
+      ],
       count_method: ["manual", "photo"],
       count_status: ["draft", "confirmed"],
       discrepancy_resolution: ["waste", "review", "resolved"],

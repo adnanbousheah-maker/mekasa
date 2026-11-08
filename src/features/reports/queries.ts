@@ -1,5 +1,5 @@
 import "server-only";
-import { requireAdmin } from "@/features/auth/session";
+import { requireManager } from "@/features/auth/session";
 import { signedPhotoUrl } from "@/features/photos/queries";
 import { createClient } from "@/lib/supabase/server";
 import { businessDate } from "@/lib/time";
@@ -21,7 +21,7 @@ export interface ReportProduct {
 }
 
 async function db() {
-  await requireAdmin();
+  await requireManager();
   return createClient();
 }
 

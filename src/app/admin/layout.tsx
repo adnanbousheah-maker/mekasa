@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense, type ReactNode } from "react";
 import { LogoutButton } from "@/features/auth/components/LogoutButton";
-import { getCurrentStaff, requireAdmin } from "@/features/auth/session";
+import { getCurrentStaff, requireManager } from "@/features/auth/session";
 import { AdminNav } from "@/features/admin/components/AdminNav";
 
 export const metadata: Metadata = { title: "لوحة الإدارة · ميكاسا" };
 
-// الصفحات كلها جوا AdminGate: غير الأدمن بيرجع للرئيسية قبل ما يشوف إشي.
+// الصفحات كلها جوا AdminGate: غير الأدمن والمدير العام بيرجع للرئيسية قبل ما يشوف إشي.
 // (كل عملية على السيرفر بتتأكد كمان لحالها، وRLS تحت الكل.)
 export default function AdminLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
@@ -30,7 +30,8 @@ export default function AdminLayout({ children }: Readonly<{ children: ReactNode
 }
 
 async function AdminGate({ children }: { children: ReactNode }) {
-  await requireAdmin();
+  // الأدمن والمدير العام (قراءة). صفحات الإعدادات والموظفين بتطلب الأدمن لحالها.
+  await requireManager();
   return children;
 }
 
@@ -44,7 +45,9 @@ async function AdminUser() {
       </span>
       <div className="flex grow flex-col">
         <span className="text-sm font-semibold">{staff.fullName}</span>
-        <span className="text-xs text-muted">المدير</span>
+        <span className="text-xs text-muted">
+          {staff.roles.includes("admin") ? "الأدمن" : "المدير العام · مشاهدة"}
+        </span>
       </div>
       <LogoutButton className="px-0 text-sm" />
     </div>

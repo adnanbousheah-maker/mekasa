@@ -9,7 +9,7 @@ import { listRawMaterials, recentRawMoves } from "@/features/raw/queries";
 import { InlineField } from "@/features/settings/components/InlineField";
 import { SavedSwitch } from "@/features/settings/components/SavedSwitch";
 import { setMaterialActiveAction, updateMaterialMinAction } from "@/features/raw/actions";
-import { requireAdmin } from "@/features/auth/session";
+import { canEdit, requireManager } from "@/features/auth/session";
 import { DAY_NAMES, dayNumberOf } from "@/lib/day-number";
 import { businessDate, formatClock } from "@/lib/time";
 
@@ -33,7 +33,7 @@ const KIND = {
 const TONE = { danger: "text-danger-text", warn: "text-warn-text", ok: "text-ok-text" } as const;
 
 async function Raw() {
-  await requireAdmin();
+  const editor = canEdit(await requireManager());
   await connection();
   const [materials, moves] = await Promise.all([listRawMaterials(true), recentRawMoves(20)]);
   const today = businessDate(new Date());
@@ -50,8 +50,8 @@ async function Raw() {
         actions={
           <>
             <ExportButton href="/admin/export/raw" />
-            <RawImportButton />
-            <NewMaterialButton />
+            {editor && <RawImportButton />}
+            {editor && <NewMaterialButton />}
           </>
         }
       />
@@ -96,13 +96,17 @@ async function Raw() {
                   </td>
                   <td className="px-3 py-2.5 text-center">
                     <span className="inline-flex items-center gap-1">
-                      <InlineField
-                        numeric
-                        label={`الحد الأدنى لـ ${m.name}`}
-                        initial={String(m.minQty)}
-                        onSave={updateMaterialMinAction.bind(null, m.id)}
-                        className="w-16"
-                      />
+                      {editor ? (
+                        <InlineField
+                          numeric
+                          label={`الحد الأدنى لـ ${m.name}`}
+                          initial={String(m.minQty)}
+                          onSave={updateMaterialMinAction.bind(null, m.id)}
+                          className="w-16"
+                        />
+                      ) : (
+                        <span className="tabular-nums">{m.minQty}</span>
+                      )}
                       <span className="text-xs text-muted">{m.baseUnit}</span>
                     </span>
                   </td>
@@ -119,7 +123,7 @@ async function Raw() {
                           {u.name} = {amount(u.factor, m.baseUnit)}
                         </span>
                       ))}
-                      <AddUnit materialId={m.id} baseUnit={m.baseUnit} />
+                      {editor && <AddUnit materialId={m.id} baseUnit={m.baseUnit} />}
                     </span>
                   </td>
                   <td className="px-3 py-2.5 text-center text-[13px] text-muted">
@@ -128,12 +132,18 @@ async function Raw() {
                       : "—"}
                   </td>
                   <td className="px-3 py-2.5 text-center">
-                    <SavedSwitch
-                      size="sm"
-                      label={`${m.name} فعّالة`}
-                      initial={m.isActive}
-                      onSave={setMaterialActiveAction.bind(null, m.id)}
-                    />
+                    {editor ? (
+                      <SavedSwitch
+                        size="sm"
+                        label={`${m.name} فعّالة`}
+                        initial={m.isActive}
+                        onSave={setMaterialActiveAction.bind(null, m.id)}
+                      />
+                    ) : m.isActive ? (
+                      "✓"
+                    ) : (
+                      "—"
+                    )}
                   </td>
                 </tr>
               );

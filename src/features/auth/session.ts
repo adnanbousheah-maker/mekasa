@@ -38,10 +38,15 @@ export const getCurrentStaff = cache(async (): Promise<CurrentStaff | null> => {
   if (error) throw new Error(`Could not load the signed-in staff member: ${error.message}`);
   if (!data || !data.is_active) return null;
 
+  const roles = data.staff_roles.map((r) => r.role);
   return {
     id: data.id,
     fullName: data.full_name,
-    roles: data.staff_roles.map((r) => r.role),
+    // مسؤول الفرع بيعمل كل شغل موظف الفرع (نفس has_role بقاعدة البيانات)
+    roles:
+      roles.includes("branch_manager") && !roles.includes("branch_staff")
+        ? [...roles, "branch_staff"]
+        : roles,
     location: data.location,
   };
 });
@@ -53,6 +58,23 @@ export async function requireStaff(): Promise<CurrentStaff> {
   return staff;
 }
 
+/** بيقرأ كل لوحة الإدارة: الأدمن والمدير العام (المدير العام ما بيعدّل). */
+export function canReadAll(staff: CurrentStaff): boolean {
+  return staff.roles.includes("admin") || staff.roles.includes("general_manager");
+}
+
+export function canEdit(staff: CurrentStaff): boolean {
+  return staff.roles.includes("admin");
+}
+
+/** لصفحات وقراءات لوحة الإدارة. الكتابة لازم requireAdmin. */
+export async function requireManager(): Promise<CurrentStaff> {
+  const staff = await requireStaff();
+  if (!canReadAll(staff)) redirect("/");
+  return staff;
+}
+
+/** للكتابة وصفحات الإعدادات والموظفين: الأدمن بس. */
 export async function requireAdmin(): Promise<CurrentStaff> {
   const staff = await requireStaff();
   if (!staff.roles.includes("admin")) redirect("/");

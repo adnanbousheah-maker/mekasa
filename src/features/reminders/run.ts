@@ -108,7 +108,8 @@ async function sendCountAlert(
     .select("id, staff_roles!staff_roles_staff_id_fkey!inner(role)")
     .eq("is_active", true)
     .eq("location_id", alert.schedule.locationId)
-    .eq("staff_roles.role", role);
+    // مسؤول الفرع بيوصله نفس تنبيهات موظفين فرعه
+    .in("staff_roles.role", role === "branch_staff" ? ["branch_staff", "branch_manager"] : [role]);
   if (staffError) throw new Error(staffError.message);
   const admins = alert.kind === "count_late" ? await activeAdmins(db) : [];
   const adminIds = new Set(admins);
@@ -191,7 +192,8 @@ async function alertMonthlyCounts(
       .from("staff")
       .select("id, staff_roles!staff_roles_staff_id_fkey!inner(role)")
       .eq("is_active", true)
-      .eq("staff_roles.role", role);
+      // مسؤول الفرع بيوصله نفس تنبيهات موظفين فرعه
+      .in("staff_roles.role", role === "branch_staff" ? ["branch_staff", "branch_manager"] : [role]);
     // أمين التغليف وين ما كان، والباقي بموقعه
     if (role !== "packaging_keeper") query = query.eq("location_id", m.location_id);
     const { data: staff } = await query;

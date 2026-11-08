@@ -7,7 +7,14 @@ import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { authEmailFor, derivePassword } from "../src/features/auth/pin.ts";
 
-type Role = "admin" | "branch_staff" | "dispatcher" | "storekeeper" | "packaging_keeper";
+type Role =
+  | "admin"
+  | "general_manager"
+  | "branch_manager"
+  | "branch_staff"
+  | "dispatcher"
+  | "storekeeper"
+  | "packaging_keeper";
 
 interface TestStaff {
   fullName: string;
@@ -37,6 +44,8 @@ const TEST_STAFF: TestStaff[] = [
     roles: ["packaging_keeper"],
     pin: "4826",
   },
+  { fullName: "سليم", phone: "962790000007", locationCode: null, roles: ["general_manager"], pin: "5172" },
+  { fullName: "هالة", phone: "962790000008", locationCode: "DBQ", roles: ["branch_manager"], pin: "6284" },
 ];
 
 function requireEnv(name: string): string {

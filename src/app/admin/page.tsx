@@ -1,36 +1,15 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { AdminLoading } from "@/components/ui/AdminLoading";
-import { requireAdmin } from "@/features/auth/session";
+import { requireManager } from "@/features/auth/session";
+import { buildAlerts, loadOverviewData } from "@/features/admin/attention";
 import { Bars } from "@/features/admin/components/AdminBits";
-import { addDays, cakesLabel, toCakes, totalCakesAndPieces } from "@/features/reports/format";
-import {
-  consumptionSince,
-  factoryBatchAlerts,
-  lastCountByLocation,
-  listReportLocations,
-  listReportProducts,
-  belowMinByLocation,
-  parLevels,
-  slotsToday,
-  stockByProduct,
-} from "@/features/reports/queries";
+import { cakesLabel, toCakes, totalCakesAndPieces } from "@/features/reports/format";
 import { linesSummary } from "@/features/orders/logic";
-import { loadDocuments } from "@/features/orders/queries";
-import { amount } from "@/features/raw/logic";
-import { listRawMaterials } from "@/features/raw/queries";
 import { EnableNotifications } from "@/features/reminders/components/EnableNotifications";
-import { lateLabel } from "@/features/reminders/slots";
 import { formatScheduleTime } from "@/features/settings/schemas";
-import { businessDate, formatClock, formatLongDate, greetingFor } from "@/lib/time";
-import { createClient } from "@/lib/supabase/server";
+import { formatClock, formatLongDate, greetingFor } from "@/lib/time";
 import { formatQuantityCompact } from "@/lib/units";
-
-async function unreceivedAlertHours(): Promise<number> {
-  const supabase = await createClient();
-  const { data } = await supabase.from("app_settings").select("unreceived_alert_hours").single();
-  return data?.unreceived_alert_hours ?? 3;
-}
 
 // design/admin/AdminOverview.dc.html
 export default function AdminOverviewPage() {
@@ -40,8 +19,6 @@ export default function AdminOverviewPage() {
     </Suspense>
   );
 }
-
-type Alert = { tone: "danger" | "warn" | "info"; title: string; sub: string; action: string; href: string };
 
 const DOT = { danger: "bg-danger", warn: "bg-warn", info: "bg-info" } as const;
 const SLOT_LABEL = { done: "تم", late: "متأخر", due: "وقته هلا", upcoming: "لسا" } as const;
@@ -53,38 +30,10 @@ const SLOT_TONE = {
 } as const;
 
 async function Overview() {
-  const admin = await requireAdmin();
-  const now = new Date();
-  const today = businessDate(now);
-  const [
-    locations,
-    products,
-    stock,
-    par,
-    slots,
-    batches,
-    lastCounts,
-    yesterdayUse,
-    weekUse,
-    docs,
-    alertHours,
-    raw,
-    belowMin,
-  ] = await Promise.all([
-    listReportLocations(),
-    listReportProducts(),
-    stockByProduct(),
-    parLevels(),
-    slotsToday(),
-    factoryBatchAlerts(),
-    lastCountByLocation(),
-    consumptionSince(addDays(today, -1), addDays(today, -1)),
-    consumptionSince(addDays(today, -6)),
-    loadDocuments({ requests: { statuses: ["pending_approval", "sent"] }, dispatches: {}, sinceDays: 14 }),
-    unreceivedAlertHours(),
-    listRawMaterials(),
-    belowMinByLocation(),
-  ]);
+  const admin = await requireManager();
+  const data = await loadOverviewData();
+  const { now, today, locations, products, stock, slots, batches, lastCounts, yesterdayUse, weekUse, docs } =
+    data;
   const productById = new Map(products.map((p) => [p.id, p]));
 
   const cakesAt = (use: Map<string, Map<string, number>>, locationId: string) =>
@@ -94,122 +43,7 @@ async function Overview() {
       0,
     );
 
-  const alerts: Alert[] = [];
-  for (const d of docs.dispatches.filter(
-    (d) => d.status === "in_transit" && d.hoursInTransit >= alertHours,
-  )) {
-    alerts.push({
-      tone: "danger",
-      title: `إخراج ${d.toName} ما انستلم من ${Math.floor(d.hoursInTransit)} ساعة`,
-      sub: `طلع ${formatLongDate(d.dispatchedAt.slice(0, 10))} ${formatClock(new Date(d.dispatchedAt))} · ${linesSummary(d.lines, d.isPackaging)}`,
-      action: "تابع",
-      href: `/admin/orders?filter=road&id=${d.requestId ?? d.id}`,
-    });
-  }
-  for (const d of docs.dispatches.filter((d) =>
-    d.lines.some((l) => l.received && l.received.qtyPieces !== l.qtyPieces && !l.received.resolution),
-  )) {
-    const line = d.lines.find((l) => l.received && l.received.qtyPieces !== l.qtyPieces)!;
-    alerts.push({
-      tone: "danger",
-      title: `فرق استلام بـ${d.toName}`,
-      sub: `${line.productName}: طلع ${formatQuantityCompact(line.qtyPieces, line.piecesPerCake)} ووصل ${formatQuantityCompact(line.received!.qtyPieces, line.piecesPerCake)}${line.received!.note ? ` · ${line.received!.note}` : ""}`,
-      action: "شوف",
-      href: `/admin/orders?filter=diff&id=${d.requestId ?? d.id}`,
-    });
-  }
-  const lowRaw = raw.filter((m) => m.belowMin);
-  if (lowRaw.length > 0) {
-    alerts.push({
-      tone: "warn",
-      title: `${lowRaw.length === 1 ? "مادة وحدة" : lowRaw.length === 2 ? "مادتين" : `${lowRaw.length} مواد`} تحت الحد الأدنى`,
-      sub: lowRaw
-        .slice(0, 3)
-        .map((m) => `${m.name} ${amount(m.qty, m.baseUnit)} من ${amount(m.minQty, m.baseUnit)}`)
-        .join(" · "),
-      action: "شوف",
-      href: "/admin/raw",
-    });
-  }
-  for (const r of docs.requests.filter((r) => r.status === "pending_approval")) {
-    alerts.push({
-      tone: "warn",
-      title: `طلب ${r.fromName} بانتظار موافقتك`,
-      sub: linesSummary(r.lines, r.isPackaging),
-      action: "وافق",
-      href: `/admin/orders?filter=wait&id=${r.id}`,
-    });
-  }
-  for (const b of batches) {
-    alerts.push({
-      tone: "danger",
-      title: b.isExpired
-        ? `دفعة رقم ${b.dayNumber} خلصت مدتها بالمصنع`
-        : `دفعة رقم ${b.dayNumber} آخر يوم بالمصنع`,
-      sub: `${b.productName}: ${formatQuantityCompact(b.qty, b.piecesPerCake)} لازم تطلع اليوم أو تنسجل تالف`,
-      action: "شوف",
-      href: "/admin/stock",
-    });
-  }
-  for (const s of slots.filter((s) => s.status === "late")) {
-    const loc = locations.find((l) => l.id === s.locationId);
-    const last = lastCounts.get(s.locationId);
-    alerts.push({
-      tone: "warn",
-      title: `جرد ${loc?.name ?? ""} ${formatScheduleTime(s.timeOfDay)} ${lateLabel(new Date(s.slotAt), now)}`,
-      sub: last
-        ? `آخر جرد ${formatLongDate(last.businessDate)} ${formatClock(new Date(last.startedAt))}`
-        : "ما في جرد قبل",
-      action: "شوف",
-      href: `/admin/counts?location=${s.locationId}`,
-    });
-  }
-  for (const c of lastCounts.values()) {
-    if (c.businessDate === today && c.impossibleLines > 0) {
-      alerts.push({
-        tone: "danger",
-        title: `${c.impossibleLines} رقم مستحيل بجرد ${c.locationName}`,
-        sub: "العد أكثر من المتوقع: يا غلط بالعد، يا استلام ما انسجل",
-        action: "راجع",
-        href: `/admin/counts/${c.id}`,
-      });
-    }
-  }
-  for (const loc of belowMin) {
-    const n = loc.items.length;
-    alerts.push({
-      tone: "danger",
-      title: `${n} ${n >= 3 && n <= 10 ? "أصناف" : "صنف"} بـ${loc.locationName} تحت الحد الأدنى`,
-      sub: loc.items
-        .slice(0, 4)
-        .map((i) =>
-          loc.kind === "packaging"
-            ? `${i.name} ${i.qty} حبة`
-            : `${i.name} ${formatQuantityCompact(i.qty, i.ppc)}`,
-        )
-        .join(" · "),
-      action: "شوف",
-      href: `/admin/settings?tab=par&loc=${loc.locationId}`,
-    });
-  }
-  for (const loc of locations.filter((l) => l.kind === "branch")) {
-    const low = products.filter((p) => {
-      const target = par.get(p.id)?.get(loc.id);
-      return p.isActive && target !== undefined && (stock.get(p.id)?.get(loc.id) ?? 0) < target;
-    });
-    if (low.length > 0 && lastCounts.has(loc.id)) {
-      alerts.push({
-        tone: "info",
-        title: `${low.length} ${low.length >= 3 && low.length <= 10 ? "أصناف" : "صنف"} بـ${loc.name} تحت الحد المطلوب`,
-        sub: low
-          .slice(0, 4)
-          .map((p) => p.nameEn)
-          .join("، "),
-        action: "شوف",
-        href: "/admin/stock",
-      });
-    }
-  }
+  const alerts = buildAlerts(data);
 
   return (
     <>

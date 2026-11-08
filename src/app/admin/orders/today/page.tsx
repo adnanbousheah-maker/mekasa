@@ -2,7 +2,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { AdminLoading } from "@/components/ui/AdminLoading";
 import { PageHeader } from "@/features/admin/components/AdminBits";
-import { requireAdmin } from "@/features/auth/session";
+import { requireManager } from "@/features/auth/session";
 import { DaySummaryTable } from "@/features/orders/components/DaySummaryTable";
 import { ordersOfDay } from "@/features/orders/queries";
 import { businessDate } from "@/lib/time";
@@ -21,7 +21,7 @@ export default function OrdersTodayPage({ searchParams }: { searchParams: Search
 
 async function OrdersToday({ searchParams }: { searchParams: SearchParams }) {
   const { date: param } = await searchParams;
-  await requireAdmin();
+  await requireManager();
   await connection();
   const today = businessDate(new Date());
   const date = typeof param === "string" && ISO.test(param) && param <= today ? param : today;

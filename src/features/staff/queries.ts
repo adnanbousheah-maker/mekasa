@@ -1,5 +1,5 @@
 import "server-only";
-import { requireAdmin } from "@/features/auth/session";
+import { requireAdmin, requireManager } from "@/features/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import type { LocationKind, Role } from "./roles";
 
@@ -54,7 +54,7 @@ function toStaffRow(record: StaffRecord, now: Date): StaffRow {
 
 /** كل الموظفين، الفعّالين أول. RLS بيرجعهم كلهم للأدمن بس. */
 export async function listStaff(): Promise<StaffRow[]> {
-  await requireAdmin();
+  await requireManager();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("staff")

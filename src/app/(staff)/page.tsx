@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { requireStaff } from "@/features/auth/session";
 import { StaffHome } from "@/features/home/components/StaffHome";
+import { NotificationBell } from "@/features/notifications/components/NotificationBell";
 import { branchHomeData, factoryHomeData } from "@/features/home/queries";
 import { isPackagingKeeper, packagingStore, pendingPackagingRequests } from "@/features/packaging/queries";
 import { getMonthlyCountsDue, getOpenSlot } from "@/features/reminders/queries";
@@ -17,7 +18,7 @@ export default function HomePage() {
 
 async function Home() {
   const staff = await requireStaff();
-  if (staff.roles.includes("admin")) redirect("/admin");
+  if (staff.roles.includes("admin") || staff.roles.includes("general_manager")) redirect("/admin");
   const counts = staff.roles.includes("branch_staff") || staff.roles.includes("storekeeper");
   const location = staff.location;
   const [slot, monthly, branch, factory, packaging] = await Promise.all([
@@ -37,6 +38,11 @@ async function Home() {
       factory={factory}
       packaging={packaging}
       vapidPublicKey={process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? null}
+      bell={
+        <Suspense fallback={null}>
+          <NotificationBell href="/notifications" />
+        </Suspense>
+      }
     />
   );
 }
