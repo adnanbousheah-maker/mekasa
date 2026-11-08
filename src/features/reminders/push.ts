@@ -19,7 +19,8 @@ export async function sendPushToStaff(staffIds: string[], message: PushMessage):
       kind: (message.tag ?? "alert").replace(/-.*$/, "").slice(0, 40) || "alert",
       title: message.title.slice(0, 120),
       body: message.body.slice(0, 500),
-      url: message.url.startsWith("/") && !message.url.startsWith("//") ? message.url : null,
+      // نفس CHECK قاعدة البيانات (`^/[^/]`): الرئيسية "/" لحالها بتنحفظ بدون رابط، وإلا الحفظ كله بيفشل
+      url: /^\/[^/]/.test(message.url) ? message.url : null,
     })),
   );
   // الإشعار بيضل ينبعت Push حتى لو الحفظ فشل

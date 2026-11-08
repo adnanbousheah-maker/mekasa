@@ -5,6 +5,15 @@ select no_plan();
 select tests.create_staff('ffffffff-0000-4000-8000-000000000001', 'أحمد', '962797770001', 'SWF', '{branch_staff}');
 select tests.create_staff('ffffffff-0000-4000-8000-000000000002', 'رنا', '962797770002', 'JBH', '{branch_staff}');
 
+-- قبل أول جرد الستوك صفر بالدفتر: ما في شي "تحت الحد الأدنى" (ولا بانر ولا تنبيه)
+reset role;
+update public.par_levels set min_pieces = 10 where location_id = tests.location('DBQ');
+select is(
+  (select count(*)::int from public.v_below_min where location_id = tests.location('DBQ')),
+  0,
+  'a location that was never counted has nothing below its minimum'
+);
+
 -- الصويفية: Latte موجود 30 قطعة والحد الأدنى 40، وCarrot موجود 30 والحد 20
 select tests.authenticate_as('ffffffff-0000-4000-8000-000000000001');
 select public.submit_count(tests.location('SWF'), format(
@@ -15,7 +24,11 @@ update public.par_levels set min_pieces = 40
 where location_id = tests.location('SWF') and product_id = tests.product('Latte');
 update public.par_levels set min_pieces = 20
 where location_id = tests.location('SWF') and product_id = tests.product('Carrot');
--- الجبيهة: Pecan حده الأدنى 10 وما في منه شي
+-- الجبيهة: انجردت (Carrot بس)، وPecan حده الأدنى 10 وما في منه شي
+select tests.authenticate_as('ffffffff-0000-4000-8000-000000000002');
+select public.submit_count(tests.location('JBH'), format(
+  '[{"product_id": "%s", "whole_cakes": 1}]', tests.product('Carrot'))::jsonb);
+select tests.as_postgres();
 update public.par_levels set min_pieces = 10
 where location_id = tests.location('JBH') and product_id = tests.product('Pecan');
 
@@ -33,6 +46,11 @@ select tests.authenticate_as('ffffffff-0000-4000-8000-000000000003');
 select public.submit_count(tests.location('FAC'), format(
   '[{"product_id": "%s", "production_date": "%s", "whole_cakes": 5}]',
   tests.product('Flan'), public.amman_today() - 8)::jsonb);
+select tests.as_postgres();
+select tests.create_staff('ffffffff-0000-4000-8000-000000000004', 'مازن', '962797770004', 'PKG', '{packaging_keeper}');
+select tests.authenticate_as('ffffffff-0000-4000-8000-000000000004');
+select public.submit_count(tests.location('PKG'), format(
+  '[{"product_id": "%s", "loose_pieces": 5}]', tests.product('Cake Box'))::jsonb);
 select tests.as_postgres();
 insert into public.par_levels (location_id, product_id, par_pieces, min_pieces)
 values (tests.location('FAC'), tests.product('Flan'), 0, 30),

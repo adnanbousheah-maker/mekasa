@@ -282,7 +282,8 @@ async function alertBelowMin(db: ReturnType<typeof createAdminClient>, today: st
     const recipients = await sendPushToStaff([...new Set([...(staff ?? []).map((s) => s.id), ...admins])], {
       title: "تحت الحد الأدنى",
       body: `${kind === "branch" ? `فرع ${name}` : name}: ${products.join("، ")} ${products.length === 1 ? "قلّ" : "قلّوا"} عن الحد الأدنى.`,
-      url: kind === "packaging" ? "/packaging" : "/",
+      // الفرع بيطلب من شاشة الطلب، والمصنع بيشوفهم برئيسيته
+      url: kind === "packaging" ? "/packaging" : kind === "branch" ? "/order" : "/",
       tag: `below-min-${locationId}-${today}`,
     });
     result.sent.push({ kind: "below_min", scheduleId: locationId, recipients });
