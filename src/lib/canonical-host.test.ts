@@ -1,12 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { canonicalRedirect } from "./canonical-host";
 
-describe.skip("canonicalRedirect (paused while the office DNS catches up)", () => {
-  it("sends the old address to the official domain, same page", () => {
-    expect(canonicalRedirect("mekasa.vercel.app", "/admin/stock", "?q=1")).toBe(
-      "https://inv.mekasajo.com/admin/stock?q=1",
-    );
-    expect(canonicalRedirect("MEKASA.vercel.app", "/", "")).toBe("https://inv.mekasajo.com/");
+// التحويل من الرابط القديم موقوف مؤقتاً (canonical-host.ts): لما يرجع، رجّع فحص التحويل هون.
+describe("canonicalRedirect", () => {
+  it("does not redirect while the old address is kept as a fallback", () => {
+    expect(canonicalRedirect("mekasa.vercel.app", "/admin/stock", "?q=1")).toBeNull();
   });
 
   it("leaves the official domain, previews and local alone", () => {
