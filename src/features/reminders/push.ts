@@ -42,7 +42,7 @@ export async function sendPushToStaff(staffIds: string[], message: PushMessage):
   const options = {
     vapidDetails: {
       // آبل بترفض subject مش حقيقي: رابط التطبيق
-      subject: process.env.VAPID_SUBJECT ?? "https://mekasa.vercel.app",
+      subject: process.env.VAPID_SUBJECT ?? "https://inv.mekasajo.com",
       publicKey: env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
       privateKey: env.VAPID_PRIVATE_KEY,
     },
