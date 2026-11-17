@@ -6,7 +6,7 @@ import { z } from "zod";
 import { normalizePhone } from "@/features/auth/phone";
 import { normalizeUsername } from "@/features/auth/username";
 import { authEmailFor, derivePassword, generatePin, pinLengthFor } from "@/features/auth/pin";
-import { requireAdmin } from "@/features/auth/session";
+import { isItAdmin, requireAdmin, type CurrentStaff } from "@/features/auth/session";
 import { serverEnv } from "@/lib/server-env";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -134,6 +134,21 @@ async function issueNewPin(staffId: string, roles: readonly Role[]): Promise<str
   return pin;
 }
 
+const IT_PROTECTED = "هاد حساب IT، ما بينعدّل من هون";
+
+/** حساب IT ما بيتعدّل (ولا رمزه ولا إيقافه) إلا منه. قاعدة البيانات بتمنع كمان، بس الرمز وحظر Auth قبلها. */
+async function isProtectedFrom(caller: CurrentStaff, staffId: string): Promise<boolean> {
+  if (isItAdmin(caller)) return false;
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("staff_roles")
+    .select("role")
+    .eq("staff_id", staffId)
+    .eq("role", "it_admin")
+    .maybeSingle();
+  return data !== null;
+}
+
 /** موظف جديد: حساب دخول برمز عشوائي، وبعدين صفه وأدواره. الرمز بيرجع مرة وحدة للأدمن. */
 export async function createStaffAction(
   _previous: StaffFormState,
@@ -175,8 +190,9 @@ export async function updateStaffAction(
   _previous: StaffFormState,
   formData: FormData,
 ): Promise<StaffFormState> {
-  await requireAdmin();
+  const caller = await requireAdmin();
   if (!staffIdSchema.safeParse(staffId).success) return { status: "error", message: "الموظف مش موجود" };
+  if (await isProtectedFrom(caller, staffId)) return { status: "error", message: IT_PROTECTED };
 
   const validated = await validateStaffForm(formData);
   if ("error" in validated) return { status: "error", message: validated.error };
@@ -215,8 +231,9 @@ export async function updateStaffAction(
 }
 
 export async function resetPinAction(staffId: string): Promise<PinResetResult> {
-  await requireAdmin();
+  const caller = await requireAdmin();
   if (!staffIdSchema.safeParse(staffId).success) return { status: "error", message: "الموظف مش موجود" };
+  if (await isProtectedFrom(caller, staffId)) return { status: "error", message: IT_PROTECTED };
 
   const supabase = await createClient();
   const { data: target, error: readError } = await supabase
@@ -240,8 +257,9 @@ export async function resetPinAction(staffId: string): Promise<PinResetResult> {
  * تفعيل: فك الحظر أول، وبعدين قاعدة البيانات، مشان ما يصير "فعّال بس محظور".
  */
 export async function setStaffActiveAction(staffId: string, active: boolean): Promise<ActiveResult> {
-  await requireAdmin();
+  const caller = await requireAdmin();
   if (!staffIdSchema.safeParse(staffId).success) return { status: "error", message: "الموظف مش موجود" };
+  if (await isProtectedFrom(caller, staffId)) return { status: "error", message: IT_PROTECTED };
 
   const supabase = await createClient();
   const admin = createAdminClient();

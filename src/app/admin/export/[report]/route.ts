@@ -34,6 +34,7 @@ import { loadDocuments, ordersOfDay } from "@/features/orders/queries";
 import { IMPORT_HEADERS, packagingLabel } from "@/features/raw/import";
 import { listRawMaterials, recentRawMoves } from "@/features/raw/queries";
 import { listStaff } from "@/features/staff/queries";
+import { getFeatures } from "@/features/settings/features";
 import { allTasksToday, recentTaskRuns } from "@/features/tasks/queries";
 import { ROLE_LABELS } from "@/features/staff/roles";
 import { buildWorkbook, excelResponse, sheet, type ExcelSheet } from "@/lib/excel";
@@ -361,6 +362,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       break;
     }
     case "tasks": {
+      if (!(await getFeatures()).tasks) return new Response("not found", { status: 404 });
       const [today, runs] = await Promise.all([allTasksToday(), recentTaskRuns(500)]);
       const STATUS = { done: "انعملت", late: "متأخرة", open: "لسا" } as const;
       sheets = [

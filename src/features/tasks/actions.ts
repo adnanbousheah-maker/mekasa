@@ -27,13 +27,15 @@ export async function completeTaskAction(input: {
   if (error) {
     console.error("completeTask", error);
     const message =
-      error.hint === "photo_required"
-        ? "هالمهمة بدها صورة"
-        : error.hint === "already_done"
-          ? "هالمهمة انعملت اليوم"
-          : error.code === "42501"
-            ? "هالمهمة لدور ثاني"
-            : "ما انحفظت. جرب كمان مرة.";
+      error.hint === "feature_off"
+        ? "المهام موقوفة هلا"
+        : error.hint === "photo_required"
+          ? "هالمهمة بدها صورة"
+          : error.hint === "already_done"
+            ? "هالمهمة انعملت اليوم"
+            : error.code === "42501"
+              ? "هالمهمة لدور ثاني"
+              : "ما انحفظت. جرب كمان مرة.";
     return { status: "error", message };
   }
   refresh();

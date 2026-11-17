@@ -10,7 +10,9 @@ import {
   theadRowClass,
   thClass,
 } from "@/features/admin/components/AdminBits";
+import { redirect } from "next/navigation";
 import { canEdit, requireManager } from "@/features/auth/session";
+import { getFeatures } from "@/features/settings/features";
 import { signedPhotoUrl } from "@/features/photos/queries";
 import { allTasksToday, recentTaskRuns, type TodayTask } from "@/features/tasks/queries";
 import { formatClock, formatLongDate } from "@/lib/time";
@@ -32,6 +34,7 @@ export default function TasksPage() {
 
 async function Tasks() {
   const staff = await requireManager();
+  if (!(await getFeatures()).tasks) redirect("/admin");
   const [today, runs] = await Promise.all([allTasksToday(), recentTaskRuns(50)]);
   const photos = new Map(
     await Promise.all(

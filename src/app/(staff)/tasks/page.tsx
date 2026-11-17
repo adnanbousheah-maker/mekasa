@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { StaffLoading, StaffScreen } from "@/components/ui/StaffScreen";
+import { redirect } from "next/navigation";
 import { requireStaff } from "@/features/auth/session";
+import { getFeatures } from "@/features/settings/features";
 import { TaskChecklist } from "@/features/tasks/components/TaskChecklist";
 import { myTasksToday } from "@/features/tasks/queries";
 
@@ -16,6 +18,7 @@ export default function TasksPage() {
 
 async function Tasks() {
   const staff = await requireStaff();
+  if (!(await getFeatures()).tasks) redirect("/");
   const tasks = await myTasksToday(staff);
   return (
     <StaffScreen>

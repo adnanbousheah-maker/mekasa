@@ -11,6 +11,13 @@ export const FACTORY = { phone: "0790000005", pin: "1593", name: "سامر" };
 export const PACKAGING = { phone: "0790000006", pin: "4826", name: "مازن" };
 export const MANAGER = { phone: "0790000007", pin: "5172", name: "سليم" };
 export const BRANCH_MANAGER = { phone: "0790000008", pin: "6284", name: "هالة" };
+export const IT_ADMIN = { phone: "0790000009", pin: "9753", name: "Adnan IT" };
+
+/** مفتاح المهام المتكررة (IT). بالسيرفس رول، فمسموح. */
+export async function setTasksFeature(on: boolean) {
+  const { error } = await serviceClient().from("app_settings").update({ feature_tasks: on }).eq("id", true);
+  if (error) throw error;
+}
 
 export function serviceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

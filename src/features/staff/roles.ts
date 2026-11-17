@@ -8,7 +8,9 @@ export type Role =
   | "branch_staff"
   | "dispatcher"
   | "storekeeper"
-  | "packaging_keeper";
+  | "packaging_keeper"
+  // سوبر أدمن IT: بينعطى من قاعدة البيانات بس، فمش بقائمة الأدوار اللي بتنختار (ROLES)
+  | "it_admin";
 export type LocationKind = "factory" | "branch" | "returns_bin" | "packaging";
 
 export const ROLES: readonly Role[] = [
@@ -29,6 +31,7 @@ export const ROLE_LABELS: Readonly<Record<Role, string>> = {
   dispatcher: "الإخراج",
   storekeeper: "أمين المستودع",
   packaging_keeper: "أمين التغليف",
+  it_admin: "سوبر أدمن IT",
 };
 
 export const ROLE_DESCRIPTIONS: Readonly<Record<Role, string>> = {
@@ -39,10 +42,13 @@ export const ROLE_DESCRIPTIONS: Readonly<Record<Role, string>> = {
   storekeeper: "الإنتاج، المواد الأولية، جرد المصنع.",
   packaging_keeper: "مستودع التغليف: طلبات الفروع، الإخراج، الجرد. بينعطى لموظف بأي موقع.",
   admin: "كل شي، وتعديل الأرقام مع سبب.",
+  it_admin: "صاحب النظام التقني: التصفير بفترة المعاينة والمزايا المخفية.",
 };
 
 // null = أي موقع (أمين التغليف بيشتغل بمستودع التغليف وين ما كان موقعه)
-const REQUIRED_KIND: Readonly<Record<Exclude<Role, "admin" | "general_manager">, LocationKind | null>> = {
+const REQUIRED_KIND: Readonly<
+  Record<Exclude<Role, "admin" | "general_manager" | "it_admin">, LocationKind | null>
+> = {
   branch_staff: "branch",
   branch_manager: "branch",
   dispatcher: "factory",
@@ -58,7 +64,7 @@ export function roleLocationProblem(
   if (roles.length === 0) return "اختار دور واحد على الأقل";
 
   for (const role of roles) {
-    if (role === "admin" || role === "general_manager") continue;
+    if (role === "admin" || role === "general_manager" || role === "it_admin") continue;
     if (locationKind === null) return "اختار الموقع";
     const required = REQUIRED_KIND[role];
     if (required !== null && locationKind !== required) {

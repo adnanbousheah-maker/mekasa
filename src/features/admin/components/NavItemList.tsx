@@ -5,7 +5,31 @@ import Link from "next/link";
 
 export type NavCounts = Partial<Record<string, number>>;
 
-type Item = { href: string; label: string; icon: string; badge?: string; adminOnly?: boolean };
+type Item = {
+  href: string;
+  label: string;
+  icon: string;
+  badge?: string;
+  adminOnly?: boolean;
+  // سوبر أدمن IT بس
+  itOnly?: boolean;
+  // ميزة بتنخفى بمفتاح IT
+  feature?: "tasks";
+};
+
+/** شو بيشوف هالشخص بالقائمة. */
+export type NavAccess = { admin: boolean; it: boolean; tasks: boolean };
+const FULL_ACCESS: NavAccess = { admin: true, it: false, tasks: false };
+
+export function canSee(
+  item: { adminOnly?: boolean; itOnly?: boolean; feature?: "tasks" },
+  access: NavAccess,
+): boolean {
+  if (item.adminOnly && !access.admin) return false;
+  if (item.itOnly && !access.it) return false;
+  if (item.feature === "tasks" && !access.tasks) return false;
+  return true;
+}
 
 const GROUPS: { title: string | null; items: Item[] }[] = [
   {
@@ -47,6 +71,7 @@ const GROUPS: { title: string | null; items: Item[] }[] = [
         label: "المهام المتكررة",
         icon: "M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17M11 6h9M11 12h9M11 18h9",
         badge: "tasks",
+        feature: "tasks",
       },
       {
         href: "/admin/factory",
@@ -96,6 +121,12 @@ const GROUPS: { title: string | null; items: Item[] }[] = [
         icon: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19 12h2M3 12h2M12 3v2M12 19v2M17 7l1.5-1.5M5.5 18.5L7 17M17 17l1.5 1.5M5.5 5.5L7 7",
         adminOnly: true,
       },
+      {
+        href: "/admin/it",
+        label: "IT",
+        icon: "M4 5h16v11H4zM8 20h8M12 16v4",
+        itOnly: true,
+      },
     ],
   },
 ];
@@ -107,6 +138,8 @@ export const NAV_PAGES = GROUPS.flatMap((g) =>
     label: i.label,
     group: g.title ?? "",
     adminOnly: Boolean(i.adminOnly),
+    itOnly: Boolean(i.itOnly),
+    feature: i.feature,
   })),
 );
 
@@ -140,14 +173,14 @@ const BASE =
 export function NavItemList({
   pathname,
   counts = {},
-  isAdmin = true,
+  access = FULL_ACCESS,
 }: {
   pathname: string | null;
   counts?: NavCounts;
-  isAdmin?: boolean;
+  access?: NavAccess;
 }) {
   return GROUPS.map((group) => {
-    const items = group.items.filter((i) => isAdmin || !i.adminOnly);
+    const items = group.items.filter((i) => canSee(i, access));
     if (items.length === 0) return null;
     return (
       <div key={group.title ?? "main"} className="contents lg:flex lg:flex-col lg:gap-1">

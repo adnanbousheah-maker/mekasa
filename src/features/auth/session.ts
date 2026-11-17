@@ -67,10 +67,22 @@ export function canEdit(staff: CurrentStaff): boolean {
   return staff.roles.includes("admin");
 }
 
+/** سوبر أدمن IT (صاحب المشروع): التصفير والمزايا المخفية. */
+export function isItAdmin(staff: CurrentStaff): boolean {
+  return staff.roles.includes("it_admin");
+}
+
 /** لصفحات وقراءات لوحة الإدارة. الكتابة لازم requireAdmin. */
 export async function requireManager(): Promise<CurrentStaff> {
   const staff = await requireStaff();
   if (!canReadAll(staff)) redirect("/");
+  return staff;
+}
+
+/** صفحة IT وأفعالها. */
+export async function requireItAdmin(): Promise<CurrentStaff> {
+  const staff = await requireStaff();
+  if (!isItAdmin(staff)) redirect("/");
   return staff;
 }
 

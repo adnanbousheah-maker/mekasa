@@ -6,6 +6,7 @@ import { NotificationBell } from "@/features/notifications/components/Notificati
 import { branchHomeData, factoryHomeData } from "@/features/home/queries";
 import { isPackagingKeeper, packagingStore, pendingPackagingRequests } from "@/features/packaging/queries";
 import { getMonthlyCountsDue, getOpenSlot } from "@/features/reminders/queries";
+import { getFeatures } from "@/features/settings/features";
 import { myTasksToday } from "@/features/tasks/queries";
 
 export default function HomePage() {
@@ -28,7 +29,7 @@ async function Home() {
     location?.kind === "branch" ? branchHomeData(location.id) : null,
     location?.kind === "factory" ? factoryHomeData(location.id) : null,
     isPackagingKeeper(staff) ? packagingHome() : null,
-    myTasksToday(staff),
+    getFeatures().then((f) => (f.tasks ? myTasksToday(staff) : [])),
   ]);
   return (
     <StaffHome

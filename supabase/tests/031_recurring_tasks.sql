@@ -7,6 +7,9 @@ select tests.create_staff('8d8d8d8d-0000-4000-8000-000000000002', 'أحمد', '9
 select tests.create_staff('8d8d8d8d-0000-4000-8000-000000000003', 'مسؤول الجبيهة', '962791170003', 'JBH', '{branch_manager}');
 select tests.create_staff('8d8d8d8d-0000-4000-8000-000000000004', 'سامر', '962791170004', 'FAC', '{dispatcher}');
 
+-- المهام مخفية افتراضياً (مفتاح IT)، فبنشغّلها لهالفحص
+update public.app_settings set feature_tasks = true;
+
 create temp table ids (name text primary key, id uuid);
 grant all on ids to authenticated;
 

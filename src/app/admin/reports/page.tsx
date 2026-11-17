@@ -6,6 +6,7 @@ import { ExportButton, PageHeader } from "@/features/admin/components/AdminBits"
 import { requireManager } from "@/features/auth/session";
 import { addDays } from "@/features/reports/format";
 import { managementReport, tasksReport, totals, type LocationKpis } from "@/features/reports/kpis";
+import { getFeatures } from "@/features/settings/features";
 import { DailyColumns, Delta, StatTile, num } from "@/features/reports/components/ReportBits";
 import { PERIOD_LABELS, PERIOD_PRESETS, resolvePeriod, wasteShare } from "@/features/reports/period";
 import { countDay, formatLongDate } from "@/lib/time";
@@ -30,7 +31,11 @@ async function Reports({ searchParams }: { searchParams: SearchParams }) {
   await requireManager();
   const today = countDay(new Date());
   const period = resolvePeriod(today, one(params.p), one(params.from), one(params.to));
-  const [report, tasks] = await Promise.all([managementReport(period), tasksReport(period)]);
+  const features = await getFeatures();
+  const [report, tasks] = await Promise.all([
+    managementReport(period),
+    features.tasks ? tasksReport(period) : { now: [], before: [] },
+  ]);
   const taskSum = (rows: typeof tasks.now) => ({
     expected: rows.reduce((s, r) => s + r.expected, 0),
     onTime: rows.reduce((s, r) => s + r.onTime, 0),

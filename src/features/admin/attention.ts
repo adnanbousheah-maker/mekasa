@@ -19,6 +19,7 @@ import {
 import { lateLabel } from "@/features/reminders/slots";
 import { formatScheduleTime } from "@/features/settings/schemas";
 import { listStaff } from "@/features/staff/queries";
+import { getFeatures } from "@/features/settings/features";
 import { allTasksToday } from "@/features/tasks/queries";
 import { requireManager } from "@/features/auth/session";
 import { createClient } from "@/lib/supabase/server";
@@ -93,7 +94,7 @@ export const loadOverviewData = cache(async () => {
     listRawMaterials(),
     belowMinByLocation(),
     listStaff(),
-    allTasksToday(),
+    getFeatures().then((f) => (f.tasks ? allTasksToday() : [])),
   ]);
   return {
     now,

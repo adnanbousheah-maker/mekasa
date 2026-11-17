@@ -6,6 +6,8 @@ import { ParTab } from "@/features/settings/components/ParTab";
 import { ProductsTab } from "@/features/settings/components/ProductsTab";
 import { SaucesTab } from "@/features/settings/components/SaucesTab";
 import { ListsTab } from "@/features/lists/components/ListsTab";
+import { requireAdmin } from "@/features/auth/session";
+import { getFeatures } from "@/features/settings/features";
 import { TasksTab } from "@/features/tasks/components/TasksTab";
 import { listTemplates, taskLocations } from "@/features/tasks/queries";
 import { categoryChoices, listLists, listOptions } from "@/features/lists/queries";
@@ -55,14 +57,20 @@ export default function SettingsPage({ searchParams }: { searchParams: SearchPar
 
 async function Settings({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
-  const tab = pickTab(params.tab);
+  // الجلسة أول (connection) قبل أي قراءة أو وقت
+  await requireAdmin();
+  // المهام المتكررة مخفية لحد ما IT يشغّلها
+  const features = await getFeatures();
+  const tabs = TABS.filter((t) => t.id !== "tasks" || features.tasks);
+  const picked = pickTab(params.tab);
+  const tab: TabId = tabs.some((t) => t.id === picked) ? picked : "products";
   const loc = typeof params.loc === "string" ? params.loc : null;
   const list = typeof params.list === "string" ? params.list : null;
 
   return (
     <>
       <div role="tablist" aria-label="أقسام الإعدادات" className="flex flex-wrap gap-1 border-b border-line">
-        {TABS.map((t) => (
+        {tabs.map((t) => (
           <Link
             key={t.id}
             href={t.id === "products" ? "/admin/settings" : `/admin/settings?tab=${t.id}`}

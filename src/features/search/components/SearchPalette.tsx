@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { NAV_PAGES } from "@/features/admin/components/NavItemList";
+import { NAV_PAGES, canSee, type NavAccess } from "@/features/admin/components/NavItemList";
 import { matches } from "@/features/reports/filters";
 import { globalSearchAction, type SearchHit } from "../actions";
 import { readRecent } from "../recent";
@@ -13,7 +13,7 @@ type Item = { key: string; label: string; hint: string; href: string };
  * بحث عام بلوحة الإدارة: Ctrl+K (أو ⌘K، أو /). الصفحات بتطلع فوراً، والأصناف والموظفين
  * والمواقع والمواد من السيرفر. بدون كتابة: آخر الصفحات. الأسهم بتتنقل وEnter بيفتح.
  */
-export function SearchPalette({ isAdmin }: { isAdmin: boolean }) {
+export function SearchPalette({ access }: { access: NavAccess }) {
   const router = useRouter();
   const dialog = useRef<HTMLDialogElement>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -70,7 +70,7 @@ export function SearchPalette({ isAdmin }: { isAdmin: boolean }) {
   }, [q]);
 
   const items: Item[] = useMemo(() => {
-    const pages = NAV_PAGES.filter((p) => isAdmin || !p.adminOnly);
+    const pages = NAV_PAGES.filter((p) => canSee(p, access));
     if (!q.trim()) {
       const list = recent.length ? recent : pages.slice(0, 6);
       return list.map((p) => ({
@@ -85,7 +85,7 @@ export function SearchPalette({ isAdmin }: { isAdmin: boolean }) {
       .map((p) => ({ key: `p${p.href}`, label: p.label, hint: "صفحة", href: p.href }));
     const dataHits = q.trim().length >= 2 ? hits.map((h, i) => ({ key: `h${i}`, ...h })) : [];
     return [...pageHits, ...dataHits];
-  }, [q, hits, recent, isAdmin]);
+  }, [q, hits, recent, access]);
 
   const go = (item: Item | undefined) => {
     if (!item) return;

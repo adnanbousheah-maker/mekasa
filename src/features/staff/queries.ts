@@ -1,5 +1,5 @@
 import "server-only";
-import { requireAdmin, requireManager } from "@/features/auth/session";
+import { isItAdmin, requireAdmin, requireManager } from "@/features/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import type { LocationKind, Role } from "./roles";
 
@@ -52,9 +52,9 @@ function toStaffRow(record: StaffRecord, now: Date): StaffRow {
   };
 }
 
-/** كل الموظفين، الفعّالين أول. RLS بيرجعهم كلهم للأدمن بس. */
+/** كل الموظفين، الفعّالين أول. RLS بيرجعهم كلهم للأدمن بس. حساب IT ما بيبين إلا لـ IT. */
 export async function listStaff(): Promise<StaffRow[]> {
-  await requireManager();
+  const viewer = await requireManager();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("staff")
@@ -63,15 +63,21 @@ export async function listStaff(): Promise<StaffRow[]> {
     .order("full_name");
   if (error) throw new Error(`Could not load staff: ${error.message}`);
   const now = new Date();
-  return data.map((record) => toStaffRow(record, now));
+  const showIt = isItAdmin(viewer);
+  return data
+    .map((record) => toStaffRow(record, now))
+    .filter((row) => showIt || !row.roles.includes("it_admin"));
 }
 
 export async function getStaff(staffId: string): Promise<StaffRow | null> {
-  await requireAdmin();
+  const viewer = await requireAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase.from("staff").select(STAFF_COLUMNS).eq("id", staffId).maybeSingle();
   if (error) throw new Error(`Could not load the staff member: ${error.message}`);
-  return data ? toStaffRow(data, new Date()) : null;
+  const row = data ? toStaffRow(data, new Date()) : null;
+  // حساب IT ما بيفتحه إلا IT
+  if (row?.roles.includes("it_admin") && !isItAdmin(viewer)) return null;
+  return row;
 }
 
 /** المواقع اللي ممكن يشتغل فيها موظف (مش خانة المرتجعات). */

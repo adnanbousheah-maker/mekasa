@@ -1,5 +1,9 @@
 import { expect, test } from "@playwright/test";
-import { ADMIN, BRANCH_DBQ, BRANCH_MANAGER, TINY_PNG, signInAndWait } from "./support";
+import { ADMIN, BRANCH_DBQ, BRANCH_MANAGER, TINY_PNG, setTasksFeature, signInAndWait } from "./support";
+
+// المهام المتكررة مخفية افتراضياً (مفتاح IT): بنشغّلها هون وبنرجّعها مخفية بالآخر
+test.beforeAll(() => setTasksFeature(true));
+test.afterAll(() => setTasksFeature(false));
 
 test("recurring tasks: the admin adds them, the branch does them, the admin sees them", async ({
   browser,

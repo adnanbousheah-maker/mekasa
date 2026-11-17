@@ -14,7 +14,8 @@ type Role =
   | "branch_staff"
   | "dispatcher"
   | "storekeeper"
-  | "packaging_keeper";
+  | "packaging_keeper"
+  | "it_admin";
 
 interface TestStaff {
   fullName: string;
@@ -46,6 +47,13 @@ const TEST_STAFF: TestStaff[] = [
   },
   { fullName: "سليم", phone: "962790000007", locationCode: null, roles: ["general_manager"], pin: "5172" },
   { fullName: "هالة", phone: "962790000008", locationCode: "DBQ", roles: ["branch_manager"], pin: "6284" },
+  {
+    fullName: "Adnan IT",
+    phone: "962790000009",
+    locationCode: null,
+    roles: ["admin", "it_admin"],
+    pin: "9753",
+  },
 ];
 
 function requireEnv(name: string): string {

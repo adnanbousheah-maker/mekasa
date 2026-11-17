@@ -252,9 +252,11 @@ export type Database = {
           default_pieces_per_cake: number;
           factory_loose_pieces_enabled: boolean;
           factory_shelf_life_days: number;
+          feature_tasks: boolean;
           id: boolean;
           order_approval_required: boolean;
           photo_count_enabled: boolean;
+          preview_mode: boolean;
           returns_enabled: boolean;
           unreceived_alert_hours: number;
           updated_at: string;
@@ -269,9 +271,11 @@ export type Database = {
           default_pieces_per_cake?: number;
           factory_loose_pieces_enabled?: boolean;
           factory_shelf_life_days?: number;
+          feature_tasks?: boolean;
           id?: boolean;
           order_approval_required?: boolean;
           photo_count_enabled?: boolean;
+          preview_mode?: boolean;
           returns_enabled?: boolean;
           unreceived_alert_hours?: number;
           updated_at?: string;
@@ -285,9 +289,11 @@ export type Database = {
           default_pieces_per_cake?: number;
           factory_loose_pieces_enabled?: boolean;
           factory_shelf_life_days?: number;
+          feature_tasks?: boolean;
           id?: boolean;
           order_approval_required?: boolean;
           photo_count_enabled?: boolean;
+          preview_mode?: boolean;
           returns_enabled?: boolean;
           unreceived_alert_hours?: number;
           updated_at?: string;
@@ -3921,6 +3927,7 @@ export type Database = {
         Returns: string;
       };
       dispatch_round: { Args: { p_round: Json }; Returns: string[] };
+      it_reset_operations: { Args: { p_confirm: string }; Returns: undefined };
       log_waste: {
         Args: {
           p_location_id: string;
@@ -4040,7 +4047,8 @@ export type Database = {
         | "storekeeper"
         | "packaging_keeper"
         | "general_manager"
-        | "branch_manager";
+        | "branch_manager"
+        | "it_admin";
       count_method: "manual" | "photo";
       count_status: "draft" | "confirmed";
       discrepancy_resolution: "waste" | "review" | "resolved";
@@ -4191,6 +4199,7 @@ export const Constants = {
         "packaging_keeper",
         "general_manager",
         "branch_manager",
+        "it_admin",
       ],
       count_method: ["manual", "photo"],
       count_status: ["draft", "confirmed"],

@@ -4,10 +4,10 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { rememberPage } from "@/features/search/recent";
 import { navCountsAction } from "../nav-actions";
-import { NAV_PAGES, NavItemList, type NavCounts } from "./NavItemList";
+import { NAV_PAGES, NavItemList, type NavAccess, type NavCounts } from "./NavItemList";
 
 /** المسار الحالي، والأعداد بتوصل بعد ما الصفحة تبين (مع كل تنقل). */
-export function ActiveNavItems({ isAdmin }: { isAdmin: boolean }) {
+export function ActiveNavItems({ access }: { access: NavAccess }) {
   const pathname = usePathname();
   const [counts, setCounts] = useState<NavCounts>({});
   // آخر الصفحات (للبحث العام)
@@ -26,5 +26,5 @@ export function ActiveNavItems({ isAdmin }: { isAdmin: boolean }) {
       live = false;
     };
   }, [pathname]);
-  return <NavItemList pathname={pathname} counts={counts} isAdmin={isAdmin} />;
+  return <NavItemList pathname={pathname} counts={counts} access={access} />;
 }
