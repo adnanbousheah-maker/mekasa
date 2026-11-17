@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { expect, type Page } from "@playwright/test";
+import { derivePassword } from "../../src/features/auth/pin";
 import type { Database } from "../../src/types/database";
 
 // موظفين scripts/seed-staff.ts (لازم `npm run db:seed-staff` قبل الاختبارات)
@@ -274,4 +275,21 @@ export async function cancelRequestsSince(locationCode: string, sinceIso: string
 /** بيوقف صنف (مشان أصناف الاختبار ما تتراكم بالقوائم). */
 export async function deactivateProduct(nameEn: string) {
   await serviceClient().from("products").update({ is_active: false }).eq("name_en", nameEn);
+}
+
+/** بيرجّع رمز موظف تجريبي لرمزه بـ seed-staff (بعد اختبار بيعمل رمز جديد). */
+export async function restorePin(phone: string, pin: string) {
+  const pepper = process.env.AUTH_PIN_PEPPER;
+  if (!pepper) throw new Error("AUTH_PIN_PEPPER is missing (.env.local)");
+  const db = serviceClient();
+  const { data, error } = await db
+    .from("staff")
+    .select("id")
+    .eq("phone", `962${phone.slice(1)}`)
+    .single();
+  if (error) throw error;
+  const { error: authError } = await db.auth.admin.updateUserById(data.id, {
+    password: derivePassword(pepper, data.id, pin),
+  });
+  if (authError) throw authError;
 }

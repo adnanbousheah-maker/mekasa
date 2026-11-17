@@ -12,6 +12,13 @@ type Props = {
 /** نافذة فوق الصفحة بـ <dialog> الأصلي (بيمسك التركيز وبيتسكر بـ Esc). */
 export function Dialog({ open, onClose, title, children }: Props) {
   const ref = useRef<HTMLDialogElement>(null);
+  // آخر قيمة لـ open. لما نسكّرها نحنا (open صار false) المتصفح كمان بيبعت close، وما لازم ينادي onClose:
+  // وإلا نافذة بتتسكر لأن ثانية انفتحت (مثلاً التأكيد ← الرمز الجديد) كانت تسكّر الجديدة كمان.
+  const openRef = useRef(open);
+
+  useEffect(() => {
+    openRef.current = open;
+  });
 
   useEffect(() => {
     const dialog = ref.current;
@@ -28,7 +35,9 @@ export function Dialog({ open, onClose, title, children }: Props) {
   return (
     <dialog
       ref={ref}
-      onClose={onClose}
+      onClose={() => {
+        if (openRef.current) onClose();
+      }}
       aria-label={title}
       className="m-auto w-[min(92vw,420px)] rounded-2xl border border-line bg-surface p-6 text-ink backdrop:bg-ink/40"
     >

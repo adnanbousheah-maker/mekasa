@@ -757,6 +757,43 @@ export type Database = {
           },
         ];
       };
+      emergency_pin_requests: {
+        Row: {
+          id: string;
+          requested_at: string;
+          staff_id: string;
+          used_at: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          id?: string;
+          requested_at?: string;
+          staff_id: string;
+          used_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          requested_at?: string;
+          staff_id?: string;
+          used_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "emergency_pin_requests_staff_id_fkey";
+            columns: ["staff_id"];
+            isOneToOne: false;
+            referencedRelation: "staff";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "emergency_pin_requests_staff_id_fkey";
+            columns: ["staff_id"];
+            isOneToOne: false;
+            referencedRelation: "v_staff_names";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       locations: {
         Row: {
           code: string;

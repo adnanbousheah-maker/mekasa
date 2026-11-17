@@ -114,17 +114,29 @@ async function saveStaff(staffId: string, data: Validated) {
  * رمز جديد: كلمة السر أول، وبعدين فك القفل وتسجيله (بجلسة الأدمن).
  * هيك ما في حالة "انفك القفل والرمز القديم لسا شغال". Supabase بيلغي الجلسات القديمة مع تغيير كلمة السر.
  */
-async function issueNewPin(staffId: string, roles: readonly Role[]): Promise<string | null> {
+async function issueNewPin(
+  staffId: string,
+  roles: readonly Role[],
+  callerId: string,
+): Promise<string | null> {
   const pin = generatePin(pinLengthFor(roles));
-  const { error: authError } = await createAdminClient().auth.admin.updateUserById(staffId, {
-    password: derivePassword(serverEnv().AUTH_PIN_PEPPER, staffId, pin),
-  });
+  const password = derivePassword(serverEnv().AUTH_PIN_PEPPER, staffId, pin);
+  const { error: authError } = await createAdminClient().auth.admin.updateUserById(staffId, { password });
   if (authError) {
     console.error("issueNewPin: password", authError);
     return null;
   }
 
   const supabase = await createClient();
+  // تغيير كلمة السر بيطلّع الموظف من كل أجهزته. إذا الأدمن غيّر رمزه هو، منرجّع ندخّله بالرمز الجديد
+  // هون، وإلا الصفحة بتروح على الدخول قبل ما يشوف الرمز.
+  if (staffId === callerId) {
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: authEmailFor(staffId),
+      password,
+    });
+    if (signInError) console.error("issueNewPin: re-sign-in", signInError);
+  }
   const { error: recordError } = await supabase.rpc("admin_record_pin_reset", { p_staff_id: staffId });
   if (recordError) {
     // الرمز الجديد شغال بس القفل ممكن يضل؛ ما بنعرضه، والأدمن بيعيد
@@ -215,7 +227,7 @@ export async function updateStaffAction(
 
   const becameAdmin = validated.data.roles.includes("admin") && !before.some((r) => r.role === "admin");
   if (becameAdmin) {
-    const pin = await issueNewPin(staffId, validated.data.roles);
+    const pin = await issueNewPin(staffId, validated.data.roles, caller.id);
     refresh();
     if (!pin) {
       return {
@@ -246,8 +258,9 @@ export async function resetPinAction(staffId: string): Promise<PinResetResult> {
   const pin = await issueNewPin(
     staffId,
     target.staff_roles.map((r) => r.role),
+    caller.id,
   );
-  refresh();
+  // بدون refresh() هون: إعادة رسم القائمة كانت تسكّر نافذة الرمز قبل ما تبين. الشاشة بتحدّث لما تتسكّر النافذة.
   if (!pin) return { status: "error", message: "ما انعمل رمز جديد. جرب كمان مرة." };
   return { status: "done", pin };
 }

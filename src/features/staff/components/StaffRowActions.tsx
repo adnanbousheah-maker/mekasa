@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Dialog } from "@/components/ui/Dialog";
 import { resetPinAction, setStaffActiveAction } from "../actions";
@@ -21,6 +22,11 @@ export function StaffRowActions({ staffId, fullName, isActive, isSelf }: Props) 
   const [dialog, setDialog] = useState<Pending>(null);
   const [error, setError] = useState<string | null>(null);
   const [isWorking, startTransition] = useTransition();
+  const router = useRouter();
+  const closePin = () => {
+    setDialog(null);
+    router.refresh();
+  };
 
   const resetPin = () =>
     startTransition(async () => {
@@ -102,12 +108,12 @@ export function StaffRowActions({ staffId, fullName, isActive, isSelf }: Props) 
         />
       </Dialog>
 
-      <Dialog open={dialog?.kind === "pin"} onClose={() => setDialog(null)} title="الرمز الجديد">
+      <Dialog open={dialog?.kind === "pin"} onClose={closePin} title="الرمز الجديد">
         {dialog?.kind === "pin" && <PinNotice fullName={fullName} pin={dialog.pin} />}
         <button
           type="button"
           className="mt-5 h-12 w-full rounded-xl bg-ink text-[17px] font-semibold text-white"
-          onClick={() => setDialog(null)}
+          onClick={closePin}
         >
           تمام، أعطيته الرمز
         </button>
