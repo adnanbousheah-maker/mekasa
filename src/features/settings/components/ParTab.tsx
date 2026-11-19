@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ProductName } from "@/components/ui/ProductName";
+import { DAY_NAMES, DAY_NUMBERS, type DayNumber } from "@/lib/day-number";
 import { formatQuantity } from "@/lib/units";
-import { setMinLevelAction, setParLevelAction } from "../actions";
+import { setDailyMinAction, setMinLevelAction, setParLevelAction } from "../actions";
 import { InlineField } from "./InlineField";
 
 type Location = { id: string; name: string; kind: string };
@@ -13,18 +14,21 @@ type Props = {
   products: Product[];
   par: Map<string, Map<string, number>>;
   min: Map<string, Map<string, number>>;
+  // الفرع بس: [صنف][يوم] بالقطع
+  daily: Map<string, Map<number, number>>;
+  today: DayNumber;
   stock: Map<string, Map<string, number>>;
 };
 
 const KIND_NOTES: Record<string, string> = {
   branch:
-    "المطلوب = كم بدك يكون بالفرع بعد الاستلام. الطلبية بتنقترح حسب استهلاك الفرع، وقبل ما يصير في جرودات كفاية حسب المطلوب. الأدنى = إذا الموجود نزل تحته بعد الجرد، بيوصل تنبيه للفرع وإلك.",
+    'المطلوب = كم بدك يكون بالفرع بعد الاستلام. الطلبية بتنقترح حسب استهلاك الفرع، وقبل ما يصير في جرودات كفاية حسب المطلوب. الأدنى = إذا الموجود نزل تحته بعد الجرد، بيوصل تنبيه للفرع وإلك. الأدنى إله رقم لكل يوم بالأسبوع، واليوم الفاضي بياخذ "كل الأيام".',
   factory: "الأدنى = إذا ستوك المصنع من هالصنف نزل تحته بعد الجرد، بيوصل تنبيه للمصنع وإلك.",
   packaging: "الأدنى بالحبة = إذا الموجود بالمستودع نزل تحته، بيوصل تنبيه لأمين التغليف وإلك.",
 };
 
 /** الحد المطلوب والأدنى، موقع موقع: كل فرع لحاله، والمصنع، ومستودع التغليف. */
-export function ParTab({ locations, current, products, par, min, stock }: Props) {
+export function ParTab({ locations, current, products, par, min, daily, today, stock }: Props) {
   const isBranch = current.kind === "branch";
   const isPackaging = current.kind === "packaging";
 
@@ -46,7 +50,7 @@ export function ParTab({ locations, current, products, par, min, stock }: Props)
 
       {/* مفتاح الموقع: الخانات بتحفظ قيمتها الأولى، فلازم تنعمل من جديد لما يتغير الموقع */}
       <div key={current.id} className="scroll-hint overflow-x-auto rounded-2xl border border-line bg-surface">
-        <table className="w-full min-w-[420px] border-collapse text-sm">
+        <table className={`w-full border-collapse text-sm ${isBranch ? "min-w-[980px]" : "min-w-[420px]"}`}>
           <thead>
             <tr className="bg-table-head text-table-head-text">
               <th scope="col" className="px-4 py-3 text-right font-semibold">
@@ -61,14 +65,24 @@ export function ParTab({ locations, current, products, par, min, stock }: Props)
                 </th>
               )}
               <th scope="col" className="px-3 py-3 font-semibold">
-                الأدنى
+                {isBranch ? "الأدنى (كل الأيام)" : "الأدنى"}
               </th>
+              {isBranch &&
+                DAY_NUMBERS.map((d) => (
+                  <th
+                    key={d}
+                    scope="col"
+                    className={`px-1.5 py-3 font-semibold ${d === today ? "text-ink underline decoration-brand decoration-2 underline-offset-4" : ""}`}
+                  >
+                    {DAY_NAMES[d]}
+                  </th>
+                ))}
             </tr>
           </thead>
           <tbody>
             {products.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-4 text-center text-muted">
+                <td colSpan={isBranch ? 11 : 4} className="px-4 py-4 text-center text-muted">
                   {isPackaging ? "ما في مواد تغليف لسا. ضيفها من تبويب التغليف." : "ما في أصناف."}
                 </td>
               </tr>
@@ -77,7 +91,10 @@ export function ParTab({ locations, current, products, par, min, stock }: Props)
               const toUnits = (pieces: number) =>
                 p.piecesPerCake ? Math.round(pieces / p.piecesPerCake) : pieces;
               const have = stock.get(p.id)?.get(current.id) ?? 0;
-              const floor = min.get(p.id)?.get(current.id);
+              const general = min.get(p.id)?.get(current.id);
+              const days = daily.get(p.id);
+              // التنبيه بيقارن مع حد اليوم إذا موجود، وإلا العام (نفس v_below_min)
+              const floor = days?.get(today) ?? general;
               const low = floor !== undefined && have < floor;
               return (
                 <tr key={p.id} className={`border-t border-line-soft ${low ? "bg-danger-soft" : ""}`}>
@@ -107,12 +124,28 @@ export function ParTab({ locations, current, products, par, min, stock }: Props)
                     <InlineField
                       numeric
                       label={`الحد الأدنى لـ ${p.nameEn} بـ${current.name}`}
-                      initial={floor === undefined ? "" : String(toUnits(floor))}
+                      initial={general === undefined ? "" : String(toUnits(general))}
                       placeholder="—"
                       onSave={setMinLevelAction.bind(null, current.id, p.id)}
                       className={isPackaging ? "w-20" : "w-16"}
                     />
                   </td>
+                  {isBranch &&
+                    DAY_NUMBERS.map((d) => {
+                      const value = days?.get(d);
+                      return (
+                        <td key={d} className={`px-1 py-1.5 text-center ${d === today ? "bg-quiet" : ""}`}>
+                          <InlineField
+                            numeric
+                            label={`الحد الأدنى لـ ${p.nameEn} بـ${current.name} يوم ${DAY_NAMES[d]}`}
+                            initial={value === undefined ? "" : String(toUnits(value))}
+                            placeholder={general === undefined ? "—" : String(toUnits(general))}
+                            onSave={setDailyMinAction.bind(null, current.id, p.id, d)}
+                            className="w-14"
+                          />
+                        </td>
+                      );
+                    })}
                 </tr>
               );
             })}

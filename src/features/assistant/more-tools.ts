@@ -401,7 +401,7 @@ export function moreAssistantTools(db: Db, now: Date) {
     betaZodTool({
       name: "factory_batches",
       description:
-        "Every batch in factory stock right now: product, day number (1=Saturday … 7=Friday), production date, quantity left, age, last day and expired flags.",
+        "Every batch in factory stock right now: product, day number (1=Sunday … 7=Saturday), production date, quantity left, age, last day and expired flags.",
       inputSchema: z.object({ product: z.string().optional() }),
       run: async ({ product }) => {
         const [products, { data }] = await Promise.all([

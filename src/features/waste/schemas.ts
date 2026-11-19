@@ -10,6 +10,9 @@ export const WASTE_REASON_LABELS: Record<WasteReason, string> = {
   other: "غيره",
 };
 
+export const WASTE_PHOTO_LABEL = "صوّر التالف (إجباري)";
+export const WASTE_PHOTO_REQUIRED = "صوّر التالف أول";
+
 export const wasteSchema = z
   .object({
     productId: z.uuid("اختار الصنف"),
@@ -30,6 +33,11 @@ export const wasteSchema = z
   .refine((w) => !w.requiresNote || w.note.length > 0, {
     message: "اكتب شو صار",
     path: ["note"],
+  })
+  // الصورة إجبارية (اجتماع 18 نوفمبر). قاعدة البيانات بترفض كمان (hint photo_required).
+  .refine((w) => w.photoPath !== null, {
+    message: WASTE_PHOTO_REQUIRED,
+    path: ["photoPath"],
   });
 
 export type WasteInput = z.input<typeof wasteSchema>;

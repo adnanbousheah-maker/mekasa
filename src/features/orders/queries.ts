@@ -111,6 +111,7 @@ export async function productsForBranch(
 export interface DocLine {
   productId: string;
   productName: string;
+  kind: ProductKind;
   piecesPerCake: number | null;
   wholeCakes: number;
   loosePieces: number;
@@ -230,6 +231,8 @@ export async function loadDocuments(filter: {
   if (dispatches.error) throw new Error(`Could not load dispatches: ${dispatches.error.message}`);
   const productNames = new Map(allProducts.map((p) => [p.id, p.nameEn]));
   const productSizes = new Map(allProducts.map((p) => [p.id, p.piecesPerCake]));
+  const productKinds = new Map(allProducts.map((p) => [p.id, p.kind]));
+  const kindOf = (id: string): ProductKind => productKinds.get(id) ?? "cake";
   const names = await namesOf(supabase, [
     ...requests.data.map((r) => r.requested_by),
     ...dispatches.data.map((d) => d.dispatched_by),
@@ -250,6 +253,7 @@ export async function loadDocuments(filter: {
         lineId: l.id,
         productId: l.product_id,
         productName: productNames.get(l.product_id) ?? "",
+        kind: kindOf(l.product_id),
         piecesPerCake: l.pieces_per_cake_snapshot,
         wholeCakes: l.whole_cakes,
         loosePieces: l.loose_pieces,
@@ -288,6 +292,7 @@ export async function loadDocuments(filter: {
             lineId: l.id,
             productId: l.product_id,
             productName: productNames.get(l.product_id) ?? "",
+            kind: kindOf(l.product_id),
             piecesPerCake: l.pieces_per_cake_snapshot,
             wholeCakes: l.whole_cakes,
             loosePieces: l.loose_pieces,

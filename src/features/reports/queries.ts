@@ -106,6 +106,24 @@ export async function minLevels(): Promise<Map<string, Map<string, number>>> {
   return map;
 }
 
+/** الحد الأدنى حسب اليوم للفروع بالقطع: [صنف][فرع][يوم 1 الأحد … 7 السبت]. بس اللي محدد إله. */
+export async function dailyMinLevels(locationId: string): Promise<Map<string, Map<number, number>>> {
+  const supabase = await db();
+  const { data, error } = await supabase
+    .from("par_level_daily_min")
+    .select("product_id, weekday, min_pieces")
+    .eq("location_id", locationId)
+    .not("min_pieces", "is", null);
+  if (error) fail("daily min levels", error);
+  const map = new Map<string, Map<number, number>>();
+  for (const row of data) {
+    const byDay = map.get(row.product_id) ?? new Map<number, number>();
+    byDay.set(row.weekday, row.min_pieces!);
+    map.set(row.product_id, byDay);
+  }
+  return map;
+}
+
 /** كل اللي تحت الحد الأدنى بكل المواقع (فروع، مصنع، مستودع تغليف)، مجمّع حسب الموقع. */
 export async function belowMinByLocation(): Promise<
   {

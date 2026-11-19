@@ -4,13 +4,15 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { ProductName } from "@/components/ui/ProductName";
 import { Stepper } from "@/components/ui/Stepper";
-import { formatQuantity } from "@/lib/units";
+import { formatQuantity, SAUCE_UNIT } from "@/lib/units";
 import { receiveDispatchAction } from "../actions";
 import { receiptDifference } from "../logic";
 
 export interface ReceiveLine {
   lineId: string;
   productName: string;
+  // الصوصات باللتر
+  sauce?: boolean;
   piecesPerCake: number | null;
   wholeCakes: number;
   loosePieces: number;
@@ -133,7 +135,8 @@ export function ReceiveForm({
                 <div className="flex flex-col gap-1">
                   <ProductName name={l.productName} className="text-[17px] font-semibold" />
                   <span className="text-[13px] text-muted">
-                    طلع: {formatQuantity(l.qtyPieces, l.piecesPerCake)}
+                    طلع:{" "}
+                    {l.sauce ? `${l.qtyPieces} ${SAUCE_UNIT}` : formatQuantity(l.qtyPieces, l.piecesPerCake)}
                   </span>
                   {req && (
                     <span
@@ -181,8 +184,7 @@ export function ReceiveForm({
                   />
                 )}
                 <Stepper
-                  label={packaging ? "حبات" : "قطع"}
-                  typed={packaging}
+                  label={packaging ? "حبات" : l.sauce ? SAUCE_UNIT : "قطع"}
                   value={r.loosePieces}
                   onChange={(v) => change(l.lineId, { loosePieces: v, ok: true })}
                   incrementLabel={`زيد قطعة ${l.productName}`}

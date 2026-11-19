@@ -6,13 +6,13 @@ import { NewSimpleItem } from "./NewSimpleItem";
 import { SavedSwitch } from "./SavedSwitch";
 import { CategorySelect, type CategoryChoice } from "@/features/lists/components/CategorySelect";
 
-/** الصوصات (بالحبة): الفروع بتطلبها من المصنع مع الكيك، وبتنعدّ بجرد آخر الشهر. */
+/** الصوصات (باللتر): الفروع بتطلبها من المصنع مع الكيك، وبتنعدّ بجرد آخر الشهر. */
 export function SaucesTab({ items, categories }: { items: ProductRow[]; categories: CategoryChoice[] }) {
   return (
     <section className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-[13px] text-muted">
-          الفروع بتطلبها من المصنع مع الكيك، وبتنعدّ بجرد آخر الشهر. كلها بالحبة. الموقوف بيختفي من الطلب
+          الفروع بتطلبها من المصنع مع الكيك، وبتنعدّ بجرد آخر الشهر. كلها باللتر. الموقوف بيختفي من الطلب
           والجرد، وسجلاته القديمة بتضل.
         </span>
         <NewSimpleItem kind="sauce" />

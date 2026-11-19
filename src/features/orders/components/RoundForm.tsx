@@ -5,7 +5,7 @@ import { useState, useTransition } from "react";
 import { ProductName } from "@/components/ui/ProductName";
 import { Stepper } from "@/components/ui/Stepper";
 import { batchLabel } from "@/lib/batch-label";
-import { formatQuantity, formatQuantityCompact } from "@/lib/units";
+import { formatQuantity, formatQuantityCompact, SAUCE_UNIT } from "@/lib/units";
 import { dispatchRoundAction } from "../actions";
 import { asWholeCakes, fairAllocate } from "../logic";
 import type { FactoryBatchStock, RequestDoc } from "../queries";
@@ -27,7 +27,7 @@ export function RoundForm({
   cakesOnly?: boolean;
   // عدد القطع بالكيكة هلا (نفس اللي dispatch_round بتحسب فيه)، مش وقت الطلب
   sizes: Record<string, number | null>;
-  // الصوصات بتطلع بالحبة، بدون دفعات
+  // الصوصات بتطلع باللتر، بدون دفعات
   sauces?: string[];
 }) {
   const isSauce = (productId: string) => sauces.includes(productId);
@@ -128,7 +128,8 @@ export function RoundForm({
                   <div className="flex items-center justify-between gap-2">
                     <ProductName name={l.productName} className="font-semibold" />
                     <span className="text-[13px] text-muted">
-                      طلبوا {sauce ? `${l.qtyPieces} حبة` : formatQuantity(l.qtyPieces, l.piecesPerCake)}
+                      طلبوا{" "}
+                      {sauce ? `${l.qtyPieces} ${SAUCE_UNIT}` : formatQuantity(l.qtyPieces, l.piecesPerCake)}
                     </span>
                   </div>
                   <div
@@ -145,7 +146,7 @@ export function RoundForm({
                     )}
                     {(l.piecesPerCake === null || !cakesOnly) && (
                       <Stepper
-                        label={sauce ? "حبات" : "قطع"}
+                        label={sauce ? SAUCE_UNIT : "قطع"}
                         typed={sauce}
                         value={q.loosePieces}
                         onChange={(v) => set({ loosePieces: v })}

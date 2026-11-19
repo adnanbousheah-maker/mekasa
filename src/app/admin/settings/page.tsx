@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { dayNumberOf } from "@/lib/day-number";
+import { countDay } from "@/lib/time";
 import { GeneralTab } from "@/features/settings/components/GeneralTab";
 import { PackagingTab } from "@/features/settings/components/PackagingTab";
 import { ParTab } from "@/features/settings/components/ParTab";
@@ -11,7 +13,13 @@ import { getFeatures } from "@/features/settings/features";
 import { TasksTab } from "@/features/tasks/components/TasksTab";
 import { listTemplates, taskLocations } from "@/features/tasks/queries";
 import { categoryChoices, listLists, listOptions } from "@/features/lists/queries";
-import { listReportProducts, minLevels, parLevels, stockByProduct } from "@/features/reports/queries";
+import {
+  dailyMinLevels,
+  listReportProducts,
+  minLevels,
+  parLevels,
+  stockByProduct,
+} from "@/features/reports/queries";
 import { MonthlyCountsCard } from "@/features/settings/components/MonthlyCountsCard";
 import { ScheduleCard } from "@/features/settings/components/ScheduleCard";
 import { packagingStock, packagingStore } from "@/features/packaging/queries";
@@ -103,6 +111,7 @@ async function TabContent({ tab, loc, list }: { tab: TabId; loc: string | null; 
     ]);
     const current = locations.find((l) => l.id === loc) ?? locations[0];
     if (!current) return <span className="text-muted">ما في مواقع.</span>;
+    const daily = current.kind === "branch" ? await dailyMinLevels(current.id) : new Map();
     return (
       <ParTab
         locations={locations}
@@ -112,6 +121,8 @@ async function TabContent({ tab, loc, list }: { tab: TabId; loc: string | null; 
         }
         par={par}
         min={min}
+        daily={daily}
+        today={dayNumberOf(countDay(new Date()))}
         stock={stock}
       />
     );

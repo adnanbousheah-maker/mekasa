@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { BRANCH_DBQ, FACTORY, TINY_PNG, lastWaste, signInAndWait, stockOf } from "./support";
+import { BRANCH_DBQ, FACTORY, addWastePhoto, lastWaste, signInAndWait, stockOf } from "./support";
 
 test("a branch employee records broken cakes with a photo", async ({ page }) => {
   await signInAndWait(page, BRANCH_DBQ.phone, BRANCH_DBQ.pin);
@@ -13,14 +13,11 @@ test("a branch employee records broken cakes with a photo", async ({ page }) => 
   // نستنى الشباك يتسكر، وإلا الكبسة على "زيد" بتضيع
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "زيد" }).click();
-  await expect(page.getByRole("status", { name: "الكمية: 2" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "الكمية" })).toHaveValue("2");
   await page.getByRole("radio", { name: "انكسرت" }).click();
-  await page.getByLabel("أضف صورة (اختياري)").setInputFiles({
-    name: "cake.png",
-    mimeType: "image/png",
-    buffer: TINY_PNG,
-  });
-  await expect(page.getByText("انرفعت الصورة")).toBeVisible();
+  await page.getByRole("button", { name: "سجّل كيكتين تالفات" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "صوّر التالف أول" })).toBeVisible();
+  await addWastePhoto(page);
 
   await page.getByRole("button", { name: "سجّل كيكتين تالفات" }).click();
   await expect(page.getByRole("heading", { name: "انسجل التالف" })).toBeVisible();
@@ -43,6 +40,7 @@ test("other needs a note, and pieces-only products are counted in pieces", async
   await expect(page.getByRole("alert").filter({ hasText: "اكتب شو صار" })).toBeVisible();
 
   await page.getByLabel("شو صار؟").fill("الزبون رجعها");
+  await addWastePhoto(page);
   await page.getByRole("button", { name: "سجّل قطعة تالفة" }).click();
   await expect(page.getByRole("heading", { name: "انسجل التالف" })).toBeVisible();
   const waste = await lastWaste("DBQ");
@@ -58,6 +56,7 @@ test("the factory records waste on a batch", async ({ page }) => {
   await page.getByRole("button", { name: "سجّل كيكة تالفة" }).click();
   await expect(page.getByRole("alert").filter({ hasText: "اختار رقم الدفعة" })).toBeVisible();
   await page.getByRole("radiogroup", { name: "رقم الدفعة" }).getByRole("radio").last().click();
+  await addWastePhoto(page);
   await page.getByRole("button", { name: "سجّل كيكة تالفة" }).click();
   await expect(page.getByRole("heading", { name: "انسجل التالف" })).toBeVisible();
   expect((await lastWaste("FAC")).qty_pieces).toBe(10);

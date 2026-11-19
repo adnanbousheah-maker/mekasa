@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { SavedSwitch } from "@/features/settings/components/SavedSwitch";
 import { ROLE_LABELS, type Role } from "@/features/staff/roles";
-import { DAY_NAMES, type DayNumber } from "@/lib/day-number";
 import { saveTemplateAction, setTemplateActiveAction } from "../actions";
 import {
   FREQUENCIES,
@@ -13,6 +12,7 @@ import {
   scheduleLabel,
   type TaskTemplate,
   type TemplateInput,
+  TASK_WEEKDAY_NAMES,
 } from "../logic";
 
 export type TaskLocation = { id: string; name: string; kind: string };
@@ -254,7 +254,7 @@ function TemplateForm({
                 className={chip(input.weekdays.includes(d))}
                 onClick={() => set({ weekdays: toggle(input.weekdays, d) })}
               >
-                {DAY_NAMES[d as DayNumber]}
+                {TASK_WEEKDAY_NAMES[d]}
               </button>
             ))}
           </div>

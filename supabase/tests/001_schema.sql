@@ -62,10 +62,10 @@ select is_empty(
 
 select results_eq(
   $$ select public.day_number(d::date)::int
-     from unnest(array['2026-10-17', '2026-10-18', '2026-10-19', '2026-10-20',
-                       '2026-10-21', '2026-10-22', '2026-10-23']) as d $$,
+     from unnest(array['2026-10-18', '2026-10-19', '2026-10-20', '2026-10-21',
+                       '2026-10-22', '2026-10-23', '2026-10-24']) as d $$,
   $$ values (1), (2), (3), (4), (5), (6), (7) $$,
-  'day_number: Saturday is 1 and Friday is 7 (matches src/lib/day-number.ts)'
+  'day_number: Sunday is 1 and Saturday is 7 (matches src/lib/day-number.ts)'
 );
 
 -- ─── قيود ────────────────────────────────────────────────────────────

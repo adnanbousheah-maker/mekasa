@@ -11,6 +11,6 @@ describe("DayBadge", () => {
 
   it("names the day for screen readers", () => {
     render(<DayBadge day={7} />);
-    expect(screen.getByLabelText("رقم 7، الجمعة")).toBeInTheDocument();
+    expect(screen.getByLabelText("رقم 7، السبت")).toBeInTheDocument();
   });
 });

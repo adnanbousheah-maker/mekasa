@@ -85,21 +85,27 @@ select is(
 -- التالف بسبب من القائمة
 select tests.authenticate_as('8b8b8b8b-0000-4000-8000-000000000002');
 insert into ids values ('waste', public.log_waste(
-  tests.location('SWF'), tests.product('Flan'), 'cake', 1, (select id from ids where name = 'heat'), null));
+  tests.location('SWF'), tests.product('Flan'), 'cake', 1, (select id from ids where name = 'heat'), null,
+  null, tests.location('SWF') || '/2026-11-19/w.jpg'));
 select results_eq(
   format($$ select reason::text, reason_option_id from public.waste_records where id = %L $$, (select id from ids where name = 'waste')),
   format($$ values ('other', %L::uuid) $$, (select id from ids where name = 'heat')),
   'the waste keeps the chosen reason'
 );
 select throws_ok(
-  format($$ select public.log_waste(%L, %L, 'cake', 1, %L) $$, tests.location('SWF'), tests.product('Flan'),
-    (select id from public.lookup_options where name = 'للمصنع بس')),
+  format($$ select public.log_waste(%L, %L, 'cake', 1, %L, null, null, %L || '/2026-11-19/w.jpg') $$, tests.location('SWF'), tests.product('Flan'),
+    (select id from public.lookup_options where name = 'للمصنع بس'), tests.location('SWF')),
   '42501', null, 'a reason for another role is refused'
 );
 select throws_ok(
-  format($$ select public.log_waste(%L, %L, 'cake', 1, %L) $$, tests.location('SWF'), tests.product('Flan'),
-    (select id from public.lookup_options where code = 'other')),
+  format($$ select public.log_waste(%L, %L, 'cake', 1, %L, null, null, %L || '/2026-11-19/w.jpg') $$, tests.location('SWF'), tests.product('Flan'),
+    (select id from public.lookup_options where code = 'other'), tests.location('SWF')),
   '23514', null, '"other" needs a note'
+);
+select throws_like(
+  format($$ select public.log_waste(%L, %L, 'cake', 1, %L) $$, tests.location('SWF'), tests.product('Flan'),
+    (select id from public.lookup_options where code = 'broken')),
+  '%photo%', 'waste without a photo is refused (19 Nov)'
 );
 select lives_ok(
   format($$ select public.record_waste(%L, %L, 'cake', 1, 'broken') $$, tests.location('SWF'), tests.product('Flan')),
@@ -116,8 +122,8 @@ select tests.authenticate_as('8b8b8b8b-0000-4000-8000-000000000001');
 update public.lookup_options set is_active = false where id = (select id from ids where name = 'heat');
 select tests.authenticate_as('8b8b8b8b-0000-4000-8000-000000000002');
 select throws_ok(
-  format($$ select public.log_waste(%L, %L, 'cake', 1, %L) $$, tests.location('SWF'), tests.product('Flan'),
-    (select id from ids where name = 'heat')),
+  format($$ select public.log_waste(%L, %L, 'cake', 1, %L, null, null, %L || '/2026-11-19/w.jpg') $$, tests.location('SWF'), tests.product('Flan'),
+    (select id from ids where name = 'heat'), tests.location('SWF')),
   '23514', null, 'a switched-off reason cannot be picked'
 );
 select tests.authenticate_as('8b8b8b8b-0000-4000-8000-000000000001');

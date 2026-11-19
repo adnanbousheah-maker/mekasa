@@ -13,7 +13,7 @@ test("a branch employee counts by hand and the stock follows the count", async (
   await choco.getByRole("button", { name: "زيد كيكة Classic Choco" }).click();
   await choco.getByRole("button", { name: "زيد كيكة Classic Choco" }).click();
   await choco.getByRole("button", { name: "زيد قطعة Classic Choco" }).click();
-  await expect(choco.getByRole("status", { name: "كيكات: 2" })).toBeVisible();
+  await expect(choco.getByRole("textbox", { name: "كيكات" })).toHaveValue("2");
 
   const tiramisu = page.getByRole("listitem", { name: "Tiramisu" });
   await expect(tiramisu.getByText("قطع (قطع بس)")).toBeVisible();

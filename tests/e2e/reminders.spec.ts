@@ -71,7 +71,7 @@ test("a minimum level alerts the branch home and the cron, once a day", async ({
       .getByRole("navigation", { name: "الموقع" })
       .getByRole("link", { name: "فرع الجبيهة" })
       .click();
-    const field = admin.getByRole("textbox", { name: "الحد الأدنى لـ Pecan بـالجبيهة" });
+    const field = admin.getByRole("textbox", { name: "الحد الأدنى لـ Pecan بـالجبيهة", exact: true });
     await expect(field).toHaveValue("");
     await field.fill("50");
     await field.press("Enter");
@@ -108,10 +108,7 @@ test("a branch that leaves out a suggested item is warned, and the admin is told
     await signInAndWait(branch, BRANCH_JBH.phone, BRANCH_JBH.pin);
     await branch.goto("/order");
     const latte = branch.getByRole("listitem", { name: "Latte" });
-    const cakes = latte.getByRole("status", { name: /^كيكات: / });
-    while ((await cakes.getAttribute("aria-label")) !== "كيكات: 0") {
-      await latte.getByRole("button", { name: "نقّص كيكة Latte" }).click();
-    }
+    await latte.getByRole("textbox", { name: "كيكات" }).fill("0");
     await branch.getByRole("button", { name: "مراجعة الطلب" }).click();
     const dialog = branch.getByRole("dialog", { name: "راجع طلبك قبل الإرسال" });
     await expect(dialog.getByRole("alert")).toContainText("هالصنف انت ما طلبته");

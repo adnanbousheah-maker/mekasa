@@ -22,7 +22,16 @@ describe("Stepper", () => {
   it("shows the label and the current value", () => {
     renderStepper(4);
     expect(screen.getByText("كيكات")).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("4");
+    expect(screen.getByRole("textbox", { name: "كيكات" })).toHaveValue("4");
+  });
+
+  it("takes a typed number, Arabic digits included", async () => {
+    const user = userEvent.setup();
+    const onChange = renderStepper(0);
+    const field = screen.getByRole("textbox", { name: "كيكات" });
+    await user.type(field, "١٢");
+    expect(onChange).toHaveBeenLastCalledWith(2);
+    expect(onChange).toHaveBeenCalledWith(1);
   });
 
   it("adds one when the plus button is pressed", async () => {

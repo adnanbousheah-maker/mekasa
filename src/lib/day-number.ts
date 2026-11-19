@@ -1,4 +1,4 @@
-// رقم اليوم اللي بينكتب على الكيك: السبت 1، الأحد 2، … الجمعة 7.
+// رقم اليوم اللي بينكتب على الكيك: الأحد 1، الاثنين 2، … السبت 7 (من 19 نوفمبر 2026، كان السبت 1).
 // بينحسب من تاريخ الإنتاج (YYYY-MM-DD بتوقيت عمّان)، وبيدور كل أسبوع،
 // عشان هيك مدة الحياة بالمصنع لازم ما تزيد عن 7 أيام.
 
@@ -17,13 +17,13 @@ export const DAY_COLORS: Readonly<Record<DayNumber, string>> = {
 };
 
 export const DAY_NAMES: Readonly<Record<DayNumber, string>> = {
-  1: "السبت",
-  2: "الأحد",
-  3: "الاثنين",
-  4: "الثلاثاء",
-  5: "الأربعاء",
-  6: "الخميس",
-  7: "الجمعة",
+  1: "الأحد",
+  2: "الاثنين",
+  3: "الثلاثاء",
+  4: "الأربعاء",
+  5: "الخميس",
+  6: "الجمعة",
+  7: "السبت",
 };
 
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -47,9 +47,8 @@ function toIsoDate(date: Date): string {
 }
 
 export function dayNumberOf(isoDate: string): DayNumber {
-  // getUTCDay: الأحد 0 … السبت 6. السبت لازم يصير 1.
-  const weekday = parseIsoDate(isoDate).getUTCDay();
-  return (((weekday + 1) % 7) + 1) as DayNumber;
+  // getUTCDay: الأحد 0 … السبت 6، والأحد لازم يصير 1.
+  return (parseIsoDate(isoDate).getUTCDay() + 1) as DayNumber;
 }
 
 /** آخر تاريخ (لحد اليوم) إله هالرقم. جرد المصنع بيستعمله ليربط "رقم 1" بالدفعة الصح. */

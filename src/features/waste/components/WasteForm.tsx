@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { DayBadge } from "@/components/ui/DayBadge";
 import { Dialog } from "@/components/ui/Dialog";
+import { NumberField } from "@/components/ui/Stepper";
 import { ProductName } from "@/components/ui/ProductName";
 import type { CountProduct, FactoryBatch } from "@/features/counts/queries";
 import { PhotoPicker } from "@/features/photos/components/PhotoPicker";
 import { DAY_NAMES, dayNumberOf } from "@/lib/day-number";
 import { recordWasteAction } from "../actions";
-import { wasteSubmitLabel } from "../schemas";
+import { WASTE_PHOTO_LABEL, WASTE_PHOTO_REQUIRED, wasteSubmitLabel } from "../schemas";
 
 export type WasteReasonOption = { id: string; name: string; icon: string | null; requiresNote: boolean };
 
@@ -64,6 +65,7 @@ export function WasteForm({ products, reasons, factory }: Props) {
     if (factory && !productionDate) return setError("اختار رقم الدفعة");
     if (!reason) return setError("اختار السبب");
     if (reason.requiresNote && !note.trim()) return setError("اكتب شو صار");
+    if (!photoPath) return setError(WASTE_PHOTO_REQUIRED);
     setError(null);
     startTransition(async () => {
       const result = await recordWasteAction({
@@ -214,9 +216,14 @@ export function WasteForm({ products, reasons, factory }: Props) {
           >
             +
           </button>
-          <span role="status" aria-label={`الكمية: ${qty}`} className="text-[28px] font-bold tabular-nums">
-            {qty}
-          </span>
+          <NumberField
+            label="الكمية"
+            value={qty}
+            min={1}
+            max={999}
+            onChange={setQty}
+            className="text-[28px]"
+          />
           <button
             type="button"
             aria-label="نقّص"
@@ -259,7 +266,7 @@ export function WasteForm({ products, reasons, factory }: Props) {
         )}
       </div>
 
-      <PhotoPicker bucket="waste-photos" label="أضف صورة (اختياري)" onUploaded={setPhotoPath} />
+      <PhotoPicker bucket="waste-photos" label={WASTE_PHOTO_LABEL} onUploaded={setPhotoPath} />
 
       <div className="grow" />
       {error && (

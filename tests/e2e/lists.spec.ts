@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ADMIN, BRANCH_JBH, FACTORY, serviceClient, signInAndWait } from "./support";
+import { ADMIN, BRANCH_JBH, FACTORY, addWastePhoto, serviceClient, signInAndWait } from "./support";
 
 test.describe.configure({ mode: "serial" });
 const laptop = { viewport: { width: 1360, height: 900 } };
@@ -44,6 +44,7 @@ test("the admin adds a waste reason and the branch uses it", async ({ browser })
   await page.getByRole("dialog").getByRole("button", { name: "Classic Choco" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("radio", { name: reason }).click();
+  await addWastePhoto(page);
   await page.getByRole("button", { name: "سجّل كيكة تالفة" }).click();
   await expect(page.getByRole("heading", { name: "انسجل التالف" })).toBeVisible();
   await page.close();

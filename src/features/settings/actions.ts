@@ -361,6 +361,68 @@ export async function setMinLevelAction(
   return done;
 }
 
+const dailyMinSchema = z.object({
+  locationId: z.uuid(),
+  productId: z.uuid(),
+  weekday: z.number().int().min(1).max(7),
+});
+
+/**
+ * الحد الأدنى لصنف بفرع ليوم واحد (1 الأحد … 7 السبت). فاضي = الحد العام لكل الأيام.
+ * بالكيكات (أو بالقطع للأصناف اللي قطع بس) وبينحفظ بالقطع. سطر par_levels لازم يكون موجود
+ * (v_below_min بتبلش منه)، فإذا ناقص بينعمل بحد مطلوب صفر متل setMinLevelAction.
+ */
+export async function setDailyMinAction(
+  locationId: string,
+  productId: string,
+  weekday: number,
+  value: string,
+): Promise<SaveResult> {
+  const admin = await requireAdmin();
+  if (!dailyMinSchema.safeParse({ locationId, productId, weekday }).success)
+    return fail("الصنف أو الفرع مش موجود");
+  let units: number | null = null;
+  if (value.trim() !== "") {
+    const amount = wholeNumber({ min: 0, max: 9_999 }).safeParse(value);
+    if (!amount.success) return fail(firstIssue(amount.error));
+    units = amount.data;
+  }
+
+  const supabase = await createClient();
+  const { data: product, error: readError } = await supabase
+    .from("v_products")
+    .select("effective_pieces_per_cake")
+    .eq("id", productId)
+    .maybeSingle();
+  if (readError || !product) return fail("الصنف مش موجود");
+  const minPieces = units === null ? null : units * (product.effective_pieces_per_cake ?? 1);
+
+  const { error: parError } = await supabase
+    .from("par_levels")
+    .upsert(
+      { location_id: locationId, product_id: productId, par_pieces: 0, updated_by: admin.id },
+      { onConflict: "location_id,product_id", ignoreDuplicates: true },
+    );
+  const { error } = parError
+    ? { error: parError }
+    : await supabase.from("par_level_daily_min").upsert(
+        {
+          location_id: locationId,
+          product_id: productId,
+          weekday,
+          min_pieces: minPieces,
+          updated_by: admin.id,
+        },
+        { onConflict: "location_id,product_id,weekday" },
+      );
+  if (error) {
+    console.error("setDailyMin", error);
+    return fail(error.code === "23514" ? "الحد حسب اليوم للفروع بس" : SAVE_FAILED);
+  }
+  refresh();
+  return done;
+}
+
 const monthlySchema = z.object({ locationId: z.uuid(), scope: z.enum(["stock", "raw"]) });
 
 /** ساعة جرد آخر الشهر لموقع (بتفعّله كمان). */

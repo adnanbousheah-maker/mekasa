@@ -2,12 +2,12 @@ import Link from "next/link";
 import { ProductName } from "@/components/ui/ProductName";
 import { PrintButton } from "@/components/ui/PrintButton";
 import { formatLongDate } from "@/lib/time";
-import { formatQuantity } from "@/lib/units";
+import { formatQuantity, SAUCE_UNIT } from "@/lib/units";
 import { shiftDate, type DayProduct, type DaySummary } from "../day-summary";
 
-// الصوصات بالحبة
+// الصوصات باللتر
 const amount = (pieces: number, p: DayProduct) =>
-  p.kind === "sauce" ? `${pieces} حبة` : formatQuantity(pieces, p.piecesPerCake);
+  p.kind === "sauce" ? `${pieces} ${SAUCE_UNIT}` : formatQuantity(pieces, p.piecesPerCake);
 
 type Props = { summary: DaySummary; date: string; today: string; basePath: string; exportHref?: string };
 

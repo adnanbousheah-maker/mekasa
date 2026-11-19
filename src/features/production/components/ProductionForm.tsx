@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { ProductName } from "@/components/ui/ProductName";
+import { NumberField } from "@/components/ui/Stepper";
 import { countPhrase } from "@/lib/units";
 import { recordProductionAction } from "../actions";
 
@@ -57,13 +58,12 @@ export function ProductionForm({ products, dayNumber }: { products: Product[]; d
                 >
                   +
                 </button>
-                <span
-                  role="status"
-                  aria-label={`${p.nameEn}: ${n}`}
-                  className="text-xl font-bold tabular-nums"
-                >
-                  {n}
-                </span>
+                <NumberField
+                  label={p.nameEn}
+                  value={n}
+                  onChange={(next) => set(p.id, next)}
+                  className="text-xl"
+                />
                 <button
                   type="button"
                   aria-label={`نقّص ${p.nameEn}`}

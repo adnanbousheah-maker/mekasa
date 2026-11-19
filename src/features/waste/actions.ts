@@ -2,7 +2,7 @@
 
 import { requireStaff } from "@/features/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { wasteSchema, type WasteInput } from "./schemas";
+import { WASTE_PHOTO_REQUIRED, wasteSchema, type WasteInput } from "./schemas";
 
 export type WasteResult = { status: "error"; message: string } | { status: "done" };
 
@@ -32,11 +32,13 @@ export async function recordWasteAction(input: WasteInput): Promise<WasteResult>
     const message =
       error.hint === "note_required"
         ? "اكتب شو صار"
-        : error.code === "23514"
-          ? "في معلومة ناقصة أو مش منطقية"
-          : error.code === "42501"
-            ? "ما إلك صلاحية تسجل تالف هون"
-            : "ما انسجل التالف. جرب كمان مرة.";
+        : error.hint === "photo_required"
+          ? WASTE_PHOTO_REQUIRED
+          : error.code === "23514"
+            ? "في معلومة ناقصة أو مش منطقية"
+            : error.code === "42501"
+              ? "ما إلك صلاحية تسجل تالف هون"
+              : "ما انسجل التالف. جرب كمان مرة.";
     return { status: "error", message };
   }
   // بدون refresh(): الفورم بينعمل من جديد مع كل رسم للصفحة (key)، فالـ refresh كان يمسح

@@ -38,13 +38,10 @@ test("the branch orders what is missing from par", async ({ page }) => {
   test.skip(flanStock >= 20, "Flan is already at par in this database");
   await page.getByRole("navigation", { name: "المهام" }).getByRole("link", { name: /طلب/ }).click();
   const flan = page.getByRole("listitem", { name: "Flan" });
-  await expect(flan.getByRole("status", { name: /^كيكات: / })).not.toHaveAccessibleName("كيكات: 0");
-  // نخليها كيكتين بالضبط
-  const cakes = flan.getByRole("status", { name: /^كيكات: / });
-  while ((await cakes.getAttribute("aria-label")) !== "كيكات: 2") {
-    const n = Number((await cakes.getAttribute("aria-label"))!.split(": ")[1]);
-    await flan.getByRole("button", { name: n > 2 ? "نقّص كيكة Flan" : "زيد كيكة Flan" }).click();
-  }
+  const cakes = flan.getByRole("textbox", { name: "كيكات" });
+  await expect(cakes).not.toHaveValue("0");
+  // نخليها كيكتين بالضبط، بالكتابة
+  await cakes.fill("2");
   await page.getByRole("button", { name: "مراجعة الطلب" }).click();
   await expect(page.getByRole("dialog", { name: "راجع طلبك قبل الإرسال" })).toContainText("كيكتين");
   await page.getByRole("button", { name: "إرسال الطلب للمصنع" }).click();

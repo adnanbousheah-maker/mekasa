@@ -43,7 +43,7 @@ test("a branch orders a sauce with the cakes and counts its sauces", async ({ pa
     await expect(page.getByRole("heading", { name: "الصوصات" })).toBeVisible();
     await page.getByRole("textbox", { name: `عدد ${renamed}` }).fill("4");
     await page.getByRole("button", { name: "مراجعة الطلب" }).click();
-    await expect(page.getByRole("dialog").getByText("4 حبة")).toBeVisible();
+    await expect(page.getByRole("dialog").getByText("4 لتر")).toBeVisible();
     await page.getByRole("button", { name: "إرسال الطلب للمصنع" }).click();
     await expect(page).toHaveURL(/\/orders\?sent=1/);
 

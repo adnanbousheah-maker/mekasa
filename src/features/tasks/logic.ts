@@ -1,7 +1,18 @@
 // المهام المتكررة: وصف التكرار بالعربي، والفحص قبل الحفظ (نفس CHECK قاعدة البيانات).
 
 import { z } from "zod";
-import { DAY_NAMES, type DayNumber } from "@/lib/day-number";
+
+/** أيام المهام بقاعدة البيانات (task_templates.weekdays): 1 = السبت … 7 = الجمعة. مش رقم الكيك. */
+export const TASK_WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const;
+export const TASK_WEEKDAY_NAMES: Readonly<Record<number, string>> = {
+  1: "السبت",
+  2: "الأحد",
+  3: "الاثنين",
+  4: "الثلاثاء",
+  5: "الأربعاء",
+  6: "الخميس",
+  7: "الجمعة",
+};
 
 export const FREQUENCIES = ["daily", "weekly", "monthly"] as const;
 export type Frequency = (typeof FREQUENCIES)[number];
@@ -32,7 +43,7 @@ export function scheduleLabel(t: Pick<TaskTemplate, "frequency" | "weekdays" | "
   if (t.frequency === "weekly") {
     const days = [...(t.weekdays ?? [])].sort((a, b) => a - b);
     if (days.length === 7) return "كل يوم";
-    return days.map((d) => DAY_NAMES[d as DayNumber]).join(" و");
+    return days.map((d) => TASK_WEEKDAY_NAMES[d]).join(" و");
   }
   return t.monthDay === 31 ? "آخر يوم بالشهر" : `يوم ${t.monthDay} بالشهر`;
 }

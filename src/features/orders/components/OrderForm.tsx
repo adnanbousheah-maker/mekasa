@@ -6,7 +6,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { ProductName } from "@/components/ui/ProductName";
 import { QuantityField } from "@/components/ui/QuantityField";
 import { Stepper } from "@/components/ui/Stepper";
-import { countPhrase, formatQuantity } from "@/lib/units";
+import { countPhrase, formatQuantity, SAUCE_UNIT } from "@/lib/units";
 import { createRequestAction } from "../actions";
 import { forgottenItems, linesSummary, orderTarget, suggestQuantity } from "../logic";
 import type { OrderProduct } from "../queries";
@@ -57,7 +57,7 @@ export function OrderForm({
         picked.length > pickedSauces.length || pickedSauces.length === 0
           ? linesSummary(picked.filter((p) => p.kind !== "sauce").map((p) => rows[p.id]))
           : "",
-        sauceUnits > 0 ? `${sauceUnits} حبة صوص` : "",
+        sauceUnits > 0 ? `${sauceUnits} ${SAUCE_UNIT} صوص` : "",
       ]
         .filter(Boolean)
         .join(" · ");
@@ -128,7 +128,9 @@ export function OrderForm({
                   <div className="flex flex-col">
                     <ProductName name={p.nameEn} className="text-[17px] font-semibold" />
                     {!packaging && (
-                      <span className="text-[13px] text-muted">عندك {Math.max(0, p.stockPieces)} حبة</span>
+                      <span className="text-[13px] text-muted">
+                        عندك {Math.max(0, p.stockPieces)} {SAUCE_UNIT}
+                      </span>
                     )}
                   </div>
                   <QuantityField
@@ -188,7 +190,7 @@ export function OrderForm({
           return [
             <li key="sauces-title" className="pt-3">
               <h2 className="text-lg font-bold">الصوصات</h2>
-              <span className="text-[13px] text-muted">بتوصل مع الكيك، بالحبة</span>
+              <span className="text-[13px] text-muted">بتوصل مع الكيك، باللتر</span>
             </li>,
             item,
           ];
@@ -229,7 +231,7 @@ export function OrderForm({
                     rows[p.id].wholeCakes ? countPhrase(rows[p.id].wholeCakes, "cake") : "",
                     rows[p.id].loosePieces
                       ? byUnit(p)
-                        ? `${rows[p.id].loosePieces} حبة`
+                        ? `${rows[p.id].loosePieces} ${p.kind === "sauce" ? SAUCE_UNIT : "حبة"}`
                         : countPhrase(rows[p.id].loosePieces, "piece")
                       : "",
                   ]

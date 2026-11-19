@@ -1,6 +1,6 @@
-// فترات تقارير الإدارة ومقارنتها بالفترة اللي قبلها (نفس الطول). الأسبوع بيبلش السبت (يوم 1).
+// فترات تقارير الإدارة ومقارنتها بالفترة اللي قبلها (نفس الطول). الأسبوع بيبلش السبت.
 
-import { dayNumberOf } from "@/lib/day-number";
+import { parseIsoDate } from "@/lib/day-number";
 import { addDays } from "./format";
 
 export const PERIOD_PRESETS = ["week", "last-week", "month", "last-month", "30d", "custom"] as const;
@@ -46,7 +46,8 @@ export function resolvePeriod(
     : "week";
   let from: string;
   let to = today;
-  const weekStart = addDays(today, -(dayNumberOf(today) - 1));
+  // getUTCDay: الأحد 0 … السبت 6، فالأيام من السبت = (اليوم + 1) % 7
+  const weekStart = addDays(today, -((parseIsoDate(today).getUTCDay() + 1) % 7));
   switch (p) {
     case "last-week":
       from = addDays(weekStart, -7);

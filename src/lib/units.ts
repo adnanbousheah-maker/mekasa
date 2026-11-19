@@ -106,3 +106,6 @@ export function formatQuantityCompact(totalPieces: number, piecesPerCake: number
   const { cakes, pieces } = splitPieces(abs, piecesPerCake);
   return `${sign}${cakes} ${WORDS.cake.short} · ${pieces} ${WORDS.piece.short}`;
 }
+
+/** الصوصات بتنطلب وبتنعدّ بلتر كامل (اجتماع 18 نوفمبر). الكمية بقاعدة البيانات = عدد اللترات. */
+export const SAUCE_UNIT = "لتر";

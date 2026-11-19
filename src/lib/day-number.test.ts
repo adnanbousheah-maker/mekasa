@@ -3,14 +3,14 @@ import { DAY_COLORS, DAY_NAMES, dayNumberOf, latestDateForDayNumber, recentDates
 
 describe("dayNumberOf", () => {
   it.each([
-    ["2026-10-17", 1], // السبت
-    ["2026-10-18", 2], // الأحد
-    ["2026-10-19", 3],
-    ["2026-10-20", 4],
-    ["2026-10-21", 5],
-    ["2026-10-22", 6],
-    ["2026-10-23", 7], // الجمعة
-    ["2026-10-24", 1], // السبت اللي بعده
+    ["2026-10-18", 1], // الأحد
+    ["2026-10-19", 2], // الاثنين
+    ["2026-10-20", 3],
+    ["2026-10-21", 4],
+    ["2026-10-22", 5],
+    ["2026-10-23", 6], // الجمعة
+    ["2026-10-24", 7], // السبت
+    ["2026-10-25", 1], // الأحد اللي بعده
   ])("gives %s the day number %i", (date, day) => {
     expect(dayNumberOf(date)).toBe(day);
   });
@@ -23,16 +23,16 @@ describe("dayNumberOf", () => {
 
 describe("latestDateForDayNumber", () => {
   it("returns today when today has that number", () => {
-    expect(latestDateForDayNumber(7, "2026-10-23")).toBe("2026-10-23");
+    expect(latestDateForDayNumber(6, "2026-10-23")).toBe("2026-10-23");
   });
 
   it("returns the most recent past date with that number", () => {
-    expect(latestDateForDayNumber(1, "2026-10-23")).toBe("2026-10-17");
-    expect(latestDateForDayNumber(6, "2026-10-23")).toBe("2026-10-22");
+    expect(latestDateForDayNumber(1, "2026-10-23")).toBe("2026-10-18");
+    expect(latestDateForDayNumber(5, "2026-10-23")).toBe("2026-10-22");
   });
 
   it("crosses month boundaries", () => {
-    expect(latestDateForDayNumber(7, "2026-11-02")).toBe("2026-10-30");
+    expect(latestDateForDayNumber(7, "2026-11-02")).toBe("2026-10-31");
   });
 });
 
@@ -49,9 +49,9 @@ describe("day labels", () => {
     });
   });
 
-  it("names Saturday as 1 and Friday as 7", () => {
-    expect(DAY_NAMES[1]).toBe("السبت");
-    expect(DAY_NAMES[7]).toBe("الجمعة");
+  it("names Sunday as 1 and Saturday as 7", () => {
+    expect(DAY_NAMES[1]).toBe("الأحد");
+    expect(DAY_NAMES[7]).toBe("السبت");
   });
 });
 

@@ -293,3 +293,13 @@ export async function restorePin(phone: string, pin: string) {
   });
   if (authError) throw authError;
 }
+
+/** صورة التالف إجبارية: بترفع صورة صغيرة وبتستنى "انرفعت الصورة". */
+export async function addWastePhoto(page: Page) {
+  await page.getByLabel("صوّر التالف (إجباري)").setInputFiles({
+    name: "cake.png",
+    mimeType: "image/png",
+    buffer: TINY_PNG,
+  });
+  await expect(page.getByText("انرفعت الصورة")).toBeVisible();
+}

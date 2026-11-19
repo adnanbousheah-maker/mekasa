@@ -71,7 +71,7 @@ test("the factory counts two batches, and picking the newer one needs a confirme
       await picker.getByRole("button", { name: `رقم ${day}`, exact: true }).click();
     }
     await plus.click();
-    await expect(item.getByRole("status", { name: `${PRODUCT} رقم ${day}: 1` })).toBeVisible();
+    await expect(item.getByRole("textbox", { name: `${PRODUCT} رقم ${day}` })).toHaveValue(`1`);
   }
   await expect(item.getByText("المجموع: 2 كيكات")).toBeVisible();
   await page.getByRole("button", { name: "تأكيد جرد المصنع" }).click();
@@ -217,7 +217,7 @@ test("the daily round shares the old batch between branches", async ({ page }) =
       await picker.getByRole("button", { name: `رقم ${day}`, exact: true }).click();
     }
     for (let i = 0; i < cakes; i++) await plus.click();
-    await expect(item.getByRole("status", { name: `${PRODUCT} رقم ${day}: ${cakes}` })).toBeVisible();
+    await expect(item.getByRole("textbox", { name: `${PRODUCT} رقم ${day}` })).toHaveValue(`${cakes}`);
   }
   await page.getByRole("button", { name: "تأكيد جرد المصنع" }).click();
   await expect(page.getByRole("heading", { name: "تم الجرد" })).toBeVisible();

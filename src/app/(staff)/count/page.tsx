@@ -113,7 +113,7 @@ async function Count() {
   );
 }
 
-/** جرد الصوصات لحاله (آخر الشهر)، بالحبة. */
+/** جرد الصوصات لحاله (آخر الشهر)، باللتر. */
 function SauceCountLink() {
   return (
     <Link

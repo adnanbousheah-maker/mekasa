@@ -8,7 +8,7 @@ import { PackagingCountForm } from "@/features/packaging/components/PackagingCou
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
-// جرد الصوصات (آخر الشهر) بالفرع أو المصنع، بالحبة. بينسجل بوقت فتح الشاشة.
+// جرد الصوصات (آخر الشهر) بالفرع أو المصنع، باللتر. بينسجل بوقت فتح الشاشة.
 export default function SauceCountPage({ searchParams }: { searchParams: SearchParams }) {
   return (
     <Suspense fallback={<StaffLoading />}>
@@ -57,7 +57,7 @@ async function SauceCount({ searchParams }: { searchParams: SearchParams }) {
       ) : (
         <>
           <p className="text-[13px] leading-relaxed text-muted">
-            عدّ كل صوص بالحبة. اللي مش موجود اكبس «ما في منه».
+            عدّ كل صوص باللتر. اللي مش موجود اكبس «ما في منه».
           </p>
           <PackagingCountForm key={startedAt} items={items} startedAt={startedAt} variant="sauce" />
         </>

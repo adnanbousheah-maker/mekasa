@@ -1139,6 +1139,91 @@ export type Database = {
           },
         ];
       };
+      par_level_daily_min: {
+        Row: {
+          location_id: string;
+          min_pieces: number | null;
+          product_id: string;
+          updated_at: string;
+          updated_by: string | null;
+          weekday: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          location_id: string;
+          min_pieces?: number | null;
+          product_id: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          weekday: number;
+        };
+        Update: {
+          location_id?: string;
+          min_pieces?: number | null;
+          product_id?: string;
+          updated_at?: string;
+          updated_by?: string | null;
+          weekday?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "par_level_daily_min_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "locations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "par_level_daily_min_location_id_fkey";
+            columns: ["location_id"];
+            isOneToOne: false;
+            referencedRelation: "v_tasks_today";
+            referencedColumns: ["location_id"];
+          },
+          {
+            foreignKeyName: "par_level_daily_min_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "par_level_daily_min_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "par_level_daily_min_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_kind";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "par_level_daily_min_product_id_fkey";
+            columns: ["product_id"];
+            isOneToOne: false;
+            referencedRelation: "v_products_before_shelf_life";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "par_level_daily_min_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "staff";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "par_level_daily_min_updated_by_fkey";
+            columns: ["updated_by"];
+            isOneToOne: false;
+            referencedRelation: "v_staff_names";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       par_levels: {
         Row: {
           location_id: string;

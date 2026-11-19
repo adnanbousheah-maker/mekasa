@@ -7,7 +7,7 @@ type Props = {
   incrementLabel: string;
   decrementLabel: string;
   min?: number;
-  // كميات كبيرة (التغليف بالمية): الرقم بالنص بينكتب كمان، مش بس + و −
+  // الرقم بالنص بينكتب كمان (افتراضياً، طلب الاجتماع 18 نوفمبر). false = + و − بس.
   typed?: boolean;
 };
 
@@ -22,7 +22,7 @@ export function Stepper({
   incrementLabel,
   decrementLabel,
   min = 0,
-  typed = false,
+  typed = true,
 }: Props) {
   const canDecrement = value > min;
 
@@ -39,20 +39,7 @@ export function Stepper({
           +
         </button>
         {typed ? (
-          <input
-            type="text"
-            inputMode="numeric"
-            aria-label={label}
-            value={String(value)}
-            onFocus={(e) => e.target.select()}
-            onChange={(e) => {
-              const digits = e.target.value
-                .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
-                .replace(/\D/g, "");
-              onChange(Math.max(min, Math.min(99_999, Number(digits || 0))));
-            }}
-            className="w-full min-w-0 bg-transparent text-center text-[22px] font-bold tabular-nums outline-none"
-          />
+          <NumberField label={label} value={value} min={min} onChange={onChange} />
         ) : (
           <span
             role="status"
@@ -73,5 +60,39 @@ export function Stepper({
         </button>
       </div>
     </div>
+  );
+}
+
+/** خانة رقم بتنكتب (كيبورد أرقام بالجوال، والأرقام العربية بتتحول). بتختار كل الرقم لما تكبس عليها. */
+export function NumberField({
+  label,
+  value,
+  onChange,
+  min = 0,
+  max = 99_999,
+  className = "text-[22px]",
+}: {
+  label: string;
+  value: number;
+  onChange: (next: number) => void;
+  min?: number;
+  max?: number;
+  className?: string;
+}) {
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      aria-label={label}
+      value={String(value)}
+      onFocus={(e) => e.target.select()}
+      onChange={(e) => {
+        const digits = e.target.value
+          .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
+          .replace(/\D/g, "");
+        onChange(Math.max(min, Math.min(max, Number(digits || 0))));
+      }}
+      className={`w-full min-w-0 bg-transparent text-center font-bold tabular-nums outline-none ${className}`}
+    />
   );
 }

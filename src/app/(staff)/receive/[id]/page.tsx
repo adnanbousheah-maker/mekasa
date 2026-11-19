@@ -58,6 +58,7 @@ async function Receive({ params }: { params: Params }) {
         lines={d.lines.map((l) => ({
           lineId: l.lineId,
           productName: l.productName,
+          sauce: l.kind === "sauce",
           piecesPerCake: l.piecesPerCake,
           wholeCakes: l.wholeCakes,
           loosePieces: l.loosePieces,

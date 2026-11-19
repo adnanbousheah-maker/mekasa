@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { BatchBadge } from "@/components/ui/BatchBadge";
+import { NumberField } from "@/components/ui/Stepper";
 import { ProductName } from "@/components/ui/ProductName";
 import { batchLabel, usesDate } from "@/lib/batch-label";
 import { DAY_NAMES, dayNumberOf, recentDates } from "@/lib/day-number";
@@ -113,13 +114,12 @@ export function FactoryCountForm({ products, batches, today, scheduleId, started
                       >
                         +
                       </button>
-                      <span
-                        role="status"
-                        aria-label={`${p.nameEn} ${day}: ${r.qty}`}
-                        className="text-[19px] font-bold tabular-nums"
-                      >
-                        {r.qty}
-                      </span>
+                      <NumberField
+                        label={`${p.nameEn} ${day}`}
+                        value={r.qty}
+                        onChange={(next) => setQty(p.id, r.productionDate, next)}
+                        className="text-[19px]"
+                      />
                       <button
                         type="button"
                         aria-label={`نقّص ${p.nameEn} ${day}`}

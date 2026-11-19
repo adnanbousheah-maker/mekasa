@@ -7,7 +7,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { ProductName } from "@/components/ui/ProductName";
 import { Stepper } from "@/components/ui/Stepper";
 import { batchLabel } from "@/lib/batch-label";
-import { formatQuantity, formatQuantityCompact } from "@/lib/units";
+import { formatQuantity, formatQuantityCompact, SAUCE_UNIT } from "@/lib/units";
 import { branchSuggestionsAction, createDispatchAction } from "../actions";
 import {
   asWholeCakes,
@@ -176,7 +176,7 @@ export function DispatchForm({
   const cakeLines = lines.filter((l) => !isSauce(l.productId));
   const summary = [
     cakeLines.some((l) => pieces(l) > 0) || sauceUnits === 0 ? linesSummary(cakeLines, packaging) : "",
-    sauceUnits > 0 ? `${sauceUnits} حبة صوص` : "",
+    sauceUnits > 0 ? `${sauceUnits} ${SAUCE_UNIT} صوص` : "",
   ]
     .filter(Boolean)
     .join(" · ");
@@ -249,7 +249,9 @@ export function DispatchForm({
               {l.requestedPieces !== null && (
                 <span className="text-[13px] text-muted">
                   طلبوا:{" "}
-                  {byUnit ? `${l.requestedPieces} حبة` : formatQuantity(l.requestedPieces, p.piecesPerCake)}
+                  {byUnit
+                    ? `${l.requestedPieces} ${p.kind === "sauce" ? SAUCE_UNIT : "حبة"}`
+                    : formatQuantity(l.requestedPieces, p.piecesPerCake)}
                 </span>
               )}
               <div
@@ -266,7 +268,7 @@ export function DispatchForm({
                 )}
                 {(p.piecesPerCake === null || !cakesOnly) && (
                   <Stepper
-                    label={byUnit ? "حبات" : "قطع"}
+                    label={byUnit ? (p.kind === "sauce" ? SAUCE_UNIT : "حبات") : "قطع"}
                     typed={byUnit}
                     value={l.loosePieces}
                     onChange={(v) => update(l.productId, { loosePieces: v })}
