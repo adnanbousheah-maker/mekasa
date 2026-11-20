@@ -32,6 +32,27 @@ test("the storekeeper records today's production", async ({ page }) => {
   expect(await factoryTodayStock("Flan")).toBe(before + 30);
 });
 
+test("part of the production can be frozen, and it shows as its own batch", async ({ page }) => {
+  const fresh = await factoryTodayStock("Flan");
+  const frozen = await factoryTodayStock("Flan", true);
+  await signInAndWait(page, FACTORY.phone, FACTORY.pin);
+  await page.getByRole("link", { name: "تسجيل إنتاج" }).click();
+  const flan = page.getByRole("listitem", { name: "Flan" });
+  await flan.getByRole("textbox", { name: "Flan", exact: true }).fill("5");
+  await flan.getByRole("textbox", { name: "مفرّز Flan" }).fill("2");
+  await expect(page.getByText(/منها 2 مفرّز ❄/)).toBeVisible();
+  await page.getByRole("button", { name: "حفظ الإنتاج" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "انحفظ الإنتاج" })).toBeVisible();
+  expect(await factoryTodayStock("Flan")).toBe(fresh + 30);
+  expect(await factoryTodayStock("Flan", true)).toBe(frozen + 20);
+
+  // بجرد المصنع المفرّز سطر لحاله (❄ والتاريخ) جنب دفعة اليوم
+  await page.goto("/count");
+  const countFlan = page.getByRole("listitem", { name: "Flan" });
+  await expect(countFlan.getByRole("textbox", { name: /^Flan ❄ / })).toBeVisible();
+  await expect(countFlan.getByText("مفرّز (اليوم)")).toBeVisible();
+});
+
 test("the branch orders what is missing from par", async ({ page }) => {
   await signInAndWait(page, BRANCH_DBQ.phone, BRANCH_DBQ.pin);
   const flanStock = await stockOf("DBQ", "Flan");

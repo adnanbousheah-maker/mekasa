@@ -340,6 +340,8 @@ export interface FactoryBatchStock {
   expired: boolean;
   lastDay: boolean;
   shelfLifeDays: number;
+  frozen: boolean;
+  expiresOn: string;
 }
 
 /** ستوك المصنع بالدفعات (للإخراج: الكميات بتبين للإخراج، الجرد بس أعمى). */
@@ -348,9 +350,12 @@ export async function factoryBatchStock(factoryId: string): Promise<FactoryBatch
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_factory_batches")
-    .select("product_id, production_date, day_number, qty_pieces, is_expired, is_last_day, shelf_life_days")
+    .select(
+      "product_id, production_date, day_number, qty_pieces, is_expired, is_last_day, shelf_life_days, is_frozen, expires_on",
+    )
     .eq("location_id", factoryId)
     .gt("qty_pieces", 0)
+    .order("expires_on")
     .order("production_date");
   if (error) throw new Error(`Could not load factory batches: ${error.message}`);
   return data.map((b) => ({
@@ -361,6 +366,8 @@ export async function factoryBatchStock(factoryId: string): Promise<FactoryBatch
     expired: b.is_expired!,
     lastDay: b.is_last_day!,
     shelfLifeDays: b.shelf_life_days ?? 7,
+    frozen: b.is_frozen ?? false,
+    expiresOn: b.expires_on!,
   }));
 }
 

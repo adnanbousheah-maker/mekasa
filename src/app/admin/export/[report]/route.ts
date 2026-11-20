@@ -460,6 +460,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
               header: `${d} (قطع)`,
               value: (r: (typeof matrix.rows)[number]) => r.byDate.get(d) ?? 0,
             })),
+            ...(matrix.hasFrozen
+              ? [{ header: "مفرّز (قطع)", value: (r: (typeof matrix.rows)[number]) => r.frozen }]
+              : []),
           ],
         }),
       ];

@@ -88,7 +88,7 @@ set search_path = ''
 as $$
   insert into public.batches (product_id, production_date)
   values (tests.product(product_name), production_date)
-  on conflict (product_id, production_date) do update set production_date = excluded.production_date
+  on conflict (product_id, production_date, is_frozen) do update set production_date = excluded.production_date
   returning id
 $$;
 

@@ -15,8 +15,9 @@ export function shortDate(isoDate: string): string {
 
 export type BatchLabel = { kind: "day"; day: DayNumber; text: string } | { kind: "date"; text: string };
 
-/** شو بينكتب على الدفعة: رقم اليوم، أو التاريخ للأصناف الطويلة. */
-export function batchLabel(productionDate: string, shelfLifeDays: number): BatchLabel {
+/** شو بينكتب على الدفعة: رقم اليوم، أو التاريخ للأصناف الطويلة وللمفرّز (❄). */
+export function batchLabel(productionDate: string, shelfLifeDays: number, frozen = false): BatchLabel {
+  if (frozen) return { kind: "date", text: `❄ ${shortDate(productionDate)}` };
   if (usesDate(shelfLifeDays)) return { kind: "date", text: shortDate(productionDate) };
   const day = dayNumberOf(productionDate);
   return { kind: "day", day, text: `رقم ${day}` };

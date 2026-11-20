@@ -16,6 +16,7 @@ export interface FactoryHomeData {
     dayNumber: number;
     productionDate: string;
     shelfLifeDays: number;
+    frozen: boolean;
     qty: number;
     piecesPerCake: number | null;
   }[];
@@ -70,7 +71,7 @@ export async function factoryHomeData(factoryId: string): Promise<FactoryHomeDat
         .eq("status", "sent"),
       supabase
         .from("v_factory_batches")
-        .select("product_id, day_number, production_date, shelf_life_days, qty_pieces")
+        .select("product_id, day_number, production_date, shelf_life_days, qty_pieces, is_frozen")
         .eq("location_id", factoryId)
         .eq("is_last_day", true)
         .gt("qty_pieces", 0),
@@ -115,6 +116,7 @@ export async function factoryHomeData(factoryId: string): Promise<FactoryHomeDat
       dayNumber: b.day_number!,
       productionDate: b.production_date!,
       shelfLifeDays: b.shelf_life_days ?? 7,
+      frozen: b.is_frozen ?? false,
       qty: b.qty_pieces!,
       piecesPerCake: names.get(b.product_id!)?.ppc ?? null,
     })),

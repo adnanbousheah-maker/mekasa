@@ -409,7 +409,7 @@ export function moreAssistantTools(db: Db, now: Date) {
           db
             .from("v_factory_batches")
             .select(
-              "product_id, production_date, day_number, qty_pieces, age_days, expires_on, is_last_day, is_expired",
+              "product_id, production_date, day_number, qty_pieces, age_days, expires_on, is_last_day, is_expired, is_frozen",
             )
             .gt("qty_pieces", 0)
             .order("production_date"),
@@ -420,8 +420,10 @@ export function moreAssistantTools(db: Db, now: Date) {
             .filter((b) => matches(byId.get(b.product_id!)?.name, product))
             .map((b) => ({
               product: byId.get(b.product_id!)?.name,
-              day_number: b.day_number,
+              day_number: b.is_frozen ? null : b.day_number,
+              frozen: b.is_frozen,
               produced: b.production_date,
+              expires_on: b.expires_on,
               quantity: formatQuantity(b.qty_pieces ?? 0, byId.get(b.product_id!)?.ppc ?? null),
               age_days: b.age_days,
               last_day: b.is_last_day,

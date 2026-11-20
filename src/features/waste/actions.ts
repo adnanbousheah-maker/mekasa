@@ -26,6 +26,7 @@ export async function recordWasteAction(input: WasteInput): Promise<WasteResult>
     p_note: w.note || undefined,
     p_production_date: w.productionDate ?? undefined,
     p_photo_path: w.photoPath ?? undefined,
+    p_frozen: w.frozen,
   });
   if (error) {
     console.error("recordWaste", error);

@@ -56,6 +56,7 @@ describe("toRpcLines", () => {
       {
         product_id: productId,
         production_date: "2026-10-22",
+        frozen: false,
         whole_cakes: 4,
         loose_pieces: 0,
         ocr_whole_cakes: null,
@@ -66,6 +67,7 @@ describe("toRpcLines", () => {
       {
         product_id: productId,
         production_date: null,
+        frozen: false,
         whole_cakes: 1,
         loose_pieces: 2,
         ocr_whole_cakes: 1,

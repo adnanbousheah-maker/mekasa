@@ -373,6 +373,7 @@ export type Database = {
           created_at: string;
           day_number: number | null;
           id: string;
+          is_frozen: boolean;
           product_id: string;
           production_date: string;
         };
@@ -381,6 +382,7 @@ export type Database = {
           created_at?: string;
           day_number?: never;
           id?: string;
+          is_frozen?: boolean;
           product_id: string;
           production_date: string;
         };
@@ -388,6 +390,7 @@ export type Database = {
           created_at?: string;
           day_number?: never;
           id?: string;
+          is_frozen?: boolean;
           product_id?: string;
           production_date?: string;
         };
@@ -3439,6 +3442,7 @@ export type Database = {
           day_number: number | null;
           expires_on: string | null;
           is_expired: boolean | null;
+          is_frozen: boolean | null;
           is_last_day: boolean | null;
           location_id: string | null;
           product_id: string | null;
@@ -4076,6 +4080,20 @@ export type Database = {
       };
       it_reset_operations: { Args: { p_confirm: string }; Returns: undefined };
       log_waste: {
+        Args: {
+          p_frozen?: boolean;
+          p_location_id: string;
+          p_note?: string;
+          p_photo_path?: string;
+          p_product_id: string;
+          p_production_date?: string;
+          p_qty: number;
+          p_reason_id: string;
+          p_unit: Database["public"]["Enums"]["entry_unit"];
+        };
+        Returns: string;
+      };
+      log_waste_before_freeze: {
         Args: {
           p_location_id: string;
           p_note?: string;

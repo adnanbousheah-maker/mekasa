@@ -14,6 +14,8 @@ export const countLineSchema = z.object({
   productId: z.uuid(),
   // المصنع بس: تاريخ إنتاج الدفعة
   productionDate: isoDate.optional(),
+  // المصنع: دفعة مفرّزة (صلاحية 30 يوم)
+  frozen: z.boolean().optional(),
   wholeCakes: countValue,
   loosePieces: countPieces,
   // الجرد بالصورة: شو قرأ Claude، وثقته
@@ -45,6 +47,7 @@ export function toRpcLines(lines: CountLine[]) {
   return lines.map((l) => ({
     product_id: l.productId,
     production_date: l.productionDate ?? null,
+    frozen: l.frozen ?? false,
     whole_cakes: l.wholeCakes,
     loose_pieces: l.loosePieces,
     ocr_whole_cakes: l.ocr?.wholeCakes ?? null,

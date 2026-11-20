@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { productionSchema, productionTotals } from "./logic";
+import { productionSchema, productionTotals, splitFrozen } from "./logic";
 
 const id = "11111111-1111-4111-8111-111111111111";
 
@@ -30,5 +30,13 @@ describe("productionTotals", () => {
         { production_lines: [{ whole_cakes: 4, loose_pieces: 0 }] },
       ]),
     ).toEqual({ cakes: 10, pieces: 24 });
+  });
+});
+
+describe("splitFrozen", () => {
+  it("splits the total into fresh and frozen, never more frozen than made", () => {
+    expect(splitFrozen(10, 3)).toEqual({ fresh: 7, frozen: 3 });
+    expect(splitFrozen(4, 9)).toEqual({ fresh: 0, frozen: 4 });
+    expect(splitFrozen(5, -1)).toEqual({ fresh: 5, frozen: 0 });
   });
 });

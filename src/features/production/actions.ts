@@ -20,6 +20,7 @@ export async function recordProductionAction(input: ProductionInput): Promise<Pr
       product_id: l.productId,
       whole_cakes: l.wholeCakes,
       loose_pieces: l.loosePieces,
+      frozen: l.frozen,
     })) as Json,
     p_note: parsed.data.note || undefined,
   });

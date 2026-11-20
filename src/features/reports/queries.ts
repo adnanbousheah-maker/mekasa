@@ -553,7 +553,15 @@ export interface FactoryMatrix {
   factoryId: string | null;
   dates: string[];
   shelfLifeDays: number;
-  rows: { productId: string; nameEn: string; piecesPerCake: number | null; byDate: Map<string, number> }[];
+  rows: {
+    productId: string;
+    nameEn: string;
+    piecesPerCake: number | null;
+    byDate: Map<string, number>;
+    // المفرّز (صلاحية 30 يوم) عمود لحاله، مش بأعمدة أرقام الأيام
+    frozen: number;
+  }[];
+  hasFrozen: boolean;
 }
 
 /** ستوك المصنع: صنف × تاريخ إنتاج (رقم اليوم)، الأقدم أول. */
@@ -564,7 +572,7 @@ export async function factoryMatrix(): Promise<FactoryMatrix> {
     listReportProducts(),
     supabase
       .from("v_factory_batches")
-      .select("product_id, production_date, qty_pieces, location_id")
+      .select("product_id, production_date, qty_pieces, location_id, is_frozen")
       .gt("qty_pieces", 0),
     supabase.from("app_settings").select("factory_shelf_life_days").single(),
   ]);
@@ -575,22 +583,32 @@ export async function factoryMatrix(): Promise<FactoryMatrix> {
   const rows = products
     .map((p) => {
       const byDate = new Map<string, number>();
+      let frozen = 0;
       for (const b of batches.filter((b) => b.product_id === p.id && b.location_id === factory?.id)) {
-        byDate.set(b.production_date!, (byDate.get(b.production_date!) ?? 0) + b.qty_pieces!);
+        if (b.is_frozen) frozen += b.qty_pieces!;
+        else byDate.set(b.production_date!, (byDate.get(b.production_date!) ?? 0) + b.qty_pieces!);
       }
-      return { productId: p.id, nameEn: p.nameEn, piecesPerCake: p.piecesPerCake, byDate };
+      return { productId: p.id, nameEn: p.nameEn, piecesPerCake: p.piecesPerCake, byDate, frozen };
     })
-    .filter((r) => r.byDate.size > 0);
-  const older = [...new Set(batches.map((b) => b.production_date!))].filter(
+    .filter((r) => r.byDate.size > 0 || r.frozen > 0);
+  const older = [...new Set(batches.filter((b) => !b.is_frozen).map((b) => b.production_date!))].filter(
     (d) => d < addDays(today, -(shelf - 1)),
   );
   const dates = [...older.sort(), ...Array.from({ length: shelf }, (_, i) => addDays(today, i - shelf + 1))];
-  return { factoryId: factory?.id ?? null, dates, shelfLifeDays: shelf, rows };
+  return {
+    factoryId: factory?.id ?? null,
+    dates,
+    shelfLifeDays: shelf,
+    rows,
+    hasFrozen: rows.some((r) => r.frozen > 0),
+  };
 }
 
 export interface ProductionCheck {
   productId: string;
   nameEn: string;
+  // دفعة اليوم المفرّزة (سطر لحاله)
+  frozen: boolean;
   piecesPerCake: number | null;
   produced: number;
   out: number;
@@ -604,7 +622,7 @@ export async function productionVsCount(factoryId: string): Promise<ProductionCh
   const supabase = await db();
   const today = businessDate(new Date());
   const [{ data: batches }, products] = await Promise.all([
-    supabase.from("batches").select("id, product_id").eq("production_date", today),
+    supabase.from("batches").select("id, product_id, is_frozen").eq("production_date", today),
     listReportProducts(),
   ]);
   if (!batches?.length) return [];
@@ -639,6 +657,7 @@ export async function productionVsCount(factoryId: string): Promise<ProductionCh
       return {
         productId: b.product_id,
         nameEn: p?.nameEn ?? "",
+        frozen: b.is_frozen,
         piecesPerCake: p?.piecesPerCake ?? null,
         produced,
         out,

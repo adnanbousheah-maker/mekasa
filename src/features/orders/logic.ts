@@ -52,10 +52,34 @@ export interface BatchStock {
   productionDate: string;
   available: number;
   expired?: boolean;
+  // المفرّز دفعة لحالها بنفس التاريخ
+  frozen?: boolean;
+  // آخر يوم صلاحية (المفرّز 30 يوم). الترتيب عليه، وبدونه على تاريخ الإنتاج
+  expiresOn?: string;
+}
+
+export interface BatchPick {
+  productionDate: string;
+  frozen?: boolean;
+  qty: number;
+}
+
+/** مفتاح الدفعة: التاريخ، و"|f" للمفرّزة. */
+export function batchKey(b: { productionDate: string; frozen?: boolean }): string {
+  return b.frozen ? `${b.productionDate}|f` : b.productionDate;
+}
+
+/** اللي بتخلص صلاحيته أول، وبعدين الأقدم إنتاج (الطازة قبل المفرّز). */
+function byExpiry(a: BatchStock, b: BatchStock): number {
+  return (
+    (a.expiresOn ?? a.productionDate).localeCompare(b.expiresOn ?? b.productionDate) ||
+    a.productionDate.localeCompare(b.productionDate) ||
+    Number(a.frozen ?? false) - Number(b.frozen ?? false)
+  );
 }
 
 export interface Allocation {
-  allocations: { productionDate: string; qty: number }[];
+  allocations: BatchPick[];
   short: number;
   // أخذنا من دفعة أحدث وفي دفعة أقدم (مش منتهية) ضل فيها
   override: boolean;
@@ -65,15 +89,10 @@ export interface Allocation {
  * توزيع الكمية على الدفعات: من الدفعة اللي اختارها الموظف أول (إذا اختار)، وبعدين الأقدم فالأحدث.
  * المنتهية ما بتنحسب. نفس منطق create_dispatch بقاعدة البيانات، للعرض قبل التأكيد.
  */
-export function fefoAllocate(batches: BatchStock[], qty: number, firstDate?: string | null): Allocation {
-  const usable = batches
-    .filter((b) => !b.expired && b.available > 0)
-    .sort((a, b) => a.productionDate.localeCompare(b.productionDate));
-  const order = firstDate
-    ? [
-        ...usable.filter((b) => b.productionDate === firstDate),
-        ...usable.filter((b) => b.productionDate !== firstDate),
-      ]
+export function fefoAllocate(batches: BatchStock[], qty: number, firstKey?: string | null): Allocation {
+  const usable = batches.filter((b) => !b.expired && b.available > 0).sort(byExpiry);
+  const order = firstKey
+    ? [...usable.filter((b) => batchKey(b) === firstKey), ...usable.filter((b) => batchKey(b) !== firstKey)]
     : usable;
 
   let left = qty;
@@ -81,14 +100,17 @@ export function fefoAllocate(batches: BatchStock[], qty: number, firstDate?: str
   for (const b of order) {
     if (left <= 0) break;
     const take = Math.min(left, b.available);
-    allocations.push({ productionDate: b.productionDate, qty: take });
+    allocations.push({ productionDate: b.productionDate, frozen: b.frozen ?? false, qty: take });
     left -= take;
   }
-  const taken = new Map(allocations.map((a) => [a.productionDate, a.qty]));
+  const taken = new Map(allocations.map((a) => [batchKey(a), a.qty]));
+  const expiry = (b: { productionDate: string; frozen?: boolean }) =>
+    usable.find((u) => batchKey(u) === batchKey(b))?.expiresOn ?? b.productionDate;
   const override = allocations.some((a) =>
     usable.some(
       (older) =>
-        older.productionDate < a.productionDate && (taken.get(older.productionDate) ?? 0) < older.available,
+        (older.expiresOn ?? older.productionDate) < expiry(a) &&
+        (taken.get(batchKey(older)) ?? 0) < older.available,
     ),
   );
   return { allocations, short: Math.max(0, left), override };
@@ -110,10 +132,8 @@ export function fairAllocate(
   batches: BatchStock[],
   lines: RoundLine[],
   piecesPerCake: number | null = null,
-): { byLine: Map<string, { productionDate: string; qty: number }[]>; short: number } {
-  const usable = batches
-    .filter((b) => !b.expired && b.available > 0)
-    .sort((a, b) => a.productionDate.localeCompare(b.productionDate));
+): { byLine: Map<string, BatchPick[]>; short: number } {
+  const usable = batches.filter((b) => !b.expired && b.available > 0).sort(byExpiry);
   const total = lines.reduce((s, l) => s + Math.max(0, l.qty), 0);
   const cake = piecesPerCake ?? 1;
   const unit =
@@ -124,7 +144,7 @@ export function fairAllocate(
       : 1;
 
   const remaining = lines.map((l) => Math.max(0, l.qty) / unit);
-  const byLine = new Map(lines.map((l) => [l.key, [] as { productionDate: string; qty: number }[]]));
+  const byLine = new Map(lines.map((l) => [l.key, [] as BatchPick[]]));
   let remainingTotal = total / unit;
 
   for (const b of usable) {
@@ -144,7 +164,9 @@ export function fairAllocate(
     }
     share.forEach((x, i) => {
       if (x <= 0) return;
-      byLine.get(lines[i].key)!.push({ productionDate: b.productionDate, qty: x * unit });
+      byLine
+        .get(lines[i].key)!
+        .push({ productionDate: b.productionDate, frozen: b.frozen ?? false, qty: x * unit });
       remaining[i] -= x;
       remainingTotal -= x;
     });
@@ -251,9 +273,13 @@ export const dispatchLineSchema = z.object({
   requestLineId: z.uuid().nullable().default(null),
   batches: z
     .array(
-      z.object({ productionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), qty: z.number().int().min(1) }),
+      z.object({
+        productionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        frozen: z.boolean().default(false),
+        qty: z.number().int().min(1),
+      }),
     )
-    .max(14)
+    .max(28)
     .optional(),
 });
 

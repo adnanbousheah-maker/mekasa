@@ -14,3 +14,9 @@ describe("batch labels", () => {
     expect(shortDate("2026-01-05")).toBe("5/1");
   });
 });
+
+describe("frozen label", () => {
+  it("shows the date with a snowflake", () => {
+    expect(batchLabel("2026-11-20", 7, true)).toEqual({ kind: "date", text: "❄ 20/11" });
+  });
+});

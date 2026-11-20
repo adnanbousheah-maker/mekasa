@@ -52,6 +52,14 @@ async function Factory() {
                   </th>
                 );
               })}
+              {matrix.hasFrozen && (
+                <th scope="col" className="px-2 py-3 font-semibold">
+                  <span className="flex flex-col items-center gap-1">
+                    <span aria-hidden>❄</span>
+                    <span className="text-xs font-normal">مفرّز</span>
+                  </span>
+                </th>
+              )}
               <th scope="col" className="px-3 py-3 font-semibold">
                 المجموع
               </th>
@@ -60,13 +68,16 @@ async function Factory() {
           <tbody>
             {matrix.rows.length === 0 && (
               <tr>
-                <td colSpan={matrix.dates.length + 2} className="px-4 py-8 text-center text-muted">
+                <td
+                  colSpan={matrix.dates.length + (matrix.hasFrozen ? 3 : 2)}
+                  className="px-4 py-8 text-center text-muted"
+                >
                   ما في ستوك بالمصنع. سجّل الإنتاج أو اعمل جرد.
                 </td>
               </tr>
             )}
             {matrix.rows.map((r) => {
-              const total = [...r.byDate.values()].reduce((s, n) => s + n, 0);
+              const total = [...r.byDate.values()].reduce((s, n) => s + n, 0) + r.frozen;
               return (
                 <tr key={r.productId} className="border-t border-line-soft">
                   <th scope="row" className="px-3 py-2.5 text-right font-semibold">
@@ -84,6 +95,13 @@ async function Factory() {
                       </td>
                     );
                   })}
+                  {matrix.hasFrozen && (
+                    <td
+                      className={`px-2 py-2.5 text-center tabular-nums ${r.frozen === 0 ? "text-line-strong" : "font-bold"}`}
+                    >
+                      {r.frozen === 0 ? "·" : q(r.frozen, r.piecesPerCake)}
+                    </td>
+                  )}
                   <td className="px-3 py-2.5 text-center font-semibold tabular-nums">
                     {q(total, r.piecesPerCake)}
                   </td>
@@ -126,9 +144,10 @@ async function Factory() {
               {checks.map((c) => {
                 const diff = c.counted === null ? null : c.counted - c.expected;
                 return (
-                  <tr key={c.productId} className="border-t border-line-soft">
+                  <tr key={`${c.productId}${c.frozen ? "|f" : ""}`} className="border-t border-line-soft">
                     <th scope="row" className="px-3 py-2.5 text-right font-semibold">
                       <ProductName name={c.nameEn} />
+                      {c.frozen && <span className="ms-1 text-xs font-normal text-muted">❄ مفرّز</span>}
                     </th>
                     <td className="px-3 py-2.5 text-center tabular-nums">{q(c.produced, c.piecesPerCake)}</td>
                     <td className="px-3 py-2.5 text-center tabular-nums">{q(c.out, c.piecesPerCake)}</td>

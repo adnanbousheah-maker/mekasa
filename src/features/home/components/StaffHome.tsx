@@ -312,7 +312,11 @@ function FactoryTasks({ staff, data }: { staff: CurrentStaff; data: FactoryHomeD
               href={isDispatcher ? "/factory/requests" : "/count"}
               className="flex items-center gap-3 rounded-[14px] border border-danger-line bg-danger-soft px-3.5 py-2.5 text-danger-text"
             >
-              <BatchBadge productionDate={b.productionDate} shelfLifeDays={b.shelfLifeDays} />
+              <BatchBadge
+                productionDate={b.productionDate}
+                shelfLifeDays={b.shelfLifeDays}
+                frozen={b.frozen}
+              />
               <span className="flex flex-col">
                 <strong className="text-[15px]">
                   دفعة {batchLabel(b.productionDate, b.shelfLifeDays).text} آخر يوم إلها

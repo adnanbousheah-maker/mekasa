@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  batchKey,
   asWholeCakes,
   createDispatchSchema,
   createRequestSchema,
@@ -50,8 +51,8 @@ describe("fefoAllocate", () => {
   it("takes the oldest usable batch first and skips expired ones", () => {
     expect(fefoAllocate(batches, 30)).toEqual({
       allocations: [
-        { productionDate: "2026-10-19", qty: 20 },
-        { productionDate: "2026-10-22", qty: 10 },
+        { productionDate: "2026-10-19", frozen: false, qty: 20 },
+        { productionDate: "2026-10-22", frozen: false, qty: 10 },
       ],
       short: 0,
       override: false,
@@ -60,7 +61,7 @@ describe("fefoAllocate", () => {
 
   it("flags an override when a newer batch is picked first", () => {
     const result = fefoAllocate(batches, 10, "2026-10-22");
-    expect(result.allocations).toEqual([{ productionDate: "2026-10-22", qty: 10 }]);
+    expect(result.allocations).toEqual([{ productionDate: "2026-10-22", frozen: false, qty: 10 }]);
     expect(result.override).toBe(true);
   });
 
@@ -117,12 +118,12 @@ describe("fairAllocate", () => {
     );
     expect(short).toBe(0);
     expect(byLine.get("swf")).toEqual([
-      { productionDate: "2026-10-22", qty: 20 },
-      { productionDate: "2026-10-25", qty: 20 },
+      { productionDate: "2026-10-22", frozen: false, qty: 20 },
+      { productionDate: "2026-10-25", frozen: false, qty: 20 },
     ]);
     expect(byLine.get("jbh")).toEqual([
-      { productionDate: "2026-10-22", qty: 10 },
-      { productionDate: "2026-10-25", qty: 10 },
+      { productionDate: "2026-10-22", frozen: false, qty: 10 },
+      { productionDate: "2026-10-25", frozen: false, qty: 10 },
     ]);
   });
 
@@ -136,8 +137,8 @@ describe("fairAllocate", () => {
       10,
     );
     // كيكتين قديمات: الصويفية 1.33 والجبيهة 0.67، فكل وحدة بتاخذ وحدة
-    expect(byLine.get("swf")![0]).toEqual({ productionDate: "2026-10-24", qty: 10 });
-    expect(byLine.get("jbh")![0]).toEqual({ productionDate: "2026-10-24", qty: 10 });
+    expect(byLine.get("swf")![0]).toEqual({ productionDate: "2026-10-24", frozen: false, qty: 10 });
+    expect(byLine.get("jbh")![0]).toEqual({ productionDate: "2026-10-24", frozen: false, qty: 10 });
   });
 
   it("spreads leftover units evenly", () => {
@@ -254,5 +255,38 @@ describe("schemas", () => {
         lines: [{ productId: id, wholeCakes: 1, loosePieces: 0 }],
       }).confirmFefoOverride,
     ).toBe(false);
+  });
+});
+
+describe("frozen batches", () => {
+  const batches = [
+    { productionDate: "2026-11-10", frozen: true, expiresOn: "2026-12-10", available: 30 },
+    { productionDate: "2026-11-18", expiresOn: "2026-11-25", available: 20 },
+    { productionDate: "2026-11-18", frozen: true, expiresOn: "2026-12-18", available: 30 },
+  ];
+
+  it("takes what expires first: fresh before frozen, then the older frozen", () => {
+    expect(fefoAllocate(batches, 30)).toEqual({
+      allocations: [
+        { productionDate: "2026-11-18", frozen: false, qty: 20 },
+        { productionDate: "2026-11-10", frozen: true, qty: 10 },
+      ],
+      short: 0,
+      override: false,
+    });
+  });
+
+  it("starting from the later frozen batch is an override", () => {
+    const a = fefoAllocate(batches, 10, batchKey({ productionDate: "2026-11-18", frozen: true }));
+    expect(a.allocations).toEqual([{ productionDate: "2026-11-18", frozen: true, qty: 10 }]);
+    expect(a.override).toBe(true);
+  });
+
+  it("the round also goes by expiry and keeps the frozen flag", () => {
+    const { byLine } = fairAllocate(batches, [{ key: "a", qty: 25 }]);
+    expect(byLine.get("a")).toEqual([
+      { productionDate: "2026-11-18", frozen: false, qty: 20 },
+      { productionDate: "2026-11-10", frozen: true, qty: 5 },
+    ]);
   });
 });

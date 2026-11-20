@@ -15,6 +15,7 @@ describe("wasteSchema", () => {
       requiresNote: false,
       note: "",
       productionDate: null,
+      frozen: false,
       photoPath,
     });
   });

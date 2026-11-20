@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
+import { BatchBadge } from "@/components/ui/BatchBadge";
 import { DayBadge } from "@/components/ui/DayBadge";
 import { Dialog } from "@/components/ui/Dialog";
 import { NumberField } from "@/components/ui/Stepper";
 import { ProductName } from "@/components/ui/ProductName";
 import type { CountProduct, FactoryBatch } from "@/features/counts/queries";
 import { PhotoPicker } from "@/features/photos/components/PhotoPicker";
+import { shortDate } from "@/lib/batch-label";
 import { DAY_NAMES, dayNumberOf } from "@/lib/day-number";
 import { recordWasteAction } from "../actions";
 import { WASTE_PHOTO_LABEL, WASTE_PHOTO_REQUIRED, wasteSubmitLabel } from "../schemas";
@@ -35,6 +37,7 @@ export function WasteForm({ products, reasons, factory }: Props) {
   const reason = reasons.find((r) => r.id === reasonId) ?? null;
   const [note, setNote] = useState("");
   const [productionDate, setProductionDate] = useState<string | null>(null);
+  const [frozen, setFrozen] = useState(false);
   const [photoPath, setPhotoPath] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
@@ -44,7 +47,13 @@ export function WasteForm({ products, reasons, factory }: Props) {
   const piecesOnly = product?.piecesPerCake === null;
   const effectiveUnit = piecesOnly ? "piece" : unit;
   const productBatches =
-    factory?.batches.filter((b) => b.productId === productId).map((b) => b.productionDate) ?? [];
+    factory?.batches.filter((b) => b.productId === productId && !b.frozen).map((b) => b.productionDate) ?? [];
+  // الدفعات المفرّزة اللي إلها ستوك
+  const frozenChoices =
+    factory?.batches
+      .filter((b) => b.productId === productId && b.frozen)
+      .map((b) => b.productionDate)
+      .sort((a, b) => a.localeCompare(b)) ?? [];
   const dateChoices = factory
     ? [...new Set([...productBatches, ...factory.dates])].sort((a, b) => a.localeCompare(b))
     : [];
@@ -56,6 +65,7 @@ export function WasteForm({ products, reasons, factory }: Props) {
     setReasonId(reasons[0]?.id ?? null);
     setNote("");
     setProductionDate(null);
+    setFrozen(false);
     setPhotoPath(null);
     setDone(null);
   };
@@ -76,6 +86,7 @@ export function WasteForm({ products, reasons, factory }: Props) {
         requiresNote: reason.requiresNote,
         note,
         productionDate,
+        frozen,
         photoPath,
       });
       if (result.status === "error") setError(result.message);
@@ -160,7 +171,7 @@ export function WasteForm({ products, reasons, factory }: Props) {
           <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="رقم الدفعة">
             {dateChoices.map((d) => {
               const day = dayNumberOf(d);
-              const on = productionDate === d;
+              const on = productionDate === d && !frozen;
               return (
                 <button
                   key={d}
@@ -168,10 +179,32 @@ export function WasteForm({ products, reasons, factory }: Props) {
                   role="radio"
                   aria-checked={on}
                   aria-label={`رقم ${day}، ${DAY_NAMES[day]}`}
-                  onClick={() => setProductionDate(d)}
+                  onClick={() => {
+                    setProductionDate(d);
+                    setFrozen(false);
+                  }}
                   className={`flex h-12 items-center rounded-full px-1.5 ${on ? "border-2 border-ink bg-quiet" : "border border-line-strong"}`}
                 >
                   <DayBadge day={day} />
+                </button>
+              );
+            })}
+            {frozenChoices.map((d) => {
+              const on = productionDate === d && frozen;
+              return (
+                <button
+                  key={`${d}|f`}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  aria-label={`مفرّز ${shortDate(d)}`}
+                  onClick={() => {
+                    setProductionDate(d);
+                    setFrozen(true);
+                  }}
+                  className={`flex h-12 items-center rounded-full px-1.5 ${on ? "border-2 border-ink bg-quiet" : "border border-line-strong"}`}
+                >
+                  <BatchBadge productionDate={d} shelfLifeDays={7} frozen />
                 </button>
               );
             })}

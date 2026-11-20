@@ -7,7 +7,7 @@ import { Stepper } from "@/components/ui/Stepper";
 import { batchLabel } from "@/lib/batch-label";
 import { formatQuantity, formatQuantityCompact, SAUCE_UNIT } from "@/lib/units";
 import { dispatchRoundAction } from "../actions";
-import { asWholeCakes, fairAllocate } from "../logic";
+import { asWholeCakes, fairAllocate, type BatchPick } from "../logic";
 import type { FactoryBatchStock, RequestDoc } from "../queries";
 
 type Qty = { wholeCakes: number; loosePieces: number };
@@ -53,7 +53,7 @@ export function RoundForm({
 
   // لكل صنف: التوزيع على كل الطلبات
   const productIds = [...new Set(requests.flatMap((r) => r.lines.map((l) => l.productId)))];
-  const allocation = new Map<string, { productionDate: string; qty: number }[]>();
+  const allocation = new Map<string, BatchPick[]>();
   const short = new Map<string, number>();
   for (const productId of productIds.filter((id) => !isSauce(id))) {
     const ppc = productId in sizes ? sizes[productId] : null;
@@ -163,7 +163,7 @@ export function RoundForm({
                       {parts
                         .map(
                           (a) =>
-                            `${batchLabel(a.productionDate, shelfOf(l.productId)).text}: ${formatQuantity(a.qty, l.piecesPerCake)}`,
+                            `${batchLabel(a.productionDate, shelfOf(l.productId), a.frozen).text}: ${formatQuantity(a.qty, l.piecesPerCake)}`,
                         )
                         .join(" · ")}
                     </span>

@@ -28,6 +28,8 @@ export const wasteSchema = z
       .regex(/^\d{4}-\d{2}-\d{2}$/)
       .nullable()
       .default(null),
+    // المصنع: التالف من الدفعة المفرّزة
+    frozen: z.boolean().default(false),
     photoPath: z.string().min(1).max(300).nullable().default(null),
   })
   .refine((w) => !w.requiresNote || w.note.length > 0, {

@@ -42,7 +42,7 @@ export function CountEditForm({ count }: { count: EditableCount }) {
       <ul className="flex flex-col gap-2.5 pb-28">
         {count.lines.map((l) => {
           const row = rows[l.lineId];
-          const label = `${l.productName}${l.productionDate ? ` ${shortDate(l.productionDate)}` : ""}`;
+          const label = `${l.productName}${l.productionDate ? ` ${l.frozen ? "❄ " : ""}${shortDate(l.productionDate)}` : ""}`;
           return (
             <li
               key={l.lineId}
@@ -52,7 +52,9 @@ export function CountEditForm({ count }: { count: EditableCount }) {
               <div className="flex items-center justify-between gap-2">
                 <ProductName name={l.productName} className="text-[17px] font-semibold" />
                 {l.productionDate && (
-                  <span className="text-sm text-muted">دفعة {shortDate(l.productionDate)}</span>
+                  <span className="text-sm text-muted">
+                    {l.frozen ? "مفرّز ❄" : "دفعة"} {shortDate(l.productionDate)}
+                  </span>
                 )}
               </div>
               <div className={`grid gap-2.5 ${l.piecesPerCake === null ? "grid-cols-1" : "grid-cols-2"}`}>

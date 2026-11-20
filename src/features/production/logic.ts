@@ -7,6 +7,8 @@ export const productionSchema = z.object({
         productId: z.uuid(),
         wholeCakes: z.number().int().min(0).max(999),
         loosePieces: z.number().int().min(0).max(9999),
+        // المفرّز دفعة لحالها، صلاحيتها 30 يوم
+        frozen: z.boolean().default(false),
       }),
     )
     .max(200)
@@ -16,6 +18,12 @@ export const productionSchema = z.object({
 });
 
 export type ProductionInput = z.input<typeof productionSchema>;
+
+/** سطر طازة وسطر مفرّز من نفس الكمية: frozen من total (الباقي طازة). */
+export function splitFrozen(total: number, frozen: number): { fresh: number; frozen: number } {
+  const f = Math.max(0, Math.min(total, frozen));
+  return { fresh: total - f, frozen: f };
+}
 
 /** "سجلت اليوم الساعة 7:30: 24 كيكة" — مجموع تسجيلات اليوم بالكيكات والقطع. */
 export function productionTotals(

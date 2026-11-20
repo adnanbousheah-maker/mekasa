@@ -141,8 +141,8 @@ export async function setParLevels(locationCode: string, pieces: Record<string, 
   };
 }
 
-/** ستوك دفعة اليوم بالمصنع لصنف. */
-export async function factoryTodayStock(productName: string): Promise<number> {
+/** ستوك دفعة اليوم بالمصنع لصنف (الطازة، أو المفرّزة). */
+export async function factoryTodayStock(productName: string, frozen = false): Promise<number> {
   const db = serviceClient();
   const { data: fac } = await db.from("locations").select("id").eq("code", "FAC").single();
   const { data: product } = await db.from("products").select("id").eq("name_en", productName).single();
@@ -152,6 +152,7 @@ export async function factoryTodayStock(productName: string): Promise<number> {
     .select("id")
     .eq("product_id", product!.id)
     .eq("production_date", today)
+    .eq("is_frozen", frozen)
     .maybeSingle();
   if (!batch) return 0;
   const { data } = await db

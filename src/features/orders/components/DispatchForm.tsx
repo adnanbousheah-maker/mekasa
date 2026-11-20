@@ -11,6 +11,7 @@ import { formatQuantity, formatQuantityCompact, SAUCE_UNIT } from "@/lib/units";
 import { branchSuggestionsAction, createDispatchAction } from "../actions";
 import {
   asWholeCakes,
+  batchKey,
   fefoAllocate,
   linesSummary,
   orderTarget,
@@ -88,12 +89,15 @@ export function DispatchForm({
     (batches ?? [])
       .filter((b) => b.productId === productId)
       .map((b) => ({
+        key: batchKey(b),
         productionDate: b.productionDate,
+        frozen: b.frozen,
+        expiresOn: b.expiresOn,
         available: b.available,
         expired: b.expired,
         dayNumber: b.dayNumber,
-        // رقم اليوم، أو التاريخ للأصناف اللي بتعيش أكثر من أسبوع
-        label: batchLabel(b.productionDate, b.shelfLifeDays).text,
+        // رقم اليوم، أو التاريخ للأصناف اللي بتعيش أكثر من أسبوع، و❄ للمفرّز
+        label: batchLabel(b.productionDate, b.shelfLifeDays, b.frozen).text,
         shelfLifeDays: b.shelfLifeDays,
         lastDay: b.lastDay,
       }));
@@ -149,7 +153,11 @@ export function DispatchForm({
           requestLineId: l.requestLineId,
           batches:
             hasBatches(l) && l.firstDate
-              ? allocationOf(l).allocations.map((a) => ({ productionDate: a.productionDate, qty: a.qty }))
+              ? allocationOf(l).allocations.map((a) => ({
+                  productionDate: a.productionDate,
+                  frozen: a.frozen ?? false,
+                  qty: a.qty,
+                }))
               : undefined,
         })),
       });
@@ -231,7 +239,7 @@ export function DispatchForm({
           );
           const stock = batchesOf(l.productId).filter((b) => !b.expired);
           const allocation = allocationOf(l);
-          const defaultFirst = stock[0]?.productionDate ?? null;
+          const defaultFirst = stock[0]?.key ?? null;
           return (
             <li
               key={l.productId}
@@ -287,21 +295,25 @@ export function DispatchForm({
                     <span className="text-[13px] text-muted">الدفعات بالمصنع (اكبس لتختار)</span>
                     <div className="flex flex-wrap gap-2">
                       {stock.map((b) => {
-                        const active = (l.firstDate ?? defaultFirst) === b.productionDate;
+                        const active = (l.firstDate ?? defaultFirst) === b.key;
                         return (
                           <button
-                            key={b.productionDate}
+                            key={b.key}
                             type="button"
                             aria-pressed={active}
                             aria-label={`ابدأ من ${b.label} (${formatQuantityCompact(b.available, p.piecesPerCake)})`}
                             onClick={() =>
                               update(l.productId, {
-                                firstDate: b.productionDate === defaultFirst ? null : b.productionDate,
+                                firstDate: b.key === defaultFirst ? null : b.key,
                               })
                             }
                             className={`flex h-12 items-center gap-1.5 rounded-full px-2 ${active ? "border-2 border-ink bg-quiet" : "border border-line-strong"}`}
                           >
-                            <BatchBadge productionDate={b.productionDate} shelfLifeDays={b.shelfLifeDays} />
+                            <BatchBadge
+                              productionDate={b.productionDate}
+                              shelfLifeDays={b.shelfLifeDays}
+                              frozen={b.frozen}
+                            />
                             <span className="text-sm tabular-nums">
                               {formatQuantityCompact(b.available, p.piecesPerCake)}
                             </span>
@@ -316,7 +328,7 @@ export function DispatchForm({
                         {allocation.allocations
                           .map(
                             (a) =>
-                              `${batchesOf(l.productId).find((b) => b.productionDate === a.productionDate)?.label}: ${formatQuantityCompact(a.qty, p.piecesPerCake)}`,
+                              `${batchesOf(l.productId).find((b) => b.key === batchKey(a))?.label}: ${formatQuantityCompact(a.qty, p.piecesPerCake)}`,
                           )
                           .join(" · ")}
                         {allocation.short > 0 &&
@@ -401,7 +413,7 @@ export function DispatchForm({
         <div role="alert" className="mb-5 flex flex-col gap-2 text-[15px]">
           <p>
             {overridden && overriddenOldest
-              ? `${byId.get(overridden.productId)?.nameEn}: في دفعة ${batchesOf(overridden.productId).find((b) => b.productionDate === overriddenOldest.productionDate)?.label} أقدم ولسا فيها ستوك. لازم تطلع الأقدم أول.`
+              ? `${byId.get(overridden.productId)?.nameEn}: في دفعة ${batchesOf(overridden.productId).find((b) => b.key === batchKey(overriddenOldest))?.label} أقدم ولسا فيها ستوك. لازم تطلع الأقدم أول.`
               : "في دفعة أقدم لسا فيها ستوك. لازم تطلع الأقدم أول."}
           </p>
           <p className="text-sm text-muted">إذا كمّلت من الأحدث، بينسجل إنك تجاوزت.</p>

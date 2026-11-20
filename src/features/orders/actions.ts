@@ -128,7 +128,13 @@ export async function createDispatchAction(input: CreateDispatchInput): Promise<
       loose_pieces: l.loosePieces,
       request_line_id: l.requestLineId,
       ...(l.batches?.length
-        ? { batches: l.batches.map((b) => ({ production_date: b.productionDate, qty_pieces: b.qty })) }
+        ? {
+            batches: l.batches.map((b) => ({
+              production_date: b.productionDate,
+              frozen: b.frozen,
+              qty_pieces: b.qty,
+            })),
+          }
         : {}),
     })) as Json,
   });

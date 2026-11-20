@@ -97,6 +97,7 @@ export interface FactoryBatch {
   dayNumber: DayNumber;
   isLastDay: boolean;
   isExpired: boolean;
+  frozen: boolean;
 }
 
 /** الدفعات اللي إلها ستوك بالمصنع، بدون الكميات (الجرد أعمى). */
@@ -104,7 +105,7 @@ export async function listFactoryBatches(locationId: string): Promise<FactoryBat
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_factory_batches")
-    .select("product_id, production_date, day_number, is_last_day, is_expired")
+    .select("product_id, production_date, day_number, is_last_day, is_expired, is_frozen")
     .eq("location_id", locationId)
     .order("production_date");
   if (error) throw new Error(`Could not load batches: ${error.message}`);
@@ -114,6 +115,7 @@ export async function listFactoryBatches(locationId: string): Promise<FactoryBat
     dayNumber: b.day_number as DayNumber,
     isLastDay: b.is_last_day ?? false,
     isExpired: b.is_expired ?? false,
+    frozen: b.is_frozen ?? false,
   }));
 }
 
@@ -174,6 +176,7 @@ export interface EditableCount {
     productName: string;
     piecesPerCake: number | null;
     productionDate: string | null;
+    frozen: boolean;
     wholeCakes: number;
     loosePieces: number;
   }[];
@@ -186,7 +189,7 @@ export async function getCountForEdit(countId: string): Promise<EditableCount | 
   const { data, error } = await supabase
     .from("stock_counts")
     .select(
-      "id, location_id, started_at, confirmed_at, status, location:locations(name), stock_count_lines(id, whole_cakes, loose_pieces, pieces_per_cake_snapshot, product:products(name_en, sort_order), batch:batches(production_date))",
+      "id, location_id, started_at, confirmed_at, status, location:locations(name), stock_count_lines(id, whole_cakes, loose_pieces, pieces_per_cake_snapshot, product:products(name_en, sort_order), batch:batches(production_date, is_frozen))",
     )
     .eq("id", countId)
     .maybeSingle();
@@ -211,6 +214,7 @@ export async function getCountForEdit(countId: string): Promise<EditableCount | 
         sortOrder: l.product.sort_order ?? 0,
         piecesPerCake: l.pieces_per_cake_snapshot,
         productionDate: l.batch?.production_date ?? null,
+        frozen: l.batch?.is_frozen ?? false,
         wholeCakes: l.whole_cakes,
         loosePieces: l.loose_pieces,
       }))
@@ -222,6 +226,7 @@ export async function getCountForEdit(countId: string): Promise<EditableCount | 
         productName: l.productName,
         piecesPerCake: l.piecesPerCake,
         productionDate: l.productionDate,
+        frozen: l.frozen,
         wholeCakes: l.wholeCakes,
         loosePieces: l.loosePieces,
       })),

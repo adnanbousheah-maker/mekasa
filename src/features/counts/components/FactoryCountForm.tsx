@@ -19,20 +19,37 @@ type Props = {
   startedAt: string;
 };
 
-type BatchRow = { productId: string; productionDate: string; qty: number; isLastDay: boolean };
+type BatchRow = {
+  productId: string;
+  productionDate: string;
+  frozen: boolean;
+  qty: number;
+  isLastDay: boolean;
+};
 
-/** design/factory/FactoryCount: جرد أعمى حسب رقم الدفعة. ما بنعرض الكمية المتوقعة. */
+// المفرّز صلاحيته 30 يوم (نفس private.frozen_shelf_life)
+const FROZEN_DAYS = 30;
+const keyOf = (r: { productionDate: string; frozen: boolean }) =>
+  r.frozen ? `${r.productionDate}|f` : r.productionDate;
+
+/**
+ * design/factory/FactoryCount: جرد أعمى حسب رقم الدفعة. ما بنعرض الكمية المتوقعة.
+ * المفرّز سطر لحاله (❄ والتاريخ) جنب دفعات نفس الصنف.
+ */
 export function FactoryCountForm({ products, batches, today, scheduleId, startedAt }: Props) {
   const router = useRouter();
   const [rows, setRows] = useState<BatchRow[]>(() =>
     batches.map((b) => ({
       productId: b.productId,
       productionDate: b.productionDate,
+      frozen: b.frozen,
       qty: 0,
       isLastDay: b.isLastDay,
     })),
   );
   const [picking, setPicking] = useState<string | null>(null);
+  // إضافة دفعة مفرّزة: الصنف وتاريخ الإنتاج
+  const [freezing, setFreezing] = useState<{ productId: string; date: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, startTransition] = useTransition();
 
@@ -41,17 +58,23 @@ export function FactoryCountForm({ products, batches, today, scheduleId, started
     (a, b) => Number(rows.some((r) => r.productId === b.id)) - Number(rows.some((r) => r.productId === a.id)),
   );
 
-  const setQty = (productId: string, date: string, qty: number) =>
+  const setQty = (productId: string, key: string, qty: number) =>
     setRows((current) =>
       current.map((r) =>
-        r.productId === productId && r.productionDate === date ? { ...r, qty: Math.max(0, qty) } : r,
+        r.productId === productId && keyOf(r) === key ? { ...r, qty: Math.max(0, qty) } : r,
       ),
     );
 
-  const addBatch = (productId: string, date: string) => {
-    setRows((current) => [...current, { productId, productionDate: date, qty: 0, isLastDay: false }]);
+  const addBatch = (productId: string, date: string, frozen = false) => {
+    setRows((current) =>
+      current.some((r) => r.productId === productId && keyOf(r) === keyOf({ productionDate: date, frozen }))
+        ? current
+        : [...current, { productId, productionDate: date, frozen, qty: 0, isLastDay: false }],
+    );
     setPicking(null);
+    setFreezing(null);
   };
+  const oldestFrozen = recentDates(today, FROZEN_DAYS).at(-1)!;
 
   const confirm = () =>
     startTransition(async () => {
@@ -64,6 +87,7 @@ export function FactoryCountForm({ products, batches, today, scheduleId, started
           return {
             productId: r.productId,
             productionDate: r.productionDate,
+            frozen: r.frozen,
             wholeCakes: piecesOnly ? 0 : r.qty,
             loosePieces: piecesOnly ? r.qty : 0,
           };
@@ -79,11 +103,14 @@ export function FactoryCountForm({ products, batches, today, scheduleId, started
         {ordered.map((p) => {
           const productRows = rows
             .filter((r) => r.productId === p.id)
-            .sort((a, b) => a.productionDate.localeCompare(b.productionDate));
+            .sort(
+              (a, b) =>
+                Number(a.frozen) - Number(b.frozen) || a.productionDate.localeCompare(b.productionDate),
+            );
           const byDate = usesDate(p.shelfLifeDays);
           // الأيام الممكنة لهالصنف حسب مدة حياته
           const free = recentDates(today, p.shelfLifeDays).filter(
-            (d) => !productRows.some((r) => r.productionDate === d),
+            (d) => !productRows.some((r) => !r.frozen && r.productionDate === d),
           );
           const total = productRows.reduce((s, r) => s + r.qty, 0);
           const unit = p.piecesPerCake === null ? "قطع" : "كيكات";
@@ -100,18 +127,23 @@ export function FactoryCountForm({ products, batches, today, scheduleId, started
                 </span>
               </div>
               {productRows.map((r) => {
-                const day = batchLabel(r.productionDate, p.shelfLifeDays).text;
-                const label = `${byDate ? "تاريخ الإنتاج" : DAY_NAMES[dayNumberOf(r.productionDate)]}${r.productionDate === today ? " (اليوم)" : ""}${r.isLastDay ? " · آخر يوم" : ""}`;
+                const day = batchLabel(r.productionDate, p.shelfLifeDays, r.frozen).text;
+                const key = keyOf(r);
+                const label = `${r.frozen ? "مفرّز" : byDate ? "تاريخ الإنتاج" : DAY_NAMES[dayNumberOf(r.productionDate)]}${r.productionDate === today ? " (اليوم)" : ""}${r.isLastDay ? " · آخر يوم" : ""}`;
                 return (
-                  <div key={r.productionDate} className="flex items-center gap-2.5">
-                    <BatchBadge productionDate={r.productionDate} shelfLifeDays={p.shelfLifeDays} />
+                  <div key={key} className="flex items-center gap-2.5">
+                    <BatchBadge
+                      productionDate={r.productionDate}
+                      shelfLifeDays={p.shelfLifeDays}
+                      frozen={r.frozen}
+                    />
                     <span className="grow text-sm text-muted">{label}</span>
                     <div className="flex h-12 w-[140px] items-center justify-between overflow-hidden rounded-xl border border-line-strong bg-surface">
                       <button
                         type="button"
                         aria-label={`زيد ${p.nameEn} ${day}`}
                         className="flex size-12 items-center justify-center bg-quiet text-[22px]"
-                        onClick={() => setQty(p.id, r.productionDate, r.qty + 1)}
+                        onClick={() => setQty(p.id, key, r.qty + 1)}
                       >
                         +
                       </button>
@@ -119,7 +151,7 @@ export function FactoryCountForm({ products, batches, today, scheduleId, started
                         label={`${p.nameEn} ${day}`}
                         value={r.qty}
                         max={p.piecesPerCake === null ? MAX_COUNT_PIECES : MAX_COUNT_VALUE}
-                        onChange={(next) => setQty(p.id, r.productionDate, next)}
+                        onChange={(next) => setQty(p.id, key, next)}
                         className="text-[19px]"
                       />
                       <button
@@ -127,7 +159,7 @@ export function FactoryCountForm({ products, batches, today, scheduleId, started
                         aria-label={`نقّص ${p.nameEn} ${day}`}
                         disabled={r.qty === 0}
                         className="flex size-12 items-center justify-center bg-quiet text-[22px] disabled:text-line-strong"
-                        onClick={() => setQty(p.id, r.productionDate, r.qty - 1)}
+                        onClick={() => setQty(p.id, key, r.qty - 1)}
                       >
                         −
                       </button>
@@ -135,7 +167,41 @@ export function FactoryCountForm({ products, batches, today, scheduleId, started
                   </div>
                 );
               })}
-              {picking === p.id ? (
+              {freezing?.productId === p.id ? (
+                <div
+                  className="flex flex-wrap items-center gap-2"
+                  role="group"
+                  aria-label={`مفرّز ${p.nameEn}`}
+                >
+                  <label className="flex items-center gap-2 text-sm">
+                    ❄ تاريخ الإنتاج
+                    <input
+                      type="date"
+                      aria-label={`تاريخ إنتاج المفرّز ${p.nameEn}`}
+                      min={oldestFrozen}
+                      max={today}
+                      value={freezing.date}
+                      onChange={(e) => setFreezing({ productId: p.id, date: e.target.value })}
+                      className="h-12 rounded-xl border border-line-strong px-2"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    disabled={!freezing.date || freezing.date < oldestFrozen || freezing.date > today}
+                    onClick={() => addBatch(p.id, freezing.date, true)}
+                    className="h-12 rounded-xl bg-ink px-4 text-sm font-semibold text-white disabled:opacity-40"
+                  >
+                    ضيف
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFreezing(null)}
+                    className="h-12 px-3 text-sm text-muted"
+                  >
+                    رجوع
+                  </button>
+                </div>
+              ) : picking === p.id ? (
                 <div
                   className="flex flex-wrap items-center gap-2"
                   role="group"
@@ -161,22 +227,32 @@ export function FactoryCountForm({ products, batches, today, scheduleId, started
                   </button>
                 </div>
               ) : (
-                free.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {free.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setPicking(p.id)}
+                      aria-label={`ضيف ${byDate ? "تاريخ" : "رقم"} لـ ${p.nameEn}`}
+                      className="h-12 self-start rounded-full border border-dashed border-line-dashed px-4 text-sm text-muted"
+                    >
+                      {byDate
+                        ? productRows.length > 0
+                          ? "+ تاريخ ثاني"
+                          : "+ تاريخ"
+                        : productRows.length > 0
+                          ? "+ رقم يوم ثاني"
+                          : "+ أضف رقم اليوم"}
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={() => setPicking(p.id)}
-                    aria-label={`ضيف ${byDate ? "تاريخ" : "رقم"} لـ ${p.nameEn}`}
-                    className="h-12 self-start rounded-full border border-dashed border-line-dashed px-4 text-sm text-muted"
+                    onClick={() => setFreezing({ productId: p.id, date: today })}
+                    aria-label={`ضيف مفرّز لـ ${p.nameEn}`}
+                    className="h-12 rounded-full border border-dashed border-line-dashed px-4 text-sm text-muted"
                   >
-                    {byDate
-                      ? productRows.length > 0
-                        ? "+ تاريخ ثاني"
-                        : "+ تاريخ"
-                      : productRows.length > 0
-                        ? "+ رقم يوم ثاني"
-                        : "+ أضف رقم اليوم"}
+                    + ❄ مفرّز
                   </button>
-                )
+                </div>
               )}
             </li>
           );
