@@ -9,7 +9,9 @@ import {
   newMaterialSchema,
   rawCountSchema,
   rawMoveSchema,
+  rawReceiptSchema,
   type NewMaterialInput,
+  type RawReceiptInput,
   type RawCountInput,
   type RawMoveInput,
 } from "./logic";
@@ -35,6 +37,28 @@ export async function recordRawMoveAction(input: RawMoveInput): Promise<RawResul
   if (error) {
     console.error("recordRawMove", error);
     return fail(error.code === "42501" ? "المواد الأولية لأمين المستودع" : "ما انحفظت الحركة. جرب كمان مرة.");
+  }
+  refresh();
+  return { status: "done" };
+}
+
+/** استلام كذا مادة من مورد، كلهم مع بعض أو ولا وحدة (record_raw_receipt). */
+export async function recordRawReceiptAction(input: RawReceiptInput): Promise<RawResult> {
+  await requireStaff();
+  const parsed = rawReceiptSchema.safeParse(input);
+  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? "في معلومة ناقصة");
+  const r = parsed.data;
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("record_raw_receipt", {
+    p_lines: r.lines.map((l) => ({ material_id: l.materialId, unit_id: l.unitId, qty: l.qty })) as Json,
+    p_supplier_name: r.supplierName || undefined,
+    p_invoice_photo_path: r.invoicePhotoPath ?? undefined,
+  });
+  if (error) {
+    console.error("recordRawReceipt", error);
+    return fail(
+      error.code === "42501" ? "المواد الأولية لأمين المستودع" : "ما انحفظ الاستلام. جرب كمان مرة.",
+    );
   }
   refresh();
   return { status: "done" };

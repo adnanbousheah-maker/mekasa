@@ -15,16 +15,19 @@ function whatOf(m: MonthlyCountDue): string {
 /** آخر يوم بالشهر: جرد شهري لكل شي، كل واحد بزر يفتحه. */
 export function MonthlyCountBanner({ items }: { items: MonthlyCountDue[] }) {
   const open = items.filter((m) => !m.done);
+  // بالأيام العادية ما في غير الجرد اليومي (المواد الأولية)
+  const daily = items.every((m) => m.everyDay);
+  const title = daily ? "جرد المواد اليومي" : "جرد آخر الشهر";
   return (
     <section
-      aria-label="جرد آخر الشهر"
+      aria-label={title}
       className={`flex flex-col gap-3 rounded-2xl border p-4 ${open.length > 0 ? "border-warn-line bg-warn-soft" : "border-ok-soft bg-ok-soft"}`}
     >
       <div className="flex flex-col">
         <strong className={`text-[17px] ${open.length > 0 ? "text-warn-text" : "text-ok-text"}`}>
-          {open.length > 0 ? "اليوم جرد آخر الشهر" : "✓ جرد آخر الشهر انعمل"}
+          {open.length > 0 ? `اليوم ${title}` : `✓ ${title} انعمل`}
         </strong>
-        {open.length > 0 && (
+        {open.length > 0 && !daily && (
           <span className="text-sm text-warn-text">عدّ كل شي، حتى اللي ما بتعدّه كل يوم.</span>
         )}
       </div>

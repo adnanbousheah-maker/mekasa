@@ -20,7 +20,7 @@ export default function RawMovePage({ searchParams }: { searchParams: SearchPara
 }
 
 async function RawMove({ searchParams }: { searchParams: SearchParams }) {
-  const { kind } = await searchParams;
+  await searchParams;
   const staff = await requireStaff();
   if (staff.location?.kind !== "factory" || !staff.roles.includes("storekeeper")) {
     return <NotForYou title="حركة مواد أولية" text="المواد الأولية لأمين المستودع." />;
@@ -29,13 +29,12 @@ async function RawMove({ searchParams }: { searchParams: SearchParams }) {
   const suppliers = usableOptions(supplierOptions, staff.roles).map((s) => s.name);
   return (
     <StaffScreen>
-      <ScreenHeader title="حركة مواد أولية" backHref="/factory/raw" />
-      <RawMoveForm
-        key={`${kind}-${new Date().toISOString()}`}
-        materials={materials}
-        suppliers={suppliers}
-        initialKind={kind === "issue" ? "issue" : "receipt"}
+      <ScreenHeader
+        title="استلام من مورد"
+        subtitle="ضيف كل المواد اللي وصلت بنفس الفاتورة"
+        backHref="/factory/raw"
       />
+      <RawMoveForm key={new Date().toISOString()} materials={materials} suppliers={suppliers} />
     </StaffScreen>
   );
 }

@@ -6,7 +6,8 @@ import type { MonthlyCountRow } from "../queries";
 import { SavedSwitch } from "./SavedSwitch";
 
 function whatOf(row: MonthlyCountRow): string {
-  if (row.scope === "raw") return "المواد الأولية";
+  // جرد المواد الأولية بالمصنع صار كل يوم (اجتماع 20 نوفمبر)
+  if (row.scope === "raw") return "المواد الأولية (كل يوم)";
   return row.locationKind === "packaging" ? "مواد التغليف" : "الكيك";
 }
 

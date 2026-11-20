@@ -137,14 +137,16 @@ async function alertMonthlyCounts(
   settings: ReminderSettings,
   result: ReminderRun,
 ) {
-  if (!isLastDayOfMonth(countToday)) return;
-  const { data: monthly, error } = await db
+  const lastDay = isLastDayOfMonth(countToday);
+  const { data: rows, error } = await db
     .from("monthly_counts")
-    .select("id, location_id, scope, time_of_day, location:locations!inner(name, kind, is_active)")
+    .select("id, location_id, scope, time_of_day, every_day, location:locations!inner(name, kind, is_active)")
     .eq("is_active", true)
     .eq("location.is_active", true);
   if (error) throw new Error(error.message);
-  if (!monthly?.length) return;
+  // آخر يوم بالشهر كلهم، وبالأيام الثانية الجرد اليومي بس (المواد الأولية بالمصنع)
+  const monthly = (rows ?? []).filter((m) => lastDay || m.every_day);
+  if (!monthly.length) return;
 
   const { data: sent, error: sentError } = await db
     .from("alert_log")
@@ -210,6 +212,7 @@ async function alertMonthlyCounts(
         place,
         m.location.kind,
         m.location_id,
+        m.every_day && !lastDay,
       ),
     );
     result.sent.push({ kind, scheduleId: m.id, recipients });

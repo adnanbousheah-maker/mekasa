@@ -204,11 +204,15 @@ describe("orderTarget", () => {
     expect(orderTarget(null, null)).toBeUndefined();
   });
 
-  it("uses tomorrow's minimum plus 5 cakes when there is one (20 Nov)", () => {
-    expect(orderTarget(35, 20, 260, 10)).toBe(310);
-    expect(orderTarget(null, null, 30, 6)).toBe(60);
-    // قطع بس: 5 قطع
-    expect(orderTarget(12, 20, 8, null)).toBe(13);
+  it("uses tomorrow's minimum plus 25%, up to a whole cake (20 Nov)", () => {
+    // 14 كيكة × 1.25 = 17.5 ← 18 كيكة
+    expect(orderTarget(35, 20, 140, 10)).toBe(180);
+    // 260 × 1.25 = 325 ← 33 كيكة
+    expect(orderTarget(null, null, 260, 10)).toBe(330);
+    // قدرة قادر 6 قطع: 30 × 1.25 = 37.5 ← 7 كيكات = 42
+    expect(orderTarget(null, null, 30, 6)).toBe(42);
+    // قطع بس: 8 × 1.25 = 10
+    expect(orderTarget(12, 20, 8, null)).toBe(10);
     expect(orderTarget(35, 20, null, 10)).toBe(35);
   });
 });

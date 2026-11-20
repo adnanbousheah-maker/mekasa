@@ -38,17 +38,17 @@ async function Raw({ searchParams }: { searchParams: SearchParams }) {
           {params.counted === "1" ? "انحفظ جرد المواد" : "انحفظت الحركة"}
         </div>
       )}
-      <div className="grid grid-cols-3 gap-2">
-        <Link href="/factory/raw/move?kind=receipt" className={tile}>
-          استلام
-        </Link>
-        <Link href="/factory/raw/move?kind=issue" className={tile}>
-          صرف
+      <div className="grid grid-cols-2 gap-2">
+        <Link href="/factory/raw/move" className={tile}>
+          استلام من مورد
         </Link>
         <Link href="/factory/raw/count" className={tile}>
-          جرد
+          جرد المواد اليومي
         </Link>
       </div>
+      <p className="text-[13px] text-muted">
+        المصروف بينحسب من الجرد اليومي: الجرد اللي قبله + المستلم − الجرد هلا.
+      </p>
       <ul className="flex flex-col gap-2.5">
         {materials.map((m) => {
           const pct = Math.min(100, Math.round((m.qty / Math.max(m.minQty * 2, 1)) * 100));

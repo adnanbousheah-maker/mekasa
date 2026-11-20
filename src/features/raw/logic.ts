@@ -33,6 +33,23 @@ export const rawMoveSchema = z.object({
   invoicePhotoPath: z.string().min(1).max(300).nullable().default(null),
 });
 
+/** استلام من مورد: كذا مادة بمرة وحدة، نفس المورد والفاتورة (اجتماع 20 نوفمبر). */
+export const rawReceiptSchema = z.object({
+  lines: z
+    .array(
+      z.object({
+        materialId: z.uuid("اختار المادة"),
+        unitId: z.uuid().nullable().default(null),
+        qty: positive,
+      }),
+    )
+    .min(1, "ضيف مادة وحدة على الأقل")
+    .max(100),
+  supplierName: z.string().trim().max(80).default(""),
+  invoicePhotoPath: z.string().min(1).max(300).nullable().default(null),
+});
+export type RawReceiptInput = z.input<typeof rawReceiptSchema>;
+
 export const rawCountSchema = z.object({
   startedAt: z.iso.datetime({ offset: true }),
   lines: z

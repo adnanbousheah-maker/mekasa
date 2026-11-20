@@ -158,10 +158,12 @@ export function OrderForm({
                     <ProductName name={p.nameEn} className="text-[17px] font-semibold" />
                     <span className="text-[13px] text-muted">
                       عندك {formatQuantity(Math.max(0, p.stockPieces), p.piecesPerCake)}
-                      {p.avgPieces !== null
-                        ? ` · بيروح ${formatQuantity(p.avgPieces, p.piecesPerCake)} يوم ${tomorrowName}`
-                        : p.parPieces !== undefined &&
-                          ` · المطلوب ${formatQuantity(p.parPieces, p.piecesPerCake)}`}
+                      {p.minTomorrow !== null
+                        ? ` · حد ${tomorrowName || "بكرا"} ${formatQuantity(p.minTomorrow, p.piecesPerCake)}`
+                        : p.avgPieces !== null
+                          ? ` · بيروح ${formatQuantity(p.avgPieces, p.piecesPerCake)} يوم ${tomorrowName}`
+                          : p.parPieces !== undefined &&
+                            ` · الهدف ${formatQuantity(p.parPieces, p.piecesPerCake)}`}
                     </span>
                   </div>
                   <div

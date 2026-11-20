@@ -432,7 +432,7 @@ function FactoryTasks({ staff, data }: { staff: CurrentStaff; data: FactoryHomeD
             <TaskLink
               variant="tile"
               href="/factory/raw/move"
-              title="استلام وصرف مواد"
+              title="استلام مواد من مورد"
               icon={<TruckIcon size={24} />}
             />
           </TileGroup>

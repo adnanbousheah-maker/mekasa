@@ -31,6 +31,8 @@ export interface MonthlyCountDue {
   locationName: string;
   timeOfDay: string;
   done: boolean;
+  // جرد كل يوم (المواد الأولية بالمصنع)، مش بس آخر الشهر
+  everyDay: boolean;
 }
 
 /** جرد آخر الشهر اليوم (بآخر يوم بالشهر بس) اللي على هالموظف حسب أدواره. */
@@ -38,7 +40,7 @@ export async function getMonthlyCountsDue(roles: readonly string[]): Promise<Mon
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("v_monthly_counts_today")
-    .select("id, location_id, scope, time_of_day, done")
+    .select("id, location_id, scope, time_of_day, done, every_day")
     .order("time_of_day");
   if (error) throw new Error(`Could not load monthly counts: ${error.message}`);
   if (!data?.length) return [];
@@ -67,6 +69,7 @@ export async function getMonthlyCountsDue(roles: readonly string[]): Promise<Mon
         locationName: place.name,
         timeOfDay: m.time_of_day!,
         done: m.done ?? false,
+        everyDay: m.every_day ?? false,
       } satisfies MonthlyCountDue,
     ];
   });

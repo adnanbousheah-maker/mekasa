@@ -2,35 +2,46 @@ import ExcelJS from "exceljs";
 import { expect, test } from "@playwright/test";
 import { ADMIN, FACTORY, signInAndWait } from "./support";
 
-test("the storekeeper receives flour in bags, issues some, and counts", async ({ page }) => {
+test("the storekeeper receives two materials from one supplier, and counts every day", async ({ page }) => {
   await signInAndWait(page, FACTORY.phone, FACTORY.pin);
-  await page.getByRole("link", { name: "استلام وصرف مواد" }).click();
-  await page.getByRole("button", { name: "اختار المادة" }).click();
+  await page.getByRole("link", { name: "استلام مواد من مورد" }).click();
+  await expect(page.getByRole("heading", { name: "استلام من مورد" })).toBeVisible();
+  // الصرف انسكّر (اجتماع 20 نوفمبر)
+  await expect(page.getByRole("radio", { name: "صرف للإنتاج" })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "+ اختار المادة" }).click();
   await page.getByRole("dialog").getByRole("button", { name: /^طحين/ }).click();
-  // الكيس (25 كيلو) مختار لحاله بالاستلام
-  await expect(page.getByRole("radio", { name: "كيس (25 كيلو)" })).toHaveAttribute("aria-checked", "true");
-  await page.getByRole("button", { name: "زيد" }).click();
-  await page.getByRole("button", { name: "زيد" }).click();
-  await page.getByRole("button", { name: "زيد" }).click();
-  await expect(page.getByText(/= 100 كيلو/)).toBeVisible();
+  const flourLine = page.getByRole("listitem", { name: "طحين" });
+  // الكيس (25 كيلو) مختار لحاله
+  await expect(flourLine.getByRole("radio", { name: "كيس (25 كيلو)" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  await flourLine.getByLabel("كمية طحين").fill("4");
+  await expect(flourLine.getByText(/= 100 كيلو/)).toBeVisible();
+
+  await page.getByRole("button", { name: "+ ضيف مادة ثانية" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: /^سكر/ }).first().click();
+  const sugarLine = page.getByRole("listitem").filter({ has: page.getByLabel(/^كمية سكر/) });
+  await sugarLine.getByRole("radio", { name: /^كيلو$/ }).click();
+  await sugarLine.getByLabel(/^كمية سكر/).fill("10");
+
   await page.getByPlaceholder("اسم المورد").fill("المطاحن");
-  await page.getByRole("button", { name: "سجّل الاستلام" }).click();
+  await page.getByRole("button", { name: "سجّل استلام 2 مواد" }).click();
   await expect(page.getByText("انحفظت الحركة")).toBeVisible();
+  await expect(page.getByRole("link", { name: "صرف" })).toHaveCount(0);
+
   const flour = page.getByRole("listitem", { name: "طحين" });
-  const before = Number((await flour.textContent())!.match(/([\d.]+) كيلو/)![1]);
-
-  await page.getByRole("link", { name: "صرف" }).click();
-  await page.getByRole("button", { name: "اختار المادة" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: /^طحين/ }).click();
-  await page.getByLabel("الكمية").fill("20");
-  await page.getByRole("button", { name: "سجّل الصرف" }).click();
-  await expect(page.getByText("انحفظت الحركة")).toBeVisible();
-  await expect(flour).toContainText(`${before - 20} كيلو`);
-
-  await page.getByRole("link", { name: "جرد" }).click();
-  await page.getByLabel("كمية طحين").fill("3");
-  await page.getByLabel("وحدة طحين").selectOption({ label: "كيس" });
+  await page.getByRole("link", { name: "جرد المواد اليومي" }).click();
+  await expect(page.getByRole("heading", { name: "جرد المواد الأولية" })).toBeVisible();
+  const countRow = page.getByRole("main").getByRole("listitem", { name: "طحين" });
+  await countRow.getByRole("textbox", { name: "كمية طحين" }).fill("3");
+  await countRow.getByRole("combobox", { name: "وحدة طحين" }).selectOption({ label: "كيس" });
   await page.getByRole("button", { name: "تأكيد جرد المواد" }).click();
+  // الجرد كامل: اللي ما انعدّ بينحسب صفر، بس بنسأل أول
+  const missing = page.getByRole("dialog", { name: "في مواد ما عدّيتها" });
+  await expect(missing).toBeVisible();
+  await missing.getByRole("button", { name: "أكيد، ما في منهم" }).click();
   await expect(page.getByText("انحفظ جرد المواد")).toBeVisible();
   await expect(flour).toContainText("75 كيلو");
 });

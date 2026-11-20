@@ -2,33 +2,41 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { Dialog } from "@/components/ui/Dialog";
 import { submitRawCountAction } from "../actions";
 import type { RawMaterialRow } from "../queries";
 
 type Row = { qty: string; unitId: string | null };
 
-/** جرد المواد الأولية: اكتب الموجود لكل مادة (بأي وحدة). الفاضي ما بينعد. */
+/**
+ * جرد المواد الأولية اليومي: اكتب الموجود لكل مادة (بأي وحدة). الجرد كامل (اجتماع 20 نوفمبر):
+ * اللي ما انكتب بينحسب صفر، فقبل التأكيد بنسأل "في مواد ما عدّيتها".
+ */
 export function RawCountForm({ materials, startedAt }: { materials: RawMaterialRow[]; startedAt: string }) {
   const router = useRouter();
   const [rows, setRows] = useState<Record<string, Row>>(() =>
     Object.fromEntries(materials.map((m) => [m.id, { qty: "", unitId: null }])),
   );
   const [error, setError] = useState<string | null>(null);
+  const [missingOpen, setMissingOpen] = useState(false);
   const [isSaving, startTransition] = useTransition();
   const parse = (v: string) => Number(v.replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660)));
   const filled = materials.filter(
     (m) => rows[m.id].qty.trim() !== "" && Number.isFinite(parse(rows[m.id].qty)),
   );
 
+  const missing = materials.filter((m) => !filled.includes(m));
+
   const submit = () =>
     startTransition(async () => {
+      setMissingOpen(false);
       const result = await submitRawCountAction({
         startedAt,
-        lines: filled.map((m) => ({
-          materialId: m.id,
-          unitId: rows[m.id].unitId,
-          qty: parse(rows[m.id].qty),
-        })),
+        lines: materials.map((m) =>
+          filled.includes(m)
+            ? { materialId: m.id, unitId: rows[m.id].unitId, qty: parse(rows[m.id].qty) }
+            : { materialId: m.id, unitId: null, qty: 0 },
+        ),
       });
       if (result.status === "error") setError(result.message);
       else router.replace("/factory/raw?counted=1");
@@ -84,14 +92,40 @@ export function RawCountForm({ materials, startedAt }: { materials: RawMaterialR
           </span>
           <button
             type="button"
-            disabled={isSaving || filled.length === 0}
-            onClick={submit}
+            disabled={isSaving || materials.length === 0}
+            onClick={() => (missing.length > 0 ? setMissingOpen(true) : submit())}
             className="flex h-14 items-center justify-center rounded-[14px] bg-ink text-lg font-semibold text-white disabled:opacity-40"
           >
             {isSaving ? "لحظة…" : "تأكيد جرد المواد"}
           </button>
         </div>
       </div>
+      <Dialog open={missingOpen} onClose={() => setMissingOpen(false)} title="في مواد ما عدّيتها">
+        <p className="text-[15px]">
+          {missing.length === 1 ? "هالمادة" : `هدول الـ${missing.length}`} ما انكتبلهم رقم، وإذا أكّدت
+          بينحسبوا صفر:
+        </p>
+        <p className="mt-2 max-h-40 overflow-y-auto text-sm text-muted">
+          {missing.map((m) => m.name).join("، ")}
+        </p>
+        <div className="mt-5 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setMissingOpen(false)}
+            className="h-12 rounded-xl bg-ink font-semibold text-white"
+          >
+            ارجع وعدّهم
+          </button>
+          <button
+            type="button"
+            disabled={isSaving}
+            onClick={submit}
+            className="h-12 rounded-xl border border-line-strong font-semibold"
+          >
+            أكيد، ما في منهم
+          </button>
+        </div>
+      </Dialog>
     </>
   );
 }

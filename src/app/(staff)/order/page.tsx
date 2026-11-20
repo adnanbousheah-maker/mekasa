@@ -32,7 +32,7 @@ async function Order() {
     <StaffScreen>
       <ScreenHeader
         title="طلب من المصنع"
-        subtitle={`الكميات مقترحة حسب استهلاك يوم ${tomorrowName} بآخر 4 أسابيع، عدّلها براحتك`}
+        subtitle={`الكمية المقترحة = حد يوم ${tomorrowName} + 25% − اللي عندك. عدّلها براحتك`}
       />
       <OrderForm
         key={new Date().toISOString()}

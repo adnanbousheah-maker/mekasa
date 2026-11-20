@@ -25,7 +25,7 @@ async function RawCount() {
     <StaffScreen>
       <ScreenHeader
         title="جرد المواد الأولية"
-        subtitle="اكتب الموجود لكل مادة. اللي بتتركه فاضي ما بينعد."
+        subtitle="جرد يومي لكل المواد: اكتب الموجود لكل مادة. اللي بتتركه فاضي بينحسب صفر."
         backHref="/factory/raw"
       />
       <RawCountForm

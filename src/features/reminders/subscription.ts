@@ -29,10 +29,26 @@ export function monthlyCountMessage(
   place: string,
   locationKind: string,
   locationId: string,
+  everyDay = false,
 ): PushMessage {
   const what = scope === "raw" ? "المواد الأولية" : locationKind === "packaging" ? "مواد التغليف" : "الكيك";
   const url =
     scope === "raw" ? "/factory/raw/count" : locationKind === "packaging" ? "/packaging/count" : "/count";
+  if (everyDay) {
+    return late
+      ? {
+          title: "جرد المواد اليومي متأخر",
+          body: `${place}: جرد ${what} (الساعة ${time}) لسا ما انعمل.`,
+          url,
+          tag: `daily-${scope}-${locationId}`,
+        }
+      : {
+          title: "جرد المواد اليومي",
+          body: `${place}: الساعة ${time} عدّ كل ${what}.`,
+          url,
+          tag: `daily-${scope}-${locationId}`,
+        };
+  }
   return late
     ? {
         title: "جرد آخر الشهر متأخر",

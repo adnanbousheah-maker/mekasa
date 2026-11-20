@@ -973,6 +973,7 @@ export type Database = {
       monthly_counts: {
         Row: {
           created_at: string;
+          every_day: boolean;
           id: string;
           is_active: boolean;
           location_id: string;
@@ -982,6 +983,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           created_at?: string;
+          every_day?: boolean;
           id?: string;
           is_active?: boolean;
           location_id: string;
@@ -990,6 +992,7 @@ export type Database = {
         };
         Update: {
           created_at?: string;
+          every_day?: boolean;
           id?: string;
           is_active?: boolean;
           location_id?: string;
@@ -3569,6 +3572,7 @@ export type Database = {
       v_monthly_counts_today: {
         Row: {
           done: boolean | null;
+          every_day: boolean | null;
           id: string | null;
           location_id: string | null;
           scope: string | null;
@@ -4100,6 +4104,10 @@ export type Database = {
           p_supplier_name?: string;
           p_unit_id?: string;
         };
+        Returns: number;
+      };
+      record_raw_receipt: {
+        Args: { p_invoice_photo_path?: string; p_lines: Json; p_supplier_name?: string };
         Returns: number;
       };
       record_waste: {
