@@ -9,6 +9,7 @@ import { batchLabel, usesDate } from "@/lib/batch-label";
 import { DAY_NAMES, dayNumberOf, recentDates } from "@/lib/day-number";
 import { submitCountAction } from "../actions";
 import type { CountProduct, FactoryBatch } from "../queries";
+import { MAX_COUNT_PIECES, MAX_COUNT_VALUE } from "../schemas";
 
 type Props = {
   products: CountProduct[];
@@ -117,6 +118,7 @@ export function FactoryCountForm({ products, batches, today, scheduleId, started
                       <NumberField
                         label={`${p.nameEn} ${day}`}
                         value={r.qty}
+                        max={p.piecesPerCake === null ? MAX_COUNT_PIECES : MAX_COUNT_VALUE}
                         onChange={(next) => setQty(p.id, r.productionDate, next)}
                         className="text-[19px]"
                       />

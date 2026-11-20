@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { ButtonLink } from "@/components/ui/Button";
 import { StaffLoading, StaffScreen } from "@/components/ui/StaffScreen";
-import { getCountSummary } from "@/features/counts/queries";
+import { countEditMinutesLeft, getCountSummary } from "@/features/counts/queries";
 import { formatScheduleTime } from "@/features/settings/schemas";
 import { formatClock } from "@/lib/time";
 
@@ -20,10 +21,12 @@ export default function CountDonePage({ searchParams }: { searchParams: SearchPa
 }
 
 async function CountDone({ searchParams }: { searchParams: SearchParams }) {
-  const { id } = await searchParams;
+  const { id, edited } = await searchParams;
   if (typeof id !== "string" || !UUID.test(id)) notFound();
+  await connection();
   const summary = await getCountSummary(id);
   if (!summary) notFound();
+  const left = countEditMinutesLeft(summary.confirmedAt, new Date());
 
   const confirmed = new Date(summary.confirmedAt);
   const what = summary.scheduleTime ? `جرد الساعة ${formatScheduleTime(summary.scheduleTime)}` : "الجرد";
@@ -53,7 +56,7 @@ async function CountDone({ searchParams }: { searchParams: SearchParams }) {
             <path d="M5 12l5 5 9-10" />
           </svg>
         </div>
-        <h1 className="text-[28px] font-bold">تم الجرد</h1>
+        <h1 className="text-[28px] font-bold">{edited === "1" ? "انعدّل الجرد" : "تم الجرد"}</h1>
         <p className="text-center text-[17px] leading-relaxed text-muted">
           {what} لـ {summary.locationName} انحفظ
           <br />
@@ -71,6 +74,11 @@ async function CountDone({ searchParams }: { searchParams: SearchParams }) {
           ))}
         </div>
         <div className="grow" />
+        {left > 0 && (
+          <ButtonLink href={`/count/edit/${id}`} variant="secondary">
+            عدّل الجرد (باقي {left} {left === 1 ? "دقيقة" : left === 2 ? "دقيقتين" : "دقايق"})
+          </ButtonLink>
+        )}
         <ButtonLink href="/">رجوع للرئيسية</ButtonLink>
       </div>
     </StaffScreen>

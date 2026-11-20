@@ -4166,6 +4166,7 @@ export type Database = {
           on_time: number;
         }[];
       };
+      staff_edit_count: { Args: { p_count_id: string; p_lines: Json }; Returns: undefined };
       submit_count: {
         Args: {
           p_form_version_id?: string;

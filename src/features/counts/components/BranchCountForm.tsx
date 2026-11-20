@@ -8,7 +8,7 @@ import { Stepper } from "@/components/ui/Stepper";
 import { countPhrase } from "@/lib/units";
 import { submitCountAction } from "../actions";
 import type { CountProduct } from "../queries";
-import { countTotals, type CountLine } from "../schemas";
+import { countTotals, MAX_COUNT_PIECES, MAX_COUNT_VALUE, type CountLine } from "../schemas";
 
 export type PrefilledLine = {
   wholeCakes: number;
@@ -168,6 +168,7 @@ export function BranchCountForm({ products, scheduleId, startedAt, initial = {},
                 {p.piecesPerCake !== null && (
                   <Stepper
                     label="كيكات"
+                    max={MAX_COUNT_VALUE}
                     value={row.wholeCakes}
                     onChange={(v) => update(p.id, "wholeCakes", v)}
                     incrementLabel={`زيد كيكة ${p.nameEn}`}
@@ -176,6 +177,7 @@ export function BranchCountForm({ products, scheduleId, startedAt, initial = {},
                 )}
                 <Stepper
                   label={p.piecesPerCake === null ? "قطع (قطع بس)" : "قطع"}
+                  max={MAX_COUNT_PIECES}
                   value={row.loosePieces}
                   onChange={(v) => update(p.id, "loosePieces", v)}
                   incrementLabel={`زيد قطعة ${p.nameEn}`}

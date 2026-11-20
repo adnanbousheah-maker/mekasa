@@ -4,7 +4,12 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { StaffLoading, StaffScreen } from "@/components/ui/StaffScreen";
 import { FactoryCountForm } from "@/features/counts/components/FactoryCountForm";
 import { NotCounting, countTitle } from "@/features/counts/components/CountBits";
-import { getCountContext, listCountProducts, listFactoryBatches } from "@/features/counts/queries";
+import {
+  editableLatestCount,
+  getCountContext,
+  listCountProducts,
+  listFactoryBatches,
+} from "@/features/counts/queries";
 import { businessDate } from "@/lib/time";
 
 // design/branch/CountMethod (الفرع)، وdesign/factory/FactoryCount (المصنع، جرد أعمى يدوي)
@@ -20,6 +25,17 @@ async function Count() {
   const context = await getCountContext();
   if (!context) return <NotCounting />;
   const { location, slot } = context;
+  const editable = await editableLatestCount(location.id, new Date());
+  // آخر جرد خلال ربع ساعة: الموظف بيقدر يعدّله بدل ما يعيد الجرد
+  const editLink = editable && (
+    <Link
+      href={`/count/edit/${editable.id}`}
+      className="flex h-12 items-center justify-center rounded-xl border-2 border-ink bg-surface font-semibold"
+    >
+      عدّل آخر جرد (باقي {editable.left}{" "}
+      {editable.left === 1 ? "دقيقة" : editable.left === 2 ? "دقيقتين" : "دقايق"})
+    </Link>
+  );
 
   if (location.kind === "factory") {
     const [products, batches] = await Promise.all([listCountProducts(), listFactoryBatches(location.id)]);
@@ -30,6 +46,7 @@ async function Count() {
           title={slot ? countTitle(slot.timeOfDay) : "جرد ستوك المصنع"}
           subtitle="عدّ كل رقم لحاله"
         />
+        {editLink}
         <p className="text-[13px] leading-relaxed text-muted">
           لكل صنف: اختار رقم اليوم المكتوب على الكيك، وعدّ كل رقم لحاله. ما بنعرض الكمية المتوقعة مشان العد
           يكون حقيقي.
@@ -50,6 +67,7 @@ async function Count() {
   return (
     <StaffScreen>
       <ScreenHeader title={slot ? countTitle(slot.timeOfDay) : "جرد"} subtitle={`فرع ${location.name}`} />
+      {editLink}
       <p className="text-lg font-semibold">كيف بدك تجرد؟</p>
       {context.photoCountEnabled && (
         <Link

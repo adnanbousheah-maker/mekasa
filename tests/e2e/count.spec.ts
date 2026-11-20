@@ -42,6 +42,25 @@ test("a branch employee counts by hand and the stock follows the count", async (
   await expect(page.getByRole("heading", { level: 1 })).toContainText(BRANCH_DBQ.name);
 });
 
+test("the branch fixes its count within 15 minutes, and a too-big number is stopped", async ({ page }) => {
+  await signInAndWait(page, BRANCH_DBQ.phone, BRANCH_DBQ.pin);
+  await page.goto("/count");
+  await page.getByRole("link", { name: /^عدّل آخر جرد \(باقي/ }).click();
+  await expect(page.getByRole("heading", { name: "تعديل الجرد" })).toBeVisible();
+
+  const choco = page.getByRole("listitem", { name: "Classic Choco" });
+  const cakes = choco.getByRole("textbox", { name: "كيكات" });
+  await expect(cakes).toHaveValue("2");
+  // أكبر رقم كيكات 999: الخانة ما بتقبل أكثر
+  await cakes.fill("5000");
+  await expect(cakes).toHaveValue("999");
+  await cakes.fill("3");
+  await page.getByRole("button", { name: "احفظ التعديل (1 صنف)" }).click();
+  await expect(page.getByRole("heading", { name: "انعدّل الجرد" })).toBeVisible();
+  // كيكة زيادة = 10 قطع
+  expect(await stockOf("DBQ", "Classic Choco")).toBe(31);
+});
+
 test("the factory counts blind, by day number", async ({ page }) => {
   await signInAndWait(page, FACTORY.phone, FACTORY.pin);
   await page.getByRole("link", { name: "جرد المصنع" }).click();

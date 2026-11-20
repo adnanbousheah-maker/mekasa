@@ -1,9 +1,12 @@
 import { z } from "zod";
 
 // أكبر رقم ممكن بخانة وحدة. أكبر من هيك غالباً غلطة إصبع (أو قراءة غلط للصورة).
+// الكيكات لحد 999، والقطع لحد 9999 (الكاسات والتشيز كيك بالمصنع ممكن تكون بالآلاف).
 export const MAX_COUNT_VALUE = 999;
+export const MAX_COUNT_PIECES = 9999;
 
-const countValue = z.number().int().min(0).max(MAX_COUNT_VALUE);
+const countValue = z.number().int().min(0).max(MAX_COUNT_VALUE, `أكبر رقم كيكات ${MAX_COUNT_VALUE}`);
+const countPieces = z.number().int().min(0).max(MAX_COUNT_PIECES, `أكبر رقم قطع ${MAX_COUNT_PIECES}`);
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const confidence = z.number().min(0).max(1);
 
@@ -12,12 +15,12 @@ export const countLineSchema = z.object({
   // المصنع بس: تاريخ إنتاج الدفعة
   productionDate: isoDate.optional(),
   wholeCakes: countValue,
-  loosePieces: countValue,
+  loosePieces: countPieces,
   // الجرد بالصورة: شو قرأ Claude، وثقته
   ocr: z
     .object({
       wholeCakes: countValue.nullable(),
-      loosePieces: countValue.nullable(),
+      loosePieces: countPieces.nullable(),
       wholeConfidence: confidence.nullable(),
       piecesConfidence: confidence.nullable(),
     })

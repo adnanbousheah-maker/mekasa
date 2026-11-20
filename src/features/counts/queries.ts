@@ -152,3 +152,98 @@ export async function getCountSummary(countId: string): Promise<CountSummary | n
     pieces: data.stock_count_lines.reduce((s, l) => s + l.loose_pieces, 0),
   };
 }
+
+/** ربع ساعة بعد التأكيد بيقدر الموظف يعدّل جرده (نفس private.count_edit_minutes). */
+export const COUNT_EDIT_MINUTES = 15;
+
+/** كم دقيقة ضايل لتعديل الجرد (0 = خلص). */
+export function countEditMinutesLeft(confirmedAt: string, now: Date): number {
+  const left = COUNT_EDIT_MINUTES * 60_000 - (now.getTime() - new Date(confirmedAt).getTime());
+  return left > 0 ? Math.ceil(left / 60_000) : 0;
+}
+
+export interface EditableCount {
+  id: string;
+  locationId: string;
+  locationName: string;
+  confirmedAt: string;
+  // آخر جرد مؤكد بالموقع (بس هو بيتعدّل)
+  isLatest: boolean;
+  lines: {
+    lineId: string;
+    productName: string;
+    piecesPerCake: number | null;
+    productionDate: string | null;
+    wholeCakes: number;
+    loosePieces: number;
+  }[];
+}
+
+/** جرد للتعديل: أسطره بأسماء الأصناف (وتاريخ الدفعة بالمصنع). RLS بتحدد مين بيشوفه. */
+export async function getCountForEdit(countId: string): Promise<EditableCount | null> {
+  await requireStaff();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("stock_counts")
+    .select(
+      "id, location_id, started_at, confirmed_at, status, location:locations(name), stock_count_lines(id, whole_cakes, loose_pieces, pieces_per_cake_snapshot, product:products(name_en, sort_order), batch:batches(production_date))",
+    )
+    .eq("id", countId)
+    .maybeSingle();
+  if (error) throw new Error(`Could not load the count: ${error.message}`);
+  if (!data || data.status !== "confirmed" || !data.confirmed_at) return null;
+  const { count: later } = await supabase
+    .from("stock_counts")
+    .select("id", { count: "exact", head: true })
+    .eq("location_id", data.location_id)
+    .eq("status", "confirmed")
+    .gt("started_at", data.started_at);
+  return {
+    id: data.id,
+    locationId: data.location_id,
+    locationName: data.location.name,
+    confirmedAt: data.confirmed_at,
+    isLatest: (later ?? 0) === 0,
+    lines: data.stock_count_lines
+      .map((l) => ({
+        lineId: l.id,
+        productName: l.product.name_en,
+        sortOrder: l.product.sort_order ?? 0,
+        piecesPerCake: l.pieces_per_cake_snapshot,
+        productionDate: l.batch?.production_date ?? null,
+        wholeCakes: l.whole_cakes,
+        loosePieces: l.loose_pieces,
+      }))
+      .sort(
+        (a, b) => a.sortOrder - b.sortOrder || (a.productionDate ?? "").localeCompare(b.productionDate ?? ""),
+      )
+      .map((l) => ({
+        lineId: l.lineId,
+        productName: l.productName,
+        piecesPerCake: l.piecesPerCake,
+        productionDate: l.productionDate,
+        wholeCakes: l.wholeCakes,
+        loosePieces: l.loosePieces,
+      })),
+  };
+}
+
+/** آخر جرد مؤكد بموقع الموظف إذا لسا بينعدّل (للرابط بشاشة الجرد). */
+export async function editableLatestCount(
+  locationId: string,
+  now: Date,
+): Promise<{ id: string; left: number } | null> {
+  await requireStaff();
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("stock_counts")
+    .select("id, confirmed_at")
+    .eq("location_id", locationId)
+    .eq("status", "confirmed")
+    .order("started_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!data?.confirmed_at) return null;
+  const left = countEditMinutesLeft(data.confirmed_at, now);
+  return left > 0 ? { id: data.id, left } : null;
+}
