@@ -83,13 +83,30 @@ test("products: Arabic name, own cake size, switching off and adding a product",
   await expect(page.getByRole("switch", { name: "Tiramisu فعّال" })).toHaveAttribute("aria-checked", "false");
   const added = page.getByRole("row", { name: new RegExp(productName) });
   await expect(added).toBeVisible();
-  await expect(added.getByText("قطعة بس")).toBeVisible();
+  await expect(added.getByLabel(`نوع ${productName}`)).toHaveValue("pieces_only");
 
   // نفس الاسم مرة ثانية
   await page.getByRole("button", { name: "+ صنف جديد" }).click();
   await dialog.getByLabel("الاسم (متل المنيو)").fill(productName);
   await dialog.getByRole("button", { name: "أضف الصنف" }).click();
   await expect(dialog.getByRole("alert")).toHaveText("في صنف بنفس الاسم");
+});
+
+test("the admin switches a product between pieces only and cake and pieces", async ({ page }) => {
+  await openSettings(page);
+  const row = page.getByRole("row", { name: new RegExp(productName) });
+  const mode = row.getByLabel(`نوع ${productName}`);
+  // انضاف "قطعة بس" بالاختبار اللي قبل
+  await expect(mode).toHaveValue("pieces_only");
+  await expect(row.getByRole("textbox", { name: `قطع بالكيكة لـ ${productName}` })).toHaveCount(0);
+
+  await mode.selectOption("whole_and_pieces");
+  await expect(row.getByRole("textbox", { name: `قطع بالكيكة لـ ${productName}` })).toBeVisible();
+  await page.reload();
+  await expect(row.getByLabel(`نوع ${productName}`)).toHaveValue("whole_and_pieces");
+
+  await row.getByLabel(`نوع ${productName}`).selectOption("pieces_only");
+  await expect(row.getByRole("textbox", { name: `قطع بالكيكة لـ ${productName}` })).toHaveCount(0);
 });
 
 test("count schedules: add a time to a branch and take it off again", async ({ page }) => {

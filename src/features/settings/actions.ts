@@ -14,6 +14,7 @@ import {
   piecesOverrideSchema,
   shelfLifeOverrideSchema,
   scheduleTimeSchema,
+  SELL_MODES,
   wholeNumber,
 } from "./schemas";
 
@@ -94,6 +95,29 @@ export async function updateProductPiecesAction(productId: string, value: string
   return updateProduct(productId, { pieces_per_cake: pieces.data });
 }
 
+/**
+ * نوع الصنف: "كيكة وقطع" أو "قطعة بس" (للكيك بس). القطعة بس ما إلها عدد قطع بالكيكة، فبيرجع فاضي
+ * (قيد pieces_only_has_no_cake_size). الجرد والطلبات القديمة ما بتتأثر: كل سطر حافظ عدد القطع وقتها.
+ */
+export async function updateProductSellModeAction(productId: string, mode: string): Promise<SaveResult> {
+  await requireAdmin();
+  if (!idSchema.safeParse(productId).success) return fail("الصنف مش موجود");
+  const parsed = z.enum(SELL_MODES).safeParse(mode);
+  if (!parsed.success) return fail("اختار نوع الصنف");
+
+  const supabase = await createClient();
+  const { data: product } = await supabase.from("products").select("kind").eq("id", productId).maybeSingle();
+  if (!product) return fail("الصنف مش موجود");
+  if (product.kind !== "cake") return fail("النوع بيتغير للكيك بس");
+
+  return updateProduct(
+    productId,
+    parsed.data === "pieces_only"
+      ? { sell_mode: "pieces_only", pieces_per_cake: null }
+      : { sell_mode: "whole_and_pieces" },
+  );
+}
+
 export async function updateProductShelfLifeAction(productId: string, value: string): Promise<SaveResult> {
   await requireAdmin();
   if (!idSchema.safeParse(productId).success) return fail("الصنف مش موجود");
@@ -117,6 +141,7 @@ async function updateProduct(
     name_en?: string;
     name_ar?: string | null;
     pieces_per_cake?: number | null;
+    sell_mode?: Database["public"]["Enums"]["sell_mode"];
     is_active?: boolean;
     shelf_life_days?: number | null;
   },
