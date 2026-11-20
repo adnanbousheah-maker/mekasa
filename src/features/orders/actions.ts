@@ -207,19 +207,30 @@ export async function resolveReceiptLineAction(
 }
 
 /** الكمية المقترحة لفرع (للإخراج بدون طلب): الحد − الموجود لكل صنف. */
-export async function branchSuggestionsAction(
-  branchId: string,
-): Promise<{ productId: string; stockPieces: number; parPieces: number | null; avgPieces: number | null }[]> {
+export async function branchSuggestionsAction(branchId: string): Promise<
+  {
+    productId: string;
+    stockPieces: number;
+    parPieces: number | null;
+    avgPieces: number | null;
+    minTomorrow: number | null;
+  }[]
+> {
   await requireStaff();
   if (!z.uuid().safeParse(branchId).success) return [];
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("branch_suggestions", { p_branch_id: branchId });
+  const [{ data, error }, mins] = await Promise.all([
+    supabase.rpc("branch_suggestions", { p_branch_id: branchId }),
+    supabase.rpc("branch_min_tomorrow", { p_branch_id: branchId }),
+  ]);
   if (error) return [];
+  const minById = new Map((mins.data ?? []).map((m) => [m.product_id, m.min_pieces]));
   return data.map((s) => ({
     productId: s.product_id,
     stockPieces: s.stock_pieces,
     parPieces: s.par_pieces,
     avgPieces: s.avg_pieces,
+    minTomorrow: minById.get(s.product_id) ?? null,
   }));
 }
 

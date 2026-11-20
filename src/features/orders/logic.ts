@@ -3,12 +3,20 @@ import { countPhrase } from "@/lib/units";
 
 // ─── الكمية المقترحة: الحد المطلوب − الموجود ─────────────────────────
 
-/** الاقتراح بكيكات كاملة (لفوق) للأصناف اللي إلها كيكة، وبالقطع للأصناف اللي قطع بس. */
-/** شو لازم يكون عند الفرع بكرا: معدل الاستهلاك إذا معروف، وإلا الحد المطلوب. */
+/** فوق الحد الأدنى لبكرا: 5 كيكات (أو 5 قطع للأصناف اللي قطع بس). قرار صاحب المشروع 20 نوفمبر. */
+export const ORDER_EXTRA_CAKES = 5;
+
+/**
+ * شو لازم يكون عند الفرع بكرا (بالقطع). إذا إله حد أدنى لبكرا: الحد + 5 كيكات.
+ * وإلا معدل الاستهلاك إذا معروف، وإلا الحد المطلوب.
+ */
 export function orderTarget(
   avgPieces: number | null,
   parPieces: number | null | undefined,
+  minTomorrow: number | null = null,
+  piecesPerCake: number | null = null,
 ): number | undefined {
+  if (minTomorrow !== null) return minTomorrow + ORDER_EXTRA_CAKES * (piecesPerCake ?? 1);
   return avgPieces ?? parPieces ?? undefined;
 }
 

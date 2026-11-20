@@ -203,6 +203,14 @@ describe("orderTarget", () => {
     expect(orderTarget(null, 20)).toBe(20);
     expect(orderTarget(null, null)).toBeUndefined();
   });
+
+  it("uses tomorrow's minimum plus 5 cakes when there is one (20 Nov)", () => {
+    expect(orderTarget(35, 20, 260, 10)).toBe(310);
+    expect(orderTarget(null, null, 30, 6)).toBe(60);
+    // قطع بس: 5 قطع
+    expect(orderTarget(12, 20, 8, null)).toBe(13);
+    expect(orderTarget(35, 20, null, 10)).toBe(35);
+  });
 });
 
 describe("forgottenItems", () => {

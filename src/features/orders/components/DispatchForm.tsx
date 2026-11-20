@@ -113,7 +113,7 @@ export function DispatchForm({
           .map((s) => {
             const p = byId.get(s.productId);
             const q = suggestQuantity(
-              orderTarget(s.avgPieces, s.parPieces),
+              orderTarget(s.avgPieces, s.parPieces, s.minTomorrow, p?.piecesPerCake ?? null),
               s.stockPieces,
               p?.piecesPerCake ?? null,
             );

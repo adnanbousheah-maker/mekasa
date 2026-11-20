@@ -3968,6 +3968,13 @@ export type Database = {
           status: string;
         }[];
       };
+      branch_min_tomorrow: {
+        Args: { p_branch_id: string };
+        Returns: {
+          min_pieces: number;
+          product_id: string;
+        }[];
+      };
       branch_suggestions: {
         Args: { p_branch_id: string };
         Returns: {

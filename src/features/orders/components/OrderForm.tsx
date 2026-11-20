@@ -32,7 +32,11 @@ export function OrderForm({
     Object.fromEntries(
       products.map((p) => [
         p.id,
-        suggestQuantity(orderTarget(p.avgPieces, p.parPieces), p.stockPieces, p.piecesPerCake),
+        suggestQuantity(
+          orderTarget(p.avgPieces, p.parPieces, p.minTomorrow, p.piecesPerCake),
+          p.stockPieces,
+          p.piecesPerCake,
+        ),
       ]),
     ),
   );

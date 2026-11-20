@@ -19,6 +19,8 @@ export interface OrderProduct {
   parPieces: number | undefined;
   // معدل استهلاك آخر 4 أيام من نفس يوم بكرا (null = ما في جرد بهالأيام)
   avgPieces: number | null;
+  // الحد الأدنى لبكرا (حد اليوم أو العام)، للاقتراح
+  minTomorrow: number | null;
 }
 
 type Db = Awaited<ReturnType<typeof createClient>>;
@@ -87,12 +89,14 @@ export async function productsForBranch(
 ): Promise<OrderProduct[]> {
   await requireStaff();
   const supabase = await createClient();
-  const [all, { data, error }] = await Promise.all([
+  const [all, { data, error }, mins] = await Promise.all([
     products(supabase),
     supabase.rpc("branch_suggestions", { p_branch_id: branchId }),
+    supabase.rpc("branch_min_tomorrow", { p_branch_id: branchId }),
   ]);
   if (error) throw new Error(`Could not load suggestions: ${error.message}`);
   const byId = new Map(data.map((s) => [s.product_id, s]));
+  const minById = new Map((mins.data ?? []).map((m) => [m.product_id, m.min_pieces]));
   return all
     .filter((p) => p.isActive && kinds.includes(p.kind))
     .sort(saucesLast)
@@ -105,6 +109,7 @@ export async function productsForBranch(
       stockPieces: byId.get(p.id)?.stock_pieces ?? 0,
       parPieces: byId.get(p.id)?.par_pieces ?? undefined,
       avgPieces: byId.get(p.id)?.avg_pieces ?? null,
+      minTomorrow: minById.get(p.id) ?? null,
     }));
 }
 

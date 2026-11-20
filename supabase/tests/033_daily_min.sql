@@ -61,5 +61,15 @@ select ok(
   (select count(*) from public.par_level_daily_min) > 0, 'the branch can read its own daily minimums'
 );
 
+-- اقتراح الطلبية بياخذ حد بكرا (الحد اللي نقلناه لبكرا فوق = 50)
+select is(
+  (select min_pieces from public.branch_min_tomorrow(tests.location('SWF')) where product_id = tests.product('Flan')),
+  50, 'the order suggestion reads tomorrow''s minimum'
+);
+select throws_ok(
+  format($$ select * from public.branch_min_tomorrow(%L) $$, tests.location('DBQ')),
+  '42501', null, 'a branch cannot read another branch''s minimums'
+);
+
 select * from finish();
 rollback;
