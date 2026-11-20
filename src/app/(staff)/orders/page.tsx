@@ -10,7 +10,7 @@ import {
   NotForYou,
   dayLabel,
 } from "@/features/orders/components/OrderBits";
-import { linesSummary } from "@/features/orders/logic";
+import { editMinutesLeft, linesSummary } from "@/features/orders/logic";
 import {
   destinationsFrom,
   loadDocuments,
@@ -53,13 +53,17 @@ async function Orders({ searchParams }: { searchParams: SearchParams }) {
     destinationsFrom(staff.location),
   ]);
 
+  // طلب انعدّل: القديم (الملغي) ما بيبين، بيبين الجديد بس
+  const replaced = new Set(requests.flatMap((r) => (r.replacesRequestId ? [r.replacesRequestId] : [])));
   const entries: Entry[] = [
-    ...requests.map((r) => ({
-      kind: "request" as const,
-      at: r.requestedAt,
-      request: r,
-      dispatch: incoming.find((d) => d.requestId === r.id),
-    })),
+    ...requests
+      .filter((r) => !replaced.has(r.id))
+      .map((r) => ({
+        kind: "request" as const,
+        at: r.requestedAt,
+        request: r,
+        dispatch: incoming.find((d) => d.requestId === r.id),
+      })),
     ...incoming
       .filter((d) => !d.requestId)
       .map((d) => ({ kind: "incoming" as const, at: d.dispatchedAt, dispatch: d })),
@@ -82,6 +86,14 @@ async function Orders({ searchParams }: { searchParams: SearchParams }) {
           className="rounded-xl border border-ok bg-ok-soft px-4 py-3 text-[15px] font-semibold text-ok-text"
         >
           {params.sent === "packaging" ? "انبعت طلبك لمستودع التغليف" : "انبعت طلبك للمصنع"}
+        </div>
+      )}
+      {params.edited === "1" && (
+        <div
+          role="status"
+          className="rounded-xl border border-ok bg-ok-soft px-4 py-3 text-[15px] font-semibold text-ok-text"
+        >
+          انعدّل طلبك
         </div>
       )}
       {params.received === "1" && (
@@ -140,6 +152,7 @@ async function Orders({ searchParams }: { searchParams: SearchParams }) {
                     {linesSummary(r.lines, r.isPackaging)} · {formatClock(new Date(r.requestedAt))}
                   </span>
                 )}
+                <RequestButtons request={r} now={now} />
               </li>
             );
           }
@@ -185,5 +198,29 @@ async function Orders({ searchParams }: { searchParams: SearchParams }) {
         </Link>
       )}
     </StaffScreen>
+  );
+}
+
+/** استعراض الطلب دايماً، والتعديل خلال ربع ساعة بس (قبل ما يطلع). */
+function RequestButtons({ request: r, now }: { request: RequestDoc; now: Date }) {
+  const left =
+    r.status === "sent" || r.status === "pending_approval" ? editMinutesLeft(r.requestedAt, now) : 0;
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <Link
+        href={`/orders/${r.id}`}
+        className={`flex h-12 items-center justify-center rounded-xl border border-line-strong bg-surface font-semibold ${left > 0 ? "" : "col-span-2"}`}
+      >
+        استعراض الطلب
+      </Link>
+      {left > 0 && (
+        <Link
+          href={`/order/edit/${r.id}`}
+          className="flex h-12 items-center justify-center rounded-xl bg-ink font-semibold text-white"
+        >
+          عدّل (باقي {left} {left === 1 ? "دقيقة" : left === 2 ? "دقيقتين" : "دقايق"})
+        </Link>
+      )}
+    </div>
   );
 }

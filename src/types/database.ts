@@ -2801,6 +2801,7 @@ export type Database = {
           approved_by: string | null;
           id: string;
           note: string | null;
+          replaces_request_id: string | null;
           requested_at: string;
           requested_by: string;
           requesting_location_id: string;
@@ -2813,6 +2814,7 @@ export type Database = {
           approved_by?: string | null;
           id?: string;
           note?: string | null;
+          replaces_request_id?: string | null;
           requested_at?: string;
           requested_by: string;
           requesting_location_id: string;
@@ -2824,6 +2826,7 @@ export type Database = {
           approved_by?: string | null;
           id?: string;
           note?: string | null;
+          replaces_request_id?: string | null;
           requested_at?: string;
           requested_by?: string;
           requesting_location_id?: string;
@@ -2843,6 +2846,13 @@ export type Database = {
             columns: ["approved_by"];
             isOneToOne: false;
             referencedRelation: "v_staff_names";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stock_requests_replaces_request_id_fkey";
+            columns: ["replaces_request_id"];
+            isOneToOne: true;
+            referencedRelation: "stock_requests";
             referencedColumns: ["id"];
           },
           {
@@ -4056,6 +4066,10 @@ export type Database = {
         Returns: string;
       };
       dispatch_round: { Args: { p_round: Json }; Returns: string[] };
+      edit_request: {
+        Args: { p_lines: Json; p_missing?: Json; p_note?: string; p_request_id: string };
+        Returns: string;
+      };
       it_reset_operations: { Args: { p_confirm: string }; Returns: undefined };
       log_waste: {
         Args: {

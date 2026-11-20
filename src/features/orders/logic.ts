@@ -197,6 +197,18 @@ export function linesSummary(
 // التغليف بينطلب بالمية (أكياس، علب)
 const qty = z.number().int().min(0).max(9999);
 
+/** القطع (والصوصات باللتر) بطلب الفرع من المصنع لحد 99 (رقمين). التغليف بالحبة بدون هالحد (بقاعدة البيانات). */
+export const MAX_REQUEST_PIECES = 99;
+
+/** الفرع بيعدّل أو بيلغي طلبه خلال ربع ساعة من وقت الطلب الأصلي (نفس private.request_edit_minutes). */
+export const REQUEST_EDIT_MINUTES = 15;
+
+/** كم دقيقة ضايل للتعديل (0 = خلص الوقت). */
+export function editMinutesLeft(requestedAt: string, now: Date): number {
+  const left = REQUEST_EDIT_MINUTES * 60_000 - (now.getTime() - new Date(requestedAt).getTime());
+  return left > 0 ? Math.ceil(left / 60_000) : 0;
+}
+
 export const requestLineSchema = z.object({
   productId: z.uuid(),
   wholeCakes: qty,

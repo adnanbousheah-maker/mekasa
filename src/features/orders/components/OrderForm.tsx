@@ -7,7 +7,8 @@ import { ProductName } from "@/components/ui/ProductName";
 import { QuantityField } from "@/components/ui/QuantityField";
 import { Stepper } from "@/components/ui/Stepper";
 import { countPhrase, formatQuantity, SAUCE_UNIT } from "@/lib/units";
-import { createRequestAction } from "../actions";
+import { createRequestAction, editRequestAction } from "../actions";
+import { MAX_REQUEST_PIECES } from "../logic";
 import { forgottenItems, linesSummary, orderTarget, suggestQuantity } from "../logic";
 import type { OrderProduct } from "../queries";
 
@@ -19,6 +20,7 @@ export function OrderForm({
   tomorrowName,
   packaging = false,
   cakesOnly = false,
+  edit,
 }: {
   products: OrderProduct[];
   tomorrowName: string;
@@ -26,18 +28,22 @@ export function OrderForm({
   packaging?: boolean;
   // إعداد الأدمن: المصنع بيطلّع كيكات كاملة بس (بدون خانة قطع)
   cakesOnly?: boolean;
+  // تعديل طلب (خلال ربع ساعة): الكميات من الطلب نفسه
+  edit?: { requestId: string; rows: Record<string, { wholeCakes: number; loosePieces: number }> };
 }) {
   const router = useRouter();
   const [rows, setRows] = useState<Record<string, Row>>(() =>
     Object.fromEntries(
-      products.map((p) => [
-        p.id,
-        suggestQuantity(
+      products.map((p) => {
+        const suggested = suggestQuantity(
           orderTarget(p.avgPieces, p.parPieces, p.minTomorrow, p.piecesPerCake),
           p.stockPieces,
           p.piecesPerCake,
-        ),
-      ]),
+        );
+        if (!edit) return [p.id, suggested];
+        const was = edit.rows[p.id] ?? { wholeCakes: 0, loosePieces: 0 };
+        return [p.id, { ...was, suggestedPieces: suggested.suggestedPieces }];
+      }),
     ),
   );
   const [q, setQ] = useState("");
@@ -79,14 +85,16 @@ export function OrderForm({
 
   const send = () =>
     startTransition(async () => {
-      const result = await createRequestAction({
+      const input = {
         lines: picked.map((p) => ({ productId: p.id, ...rows[p.id] })),
         missing: forgotten.map((p) => ({ productId: p.id, suggestedPieces: rows[p.id].suggestedPieces })),
-      });
+      };
+      const result = edit ? await editRequestAction(edit.requestId, input) : await createRequestAction(input);
       if (result.status === "error") {
         setError(result.message);
         setReview(false);
-      } else router.replace(packaging ? "/orders?sent=packaging" : "/orders?sent=1");
+      } else
+        router.replace(edit ? "/orders?edited=1" : packaging ? "/orders?sent=packaging" : "/orders?sent=1");
     });
 
   return (
@@ -140,7 +148,7 @@ export function OrderForm({
                   <QuantityField
                     label={`عدد ${p.nameEn}`}
                     value={row.loosePieces}
-                    max={9999}
+                    max={packaging ? 9999 : MAX_REQUEST_PIECES}
                     onChange={(v) => update(p.id, "loosePieces", v)}
                   />
                 </div>
@@ -171,6 +179,7 @@ export function OrderForm({
                     {(p.piecesPerCake === null || !cakesOnly) && (
                       <Stepper
                         label={p.piecesPerCake === null ? "قطع (قطع بس)" : "قطع"}
+                        max={MAX_REQUEST_PIECES}
                         value={row.loosePieces}
                         onChange={(v) => update(p.id, "loosePieces", v)}
                         incrementLabel={`زيد قطعة ${p.nameEn}`}
@@ -269,7 +278,13 @@ export function OrderForm({
             onClick={send}
             className="h-14 rounded-[14px] bg-ink text-lg font-semibold text-white disabled:opacity-40"
           >
-            {isSaving ? "لحظة…" : packaging ? "إرسال الطلب لمستودع التغليف" : "إرسال الطلب للمصنع"}
+            {isSaving
+              ? "لحظة…"
+              : edit
+                ? "احفظ التعديل"
+                : packaging
+                  ? "إرسال الطلب لمستودع التغليف"
+                  : "إرسال الطلب للمصنع"}
           </button>
           <button
             type="button"

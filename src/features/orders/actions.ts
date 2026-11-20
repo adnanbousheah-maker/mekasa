@@ -29,6 +29,9 @@ function messageFor(error: { code?: string; hint?: string; message: string }): O
     return { status: "error", message: "ستوك المصنع ما بيكفي. سجّل الإنتاج أو الجرد أول." };
   if (error.hint === "expired_batch")
     return { status: "error", message: "في دفعة خلصت مدتها. سجّلها تالف بدل ما تطلع." };
+  if (error.hint === "not_editable")
+    return { status: "error", message: "عدّت ربع ساعة على الطلب، ما بينعدّل. احكي مع الإدارة." };
+  if (error.hint === "too_many_pieces") return { status: "error", message: "القطع لحد 99" };
   if (error.code === "42501") return { status: "error", message: "ما إلك صلاحية لهالعملية" };
   if (error.code === "23514" || error.code === "23505")
     return { status: "error", message: "في معلومة مش منطقية أو العملية انعملت قبل" };
@@ -63,6 +66,38 @@ export async function createRequestAction(input: CreateRequestInput): Promise<Or
   return { status: "done", id: data };
 }
 
+/** تعديل طلب خلال ربع ساعة: الطلب القديم بينلغى وبينعمل جديد بنفس الوقت (edit_request). */
+export async function editRequestAction(requestId: string, input: CreateRequestInput): Promise<OrderResult> {
+  await requireStaff();
+  if (!z.uuid().safeParse(requestId).success) return { status: "error", message: "الطلب مش موجود" };
+  const parsed = createRequestSchema.safeParse(input);
+  if (!parsed.success)
+    return { status: "error", message: parsed.error.issues[0]?.message ?? "في معلومة ناقصة" };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("edit_request", {
+    p_request_id: requestId,
+    p_lines: parsed.data.lines.map((l) => ({
+      product_id: l.productId,
+      whole_cakes: l.wholeCakes,
+      loose_pieces: l.loosePieces,
+      suggested_pieces: l.suggestedPieces,
+    })) as Json,
+    p_note: parsed.data.note || undefined,
+    p_missing: parsed.data.missing.map((m) => ({
+      product_id: m.productId,
+      suggested_pieces: m.suggestedPieces,
+    })) as Json,
+  });
+  if (error) {
+    console.error("editRequest", error);
+    return messageFor(error);
+  }
+  refresh();
+  return { status: "done", id: data };
+}
+
+/** إلغاء طلب ما طلع: الأدمن والمدير العام بأي وقت، والفرع خلال ربع ساعة (cancel_request بتفحص). */
 export async function cancelRequestAction(requestId: string): Promise<OrderResult> {
   await requireStaff();
   if (!z.uuid().safeParse(requestId).success) return { status: "error", message: "الطلب مش موجود" };

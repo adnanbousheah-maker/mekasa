@@ -7,6 +7,7 @@ type Props = {
   incrementLabel: string;
   decrementLabel: string;
   min?: number;
+  max?: number;
   // الرقم بالنص بينكتب كمان (افتراضياً، طلب الاجتماع 18 نوفمبر). false = + و − بس.
   typed?: boolean;
 };
@@ -22,6 +23,7 @@ export function Stepper({
   incrementLabel,
   decrementLabel,
   min = 0,
+  max = 99_999,
   typed = true,
 }: Props) {
   const canDecrement = value > min;
@@ -34,12 +36,13 @@ export function Stepper({
           type="button"
           aria-label={incrementLabel}
           className={stepButton}
-          onClick={() => onChange(value + 1)}
+          disabled={value >= max}
+          onClick={() => onChange(Math.min(max, value + 1))}
         >
           +
         </button>
         {typed ? (
-          <NumberField label={label} value={value} min={min} onChange={onChange} />
+          <NumberField label={label} value={value} min={min} max={max} onChange={onChange} />
         ) : (
           <span
             role="status"

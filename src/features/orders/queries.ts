@@ -131,6 +131,8 @@ export interface RequestDoc {
   fromName: string;
   toName: string;
   requestingLocationId: string;
+  // تعديل لطلب قديم (القديم انلغى)
+  replacesRequestId: string | null;
   // طلب من مستودع التغليف
   isPackaging: boolean;
   lines: (DocLine & { lineId: string; suggestedPieces: number | null })[];
@@ -178,7 +180,7 @@ export interface DispatchDoc {
 }
 
 const REQUEST_COLUMNS =
-  "id, status, requested_at, requested_by, requesting_location_id, requesting:locations!stock_requests_requesting_location_id_fkey(name), supplying:locations!stock_requests_supplying_location_id_fkey(name, kind), stock_request_lines(id, product_id, whole_cakes, loose_pieces, qty_pieces, pieces_per_cake_snapshot, suggested_pieces), stock_request_missing(product_id, suggested_pieces)";
+  "id, status, requested_at, requested_by, requesting_location_id, replaces_request_id, requesting:locations!stock_requests_requesting_location_id_fkey(name), supplying:locations!stock_requests_supplying_location_id_fkey(name, kind), stock_request_lines(id, product_id, whole_cakes, loose_pieces, qty_pieces, pieces_per_cake_snapshot, suggested_pieces), stock_request_missing(product_id, suggested_pieces)";
 
 const DISPATCH_COLUMNS =
   "id, kind, status, request_id, from_location_id, to_location_id, dispatched_at, dispatched_by, driver_name, from:locations!dispatches_from_location_id_fkey(name, kind), to:locations!dispatches_to_location_id_fkey(name), dispatch_lines(id, product_id, request_line_id, whole_cakes, loose_pieces, qty_pieces, pieces_per_cake_snapshot, dispatch_line_batches(qty_pieces, is_fefo_override, batch:batches(production_date, day_number))), receipts(received_at, received_by, receipt_lines(id, dispatch_line_id, whole_cakes, loose_pieces, qty_pieces, note, resolution, damaged_pieces))";
@@ -253,6 +255,7 @@ export async function loadDocuments(filter: {
       fromName: r.requesting.name,
       toName: r.supplying.name,
       requestingLocationId: r.requesting_location_id,
+      replacesRequestId: r.replaces_request_id,
       isPackaging: r.supplying.kind === "packaging",
       lines: r.stock_request_lines.map((l) => ({
         lineId: l.id,
@@ -503,7 +506,12 @@ export async function ordersOfDay(date: string): Promise<DaySummary> {
   const requests = data.filter(
     (r) => r.supplying.kind === "factory" && businessDate(new Date(r.requested_at)) === date,
   );
-  return summarizeDay(
+  const perBranch = new Map<string, { name: string; count: number }>();
+  for (const r of requests) {
+    const b = perBranch.get(r.requesting_location_id) ?? { name: r.requesting.name, count: 0 };
+    perBranch.set(r.requesting_location_id, { ...b, count: b.count + 1 });
+  }
+  const summary = summarizeDay(
     requests.flatMap((r) =>
       r.stock_request_lines.map((l) => ({
         branchId: r.requesting_location_id,
@@ -515,4 +523,5 @@ export async function ordersOfDay(date: string): Promise<DaySummary> {
     all.filter((p) => p.kind === "cake" || p.kind === "sauce"),
     requests.length,
   );
+  return { ...summary, repeated: [...perBranch.values()].filter((b) => b.count > 1) };
 }

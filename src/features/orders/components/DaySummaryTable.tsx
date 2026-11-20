@@ -56,6 +56,13 @@ export function DaySummaryTable({ summary, date, today, basePath, exportHref }: 
         أي تعديل بالإخراج.
       </p>
 
+      {summary.repeated && summary.repeated.length > 0 && (
+        <p role="note" className="rounded-xl bg-warn-soft px-3 py-2.5 text-sm text-warn-text print:hidden">
+          <span className="font-semibold">انتبه: </span>
+          {summary.repeated.map((b) => `${b.name} بعت ${b.count} طلبات`).join("، ")} بهاليوم، والأرقام هون
+          مجموعهم. إذا في طلب مكرر، احذفه من صفحة الطلب والإخراج.
+        </p>
+      )}
       {rows.length === 0 ? (
         <p className="text-muted">ما في طلبات بهاليوم.</p>
       ) : (

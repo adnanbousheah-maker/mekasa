@@ -18,6 +18,8 @@ export interface DaySummary {
   branches: { id: string; name: string }[];
   rows: { product: DayProduct; byBranch: Map<string, number>; total: number }[];
   requests: number;
+  // فروع بعتت أكثر من طلب بنفس اليوم (الأرقام مجموعهم): اسم الفرع ← عدد الطلبات
+  repeated?: { name: string; count: number }[];
 }
 
 /** الأصناف بترتيب المنيو، والفروع حسب أول ظهور، وبس الأصناف اللي انطلبت. */
