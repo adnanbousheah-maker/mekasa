@@ -45,6 +45,36 @@ test("IT shows the tasks, and the branch sees them", async ({ browser }) => {
   expect(data?.feature_tasks).toBe(true);
 });
 
+test("IT clears the counts of one location only", async ({ browser }) => {
+  const db = serviceClient();
+  const countsAt = async (code: string) => {
+    const { data: loc } = await db.from("locations").select("id").eq("code", code).single();
+    const { count } = await db
+      .from("stock_counts")
+      .select("id", { count: "exact", head: true })
+      .eq("location_id", loc!.id);
+    return count ?? 0;
+  };
+  // الاختبارات اللي قبل عملت جرودات بدابوق (والمصنع)
+  expect(await countsAt("DBQ")).toBeGreaterThan(0);
+  const otherBefore = await countsAt("FAC");
+
+  const it = await browser.newPage({ viewport: { width: 1360, height: 900 } });
+  try {
+    await signInAndWait(it, IT_ADMIN.phone, IT_ADMIN.pin);
+    await it.goto("/admin/it");
+    const section = it.getByRole("region", { name: "تصفير جرودات موقع" });
+    await section.getByRole("combobox").selectOption({ label: "دابوق" });
+    await section.getByRole("textbox").fill("صفّر");
+    await section.getByRole("button", { name: "صفّر جرودات دابوق" }).click();
+    await expect(section.getByRole("status")).toContainText("الجرد الجاي بهالموقع بيصير أول جرد");
+  } finally {
+    await it.close();
+  }
+  expect(await countsAt("DBQ")).toBe(0);
+  expect(await countsAt("FAC")).toBe(otherBefore);
+});
+
 test("IT resets the system: the work is gone, the staff and products stay", async ({ browser, page }) => {
   const db = serviceClient();
   // شي أكيد ينمسح، حتى لو الملف اشتغل لحاله على قاعدة فاضية

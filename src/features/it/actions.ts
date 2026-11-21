@@ -64,3 +64,35 @@ export async function endPreviewAction(confirm: string): Promise<SaveResult> {
   refresh();
   return { status: "done" };
 }
+
+export type LocationResetResult = { status: "error"; message: string } | { status: "done"; message: string };
+
+/** تصفير جرودات موقع واحد (متاح دايماً لـ IT): الجرودات وحركاتها، والمواد الأولية إذا انطلب. */
+export async function resetLocationCountsAction(
+  locationId: string,
+  includeRaw: boolean,
+  confirm: string,
+): Promise<LocationResetResult> {
+  await requireItAdmin();
+  if (confirm.trim() !== RESET_WORD) return { status: "error", message: `اكتب «${RESET_WORD}» بالضبط` };
+  if (!/^[0-9a-f-]{36}$/i.test(locationId)) return { status: "error", message: "اختار الموقع" };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("it_reset_location_counts", {
+    p_location_id: locationId,
+    p_include_raw: includeRaw === true,
+    p_confirm: RESET_WORD,
+  });
+  if (error) {
+    console.error("itResetLocation", error);
+    return {
+      status: "error",
+      message: error.code === "42501" ? "التصفير لسوبر أدمن IT بس" : "ما صار التصفير. جرب كمان مرة.",
+    };
+  }
+  const result = (data ?? {}) as { counts?: number; raw_counts?: number };
+  refresh();
+  return {
+    status: "done",
+    message: `انمسح ${result.counts ?? 0} جرد${includeRaw ? ` و${result.raw_counts ?? 0} جرد مواد` : ""}. الجرد الجاي بهالموقع بيصير أول جرد.`,
+  };
+}

@@ -4078,6 +4078,10 @@ export type Database = {
         Args: { p_lines: Json; p_missing?: Json; p_note?: string; p_request_id: string };
         Returns: string;
       };
+      it_reset_location_counts: {
+        Args: { p_confirm: string; p_include_raw: boolean; p_location_id: string };
+        Returns: Json;
+      };
       it_reset_operations: { Args: { p_confirm: string }; Returns: undefined };
       log_waste: {
         Args: {

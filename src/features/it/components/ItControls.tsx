@@ -4,10 +4,19 @@ import { SavedSwitch } from "@/features/settings/components/SavedSwitch";
 import { endPreviewAction, resetOperationsAction, setFeatureAction } from "../actions";
 import { END_PREVIEW_WORD, RESET_WORD } from "../words";
 import { ConfirmWordAction } from "./ConfirmWordAction";
+import { LocationCountReset } from "./LocationCountReset";
 
 const card = "flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5";
 
-export function ItControls({ previewMode, tasks }: { previewMode: boolean; tasks: boolean }) {
+export function ItControls({
+  previewMode,
+  tasks,
+  locations,
+}: {
+  previewMode: boolean;
+  tasks: boolean;
+  locations: { id: string; name: string; kind: string }[];
+}) {
   return (
     <div className="flex flex-col gap-4">
       <section aria-label="المزايا" className={card}>
@@ -26,6 +35,18 @@ export function ItControls({ previewMode, tasks }: { previewMode: boolean; tasks
             onSave={(next) => setFeatureAction("tasks", next)}
           />
         </div>
+      </section>
+
+      <section aria-label="تصفير جرودات موقع" className={`${card} border-danger-line`}>
+        <h2 className="text-[17px] font-bold text-danger-text">تصفير جرودات موقع</h2>
+        <p className="text-[15px] text-muted">
+          بيمسح كل جرودات موقع واحد وتعديلاتها، فالستوك بالموقع بيرجع لحركاته بس (اللي وصله وطلع منه والتالف)،
+          والجرد الجاي بيصير أول جرد.
+        </p>
+        <p className="text-[15px]">
+          <strong>بيضل:</strong> الطلبات والإخراج والاستلام والإنتاج والتالف، وكل المواقع الثانية.
+        </p>
+        <LocationCountReset locations={locations} />
       </section>
 
       {previewMode ? (
