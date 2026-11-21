@@ -8,6 +8,8 @@ import { ProductName } from "@/components/ui/ProductName";
 import { batchLabel, usesDate } from "@/lib/batch-label";
 import { DAY_NAMES, dayNumberOf, recentDates } from "@/lib/day-number";
 import { submitCountAction } from "../actions";
+import { useCountDraft } from "../draft";
+import { DraftNotice } from "./DraftNotice";
 import type { CountProduct, FactoryBatch } from "../queries";
 import { MAX_COUNT_PIECES, MAX_COUNT_VALUE } from "../schemas";
 
@@ -38,14 +40,34 @@ const keyOf = (r: { productionDate: string; frozen: boolean }) =>
  */
 export function FactoryCountForm({ products, batches, today, scheduleId, startedAt }: Props) {
   const router = useRouter();
-  const [rows, setRows] = useState<BatchRow[]>(() =>
+  const blankRows = (): BatchRow[] =>
     batches.map((b) => ({
       productId: b.productId,
       productionDate: b.productionDate,
       frozen: b.frozen,
       qty: 0,
       isLastDay: b.isLastDay,
-    })),
+    }));
+  const [rows, setRows] = useState<BatchRow[]>(blankRows);
+  // الأرقام بتنحفظ بالجوال: الدفعات الموجودة بتاخذ رقمها، واللي الموظف ضافها بترجع
+  const draft = useCountDraft(
+    "factory",
+    rows,
+    (saved) =>
+      setRows((current) => {
+        const known = new Set(products.map((p) => p.id));
+        const merged = current.map((r) => {
+          const s = saved.find((x) => x.productId === r.productId && keyOf(x) === keyOf(r));
+          return s ? { ...r, qty: s.qty } : r;
+        });
+        const added = saved.filter(
+          (s) =>
+            known.has(s.productId) &&
+            !current.some((r) => r.productId === s.productId && keyOf(r) === keyOf(s)),
+        );
+        return [...merged, ...added];
+      }),
+    startedAt,
   );
   const [picking, setPicking] = useState<string | null>(null);
   // إضافة دفعة مفرّزة: الصنف وتاريخ الإنتاج
@@ -81,7 +103,7 @@ export function FactoryCountForm({ products, batches, today, scheduleId, started
       const byProduct = new Map(products.map((p) => [p.id, p]));
       const result = await submitCountAction({
         scheduleId,
-        startedAt,
+        startedAt: draft.startedAt,
         lines: rows.map((r) => {
           const piecesOnly = byProduct.get(r.productId)?.piecesPerCake === null;
           return {
@@ -94,11 +116,22 @@ export function FactoryCountForm({ products, batches, today, scheduleId, started
         }),
       });
       if (result.status === "error") setError(result.message);
-      else router.replace(`/count/done?id=${result.countId}`);
+      else {
+        draft.clear();
+        router.replace(`/count/done?id=${result.countId}`);
+      }
     });
 
   return (
     <>
+      {draft.restored && (
+        <DraftNotice
+          onDiscard={() => {
+            draft.discard();
+            setRows(blankRows());
+          }}
+        />
+      )}
       <ul className="flex flex-col gap-2.5 pb-36">
         {ordered.map((p) => {
           const productRows = rows

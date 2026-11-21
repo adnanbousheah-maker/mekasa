@@ -1,10 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { Dialog } from "@/components/ui/Dialog";
 import { ProductName } from "@/components/ui/ProductName";
 import { QuantityField } from "@/components/ui/QuantityField";
+import { DraftNotice } from "@/features/counts/components/DraftNotice";
+import { useCountDraft } from "@/features/counts/draft";
 import { submitPackagingCountAction, submitSauceCountAction } from "../actions";
 
 type Item = { id: string; nameEn: string };
@@ -41,6 +43,17 @@ export function PackagingCountForm({
   const [askMissing, setAskMissing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, startTransition] = useTransition();
+  const snapshot = useMemo(() => ({ qty, counted: [...counted] }), [qty, counted]);
+  const draft = useCountDraft(
+    variant,
+    snapshot,
+    (saved) => {
+      const ids = new Set(items.map((i) => i.id));
+      setQty(Object.fromEntries(Object.entries(saved.qty).filter(([id]) => ids.has(id))));
+      setCounted(new Set(saved.counted.filter((id) => ids.has(id))));
+    },
+    startedAt,
+  );
 
   const set = (id: string, value: number) => {
     setQty((q) => ({ ...q, [id]: value }));
@@ -52,15 +65,27 @@ export function PackagingCountForm({
     startTransition(async () => {
       setAskMissing(false);
       const result = await text.submit({
-        startedAt,
+        startedAt: draft.startedAt,
         lines: items.map((i) => ({ productId: i.id, qty: qty[i.id] ?? 0 })),
       });
       if (result.status === "error") setError(result.message);
-      else router.replace(text.doneHref);
+      else {
+        draft.clear();
+        router.replace(text.doneHref);
+      }
     });
 
   return (
     <>
+      {draft.restored && (
+        <DraftNotice
+          onDiscard={() => {
+            draft.discard();
+            setQty({});
+            setCounted(new Set());
+          }}
+        />
+      )}
       <ul className="flex flex-col gap-2.5 pb-44">
         {items.map((i) => {
           const done = counted.has(i.id);

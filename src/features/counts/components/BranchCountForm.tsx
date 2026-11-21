@@ -7,6 +7,8 @@ import { ProductName } from "@/components/ui/ProductName";
 import { Stepper } from "@/components/ui/Stepper";
 import { countPhrase } from "@/lib/units";
 import { submitCountAction } from "../actions";
+import { useCountDraft } from "../draft";
+import { DraftNotice } from "./DraftNotice";
 import type { CountProduct } from "../queries";
 import { countTotals, MAX_COUNT_PIECES, MAX_COUNT_VALUE, type CountLine } from "../schemas";
 
@@ -32,7 +34,7 @@ type Row = { wholeCakes: number; loosePieces: number; unsure: boolean; counted: 
 /** design/branch/CountConfirm: كيكات وقطع لكل صنف، وتأكيد بأسفل الشاشة. */
 export function BranchCountForm({ products, scheduleId, startedAt, initial = {}, photo }: Props) {
   const router = useRouter();
-  const [rows, setRows] = useState<Record<string, Row>>(() =>
+  const blankRows = () =>
     Object.fromEntries(
       products.map((p) => {
         const pre = initial[p.id];
@@ -47,7 +49,20 @@ export function BranchCountForm({ products, scheduleId, startedAt, initial = {},
           },
         ];
       }),
-    ),
+    ) as Record<string, Row>;
+  const [rows, setRows] = useState<Record<string, Row>>(blankRows);
+  // الجرد اليدوي بينحفظ بالجوال وهو عم يعدّ (الجرد بالصورة لأ: الصورة ما بترجع)
+  const draft = useCountDraft(
+    "branch",
+    rows,
+    (saved) =>
+      setRows((current) =>
+        Object.fromEntries(
+          Object.entries(current).map(([id, r]) => [id, saved[id] ? { ...r, ...saved[id] } : r]),
+        ),
+      ),
+    startedAt,
+    !photo,
   );
   const [error, setError] = useState<string | null>(null);
   const [q, setQ] = useState("");
@@ -86,7 +101,7 @@ export function BranchCountForm({ products, scheduleId, startedAt, initial = {},
       setAskMissing(false);
       const result = await submitCountAction({
         scheduleId,
-        startedAt,
+        startedAt: draft.startedAt,
         method: photo ? "photo" : "manual",
         photoPath: photo?.path ?? null,
         formVersionId: photo?.formVersionId ?? null,
@@ -100,12 +115,21 @@ export function BranchCountForm({ products, scheduleId, startedAt, initial = {},
       if (result.status === "error") {
         setError(result.message);
       } else {
+        draft.clear();
         router.replace(`/count/done?id=${result.countId}`);
       }
     });
 
   return (
     <>
+      {draft.restored && (
+        <DraftNotice
+          onDiscard={() => {
+            draft.discard();
+            setRows(blankRows());
+          }}
+        />
+      )}
       {unsureCount > 0 && (
         <div
           role="status"

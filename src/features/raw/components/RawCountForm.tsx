@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Dialog } from "@/components/ui/Dialog";
+import { DraftNotice } from "@/features/counts/components/DraftNotice";
+import { useCountDraft } from "@/features/counts/draft";
 import { submitRawCountAction } from "../actions";
 import type { RawMaterialRow } from "../queries";
 
@@ -14,8 +16,17 @@ type Row = { qty: string; unitId: string | null };
  */
 export function RawCountForm({ materials, startedAt }: { materials: RawMaterialRow[]; startedAt: string }) {
   const router = useRouter();
-  const [rows, setRows] = useState<Record<string, Row>>(() =>
-    Object.fromEntries(materials.map((m) => [m.id, { qty: "", unitId: null }])),
+  const blankRows = () =>
+    Object.fromEntries(materials.map((m) => [m.id, { qty: "", unitId: null }])) as Record<string, Row>;
+  const [rows, setRows] = useState<Record<string, Row>>(blankRows);
+  const draft = useCountDraft(
+    "raw",
+    rows,
+    (saved) =>
+      setRows((current) =>
+        Object.fromEntries(Object.entries(current).map(([id, r]) => [id, saved[id] ?? r])),
+      ),
+    startedAt,
   );
   const [error, setError] = useState<string | null>(null);
   const [missingOpen, setMissingOpen] = useState(false);
@@ -31,7 +42,7 @@ export function RawCountForm({ materials, startedAt }: { materials: RawMaterialR
     startTransition(async () => {
       setMissingOpen(false);
       const result = await submitRawCountAction({
-        startedAt,
+        startedAt: draft.startedAt,
         lines: materials.map((m) =>
           filled.includes(m)
             ? { materialId: m.id, unitId: rows[m.id].unitId, qty: parse(rows[m.id].qty) }
@@ -39,11 +50,22 @@ export function RawCountForm({ materials, startedAt }: { materials: RawMaterialR
         ),
       });
       if (result.status === "error") setError(result.message);
-      else router.replace("/factory/raw?counted=1");
+      else {
+        draft.clear();
+        router.replace("/factory/raw?counted=1");
+      }
     });
 
   return (
     <>
+      {draft.restored && (
+        <DraftNotice
+          onDiscard={() => {
+            draft.discard();
+            setRows(blankRows());
+          }}
+        />
+      )}
       <ul className="flex flex-col gap-2.5 pb-36">
         {materials.map((m) => (
           <li

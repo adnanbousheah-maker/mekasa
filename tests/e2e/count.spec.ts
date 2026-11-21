@@ -19,6 +19,10 @@ test("a branch employee counts by hand and the stock follows the count", async (
   await expect(tiramisu.getByText("قطع (قطع بس)")).toBeVisible();
   await tiramisu.getByRole("button", { name: "زيد قطعة Tiramisu" }).click();
 
+  // الصفحة تحدّثت بنص الجرد: الأرقام بترجع
+  await page.reload();
+  await expect(page.getByText("رجّعنا الأرقام اللي كنت كاتبها")).toBeVisible();
+  await expect(choco.getByRole("textbox", { name: "كيكات" })).toHaveValue("2");
   await expect(page.getByText("عدّيت 2 من 20 · كيكتين · قطعتين")).toBeVisible();
   await expect(choco.getByText("✓ انعدّ")).toBeVisible();
   await page.getByRole("button", { name: "تأكيد الجرد" }).click();
