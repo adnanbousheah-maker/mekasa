@@ -66,8 +66,15 @@ test("IT clears the counts of one location only", async ({ browser }) => {
     const section = it.getByRole("region", { name: "تصفير جرودات موقع" });
     await section.getByRole("combobox").selectOption({ label: "دابوق" });
     await section.getByRole("textbox").fill("صفّر");
-    await section.getByRole("button", { name: "صفّر جرودات دابوق" }).click();
-    await expect(section.getByRole("status")).toContainText("الجرد الجاي بهالموقع بيصير أول جرد");
+    await section.getByRole("button", { name: "صفّر جرد الكيك والصوصات بـدابوق" }).click();
+    await expect(section.getByRole("status")).toContainText("الجرد الجاي بيصير أول جرد");
+
+    // بالمصنع: المواد الأولية بس، وجرد الكيك بيضل
+    await section.getByRole("combobox").selectOption({ label: "المصنع" });
+    await section.getByRole("radio", { name: "جرد المواد الأولية بس" }).check();
+    await section.getByRole("textbox").fill("صفّر");
+    await section.getByRole("button", { name: "صفّر جرد المواد الأولية بـالمصنع" }).click();
+    await expect(section.getByRole("status")).toContainText("جرد مواد أولية");
   } finally {
     await it.close();
   }

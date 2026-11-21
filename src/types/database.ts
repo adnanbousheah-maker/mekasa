@@ -4079,7 +4079,7 @@ export type Database = {
         Returns: string;
       };
       it_reset_location_counts: {
-        Args: { p_confirm: string; p_include_raw: boolean; p_location_id: string };
+        Args: { p_confirm: string; p_location_id: string; p_scope: string };
         Returns: Json;
       };
       it_reset_operations: { Args: { p_confirm: string }; Returns: undefined };

@@ -1,18 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { resetLocationCountsAction } from "../actions";
+import { resetLocationCountsAction, type ResetScope } from "../actions";
 import { RESET_WORD } from "../words";
 import { ConfirmWordAction } from "./ConfirmWordAction";
 
 type Location = { id: string; name: string; kind: string };
 
-/** تصفير جرودات موقع واحد: بتختار الموقع، والمصنع فيه خيار المواد الأولية كمان. */
+const SCOPES: { value: ResetScope; label: string; button: string }[] = [
+  { value: "stock", label: "جرد الكيك والصوصات", button: "صفّر جرد الكيك والصوصات" },
+  { value: "raw", label: "جرد المواد الأولية بس", button: "صفّر جرد المواد الأولية" },
+  { value: "both", label: "الاثنين", button: "صفّر كل الجرودات" },
+];
+
+/** تصفير جرودات موقع واحد. بالمصنع بتختار: الكيك والصوصات، أو المواد الأولية بس، أو الاثنين. */
 export function LocationCountReset({ locations }: { locations: Location[] }) {
   const [locationId, setLocationId] = useState("");
-  const [includeRaw, setIncludeRaw] = useState(false);
+  const [scope, setScope] = useState<ResetScope>("stock");
   const location = locations.find((l) => l.id === locationId) ?? null;
   const isFactory = location?.kind === "factory";
+  const effective: ResetScope = isFactory ? scope : "stock";
+  const chosen = SCOPES.find((s) => s.value === effective)!;
 
   return (
     <div className="flex flex-col gap-3">
@@ -22,7 +30,7 @@ export function LocationCountReset({ locations }: { locations: Location[] }) {
           value={locationId}
           onChange={(e) => {
             setLocationId(e.target.value);
-            setIncludeRaw(false);
+            setScope("stock");
           }}
           className="h-12 rounded-xl border border-line bg-surface px-3 text-base"
         >
@@ -35,24 +43,31 @@ export function LocationCountReset({ locations }: { locations: Location[] }) {
         </select>
       </label>
       {isFactory && (
-        <label className="flex min-h-12 items-center gap-3">
-          <input
-            type="checkbox"
-            checked={includeRaw}
-            onChange={(e) => setIncludeRaw(e.target.checked)}
-            className="size-6"
-          />
-          <span className="text-[15px]">ومعها جرد المواد الأولية</span>
-        </label>
+        <fieldset className="flex flex-col gap-1">
+          <legend className="mb-1 text-sm text-muted">شو بدك تصفّر؟</legend>
+          {SCOPES.map((s) => (
+            <label key={s.value} className="flex min-h-12 items-center gap-3">
+              <input
+                type="radio"
+                name="reset-scope"
+                value={s.value}
+                checked={scope === s.value}
+                onChange={() => setScope(s.value)}
+                className="size-6"
+              />
+              <span className="text-[15px]">{s.label}</span>
+            </label>
+          ))}
+        </fieldset>
       )}
       {location && (
         <ConfirmWordAction
-          key={`${location.id}-${includeRaw}`}
+          key={`${location.id}-${effective}`}
           word={RESET_WORD}
           label="ما في رجعة. للتأكيد"
-          buttonLabel={`صفّر جرودات ${location.name}`}
+          buttonLabel={`${chosen.button} بـ${location.name}`}
           doneMessage="انصفّرت الجرودات"
-          onConfirm={(word) => resetLocationCountsAction(location.id, isFactory && includeRaw, word)}
+          onConfirm={(word) => resetLocationCountsAction(location.id, effective, word)}
         />
       )}
     </div>

@@ -20,17 +20,17 @@ select public.submit_count(tests.location('JBH'),
 -- الأدمن العادي ما بيقدر
 select tests.authenticate_as('9f9f9f9f-0000-4000-8000-000000000002');
 select throws_ok(
-  format($$ select public.it_reset_location_counts(%L, false, 'صفّر') $$, tests.location('SWF')),
+  format($$ select public.it_reset_location_counts(%L, 'stock', 'صفّر') $$, tests.location('SWF')),
   '42501', null, 'only IT can reset a location''s counts'
 );
 
 select tests.authenticate_as('9f9f9f9f-0000-4000-8000-000000000001');
 select throws_ok(
-  format($$ select public.it_reset_location_counts(%L, false, 'لا') $$, tests.location('SWF')),
+  format($$ select public.it_reset_location_counts(%L, 'stock', 'لا') $$, tests.location('SWF')),
   '23514', null, 'the confirmation word is needed'
 );
 select is(
-  public.it_reset_location_counts(tests.location('SWF'), false, 'صفّر') ->> 'counts',
+  public.it_reset_location_counts(tests.location('SWF'), 'stock', 'صفّر') ->> 'counts',
   '2', 'it says how many counts were cleared'
 );
 
@@ -70,6 +70,30 @@ select is(
   (select sum(qty_pieces)::int from public.stock_movements where location_id = tests.location('SWF')),
   50, 'and sets the stock'
 );
+
+-- المواد الأولية بس بالمصنع: جرودات الكيك بالمصنع بتضل
+select tests.create_staff('9f9f9f9f-0000-4000-8000-000000000005', 'أمين', '962791190005', 'FAC', '{storekeeper}');
+select tests.authenticate_as('9f9f9f9f-0000-4000-8000-000000000005');
+select public.submit_count(tests.location('FAC'),
+  format('[{"product_id": "%s", "production_date": "%s", "whole_cakes": 1}]', tests.product('Flan'), public.amman_today())::jsonb);
+select public.submit_raw_count(
+  (select jsonb_agg(jsonb_build_object('material_id', m.id, 'qty', 5)) from (select id from public.raw_materials limit 1) m));
+select tests.authenticate_as('9f9f9f9f-0000-4000-8000-000000000001');
+select throws_ok(
+  format($$ select public.it_reset_location_counts(%L, 'all', 'صفّر') $$, tests.location('FAC')),
+  '23514', null, 'the scope must be stock, raw or both'
+);
+select is(
+  public.it_reset_location_counts(tests.location('FAC'), 'raw', 'صفّر') ->> 'raw_counts',
+  '1', 'only the raw counts are cleared'
+);
+select tests.as_postgres();
+select is((select count(*)::int from public.raw_counts where location_id = tests.location('FAC')), 0, 'no raw counts left');
+select is(
+  (select coalesce(sum(qty_base), 0)::int from public.raw_movements where location_id = tests.location('FAC')),
+  0, 'the raw stock from the count is gone'
+);
+select is((select count(*)::int from public.stock_counts where location_id = tests.location('FAC')), 1, 'the cake count stays');
 
 select * from finish();
 rollback;
