@@ -29,7 +29,12 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="ar" dir="rtl" className={`${plexArabic.variable} ${jost.variable} h-full antialiased`}>
+    <html
+      lang="ar"
+      dir="rtl"
+      translate="no"
+      className={`${plexArabic.variable} ${jost.variable} h-full antialiased`}
+    >
       <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
