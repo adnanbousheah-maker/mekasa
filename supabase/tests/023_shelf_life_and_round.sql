@@ -49,7 +49,8 @@ select lives_ok(
       'lines', jsonb_build_array(jsonb_build_object('product_id', tests.product('Flan'), 'whole_cakes', 4,
         'request_line_id', (select l.id from public.stock_request_lines l where l.request_id = (select id from ids where name = 'swf'))))),
     jsonb_build_object('request_id', (select id from ids where name = 'jbh'),
-      'lines', jsonb_build_array(jsonb_build_object('product_id', tests.product('Flan'), 'whole_cakes', 2))))),
+      'lines', jsonb_build_array(jsonb_build_object('product_id', tests.product('Flan'), 'whole_cakes', 2,
+        'request_line_id', (select l.id from public.stock_request_lines l where l.request_id = (select id from ids where name = 'jbh'))))))),
   'the dispatcher sends both requests in one round'
 );
 

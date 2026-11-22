@@ -101,6 +101,14 @@ export function StaffHome({
 
       {atFactory && <FactoryTasks staff={staff} data={factory} />}
       {atBranch && <BranchTasks data={branch} />}
+      {atFactory && staff.roles.includes("factory_manager") && (
+        <Link
+          href="/factory/report"
+          className="flex h-14 items-center justify-center gap-2 rounded-[14px] border border-line bg-surface text-base font-semibold"
+        >
+          تقرير المصنع
+        </Link>
+      )}
       {atBranch && staff.roles.includes("branch_manager") && (
         <Link
           href="/branch"

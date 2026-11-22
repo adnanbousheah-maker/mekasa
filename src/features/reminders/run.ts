@@ -6,6 +6,13 @@ import { pendingAlerts, slotStatus, slotTime, type PendingAlert, type ReminderSe
 import { sendPushToStaff } from "./push";
 import { countReminderMessage, monthlyCountMessage } from "./subscription";
 
+// مسؤول الفرع بيوصله نفس تنبيهات موظفين فرعه، ومسؤول المصنع تنبيهات أمين المستودع والإخراج
+function withManagers(role: "branch_staff" | "storekeeper" | "dispatcher" | "packaging_keeper") {
+  if (role === "branch_staff") return ["branch_staff", "branch_manager"] as const;
+  if (role === "storekeeper" || role === "dispatcher") return [role, "factory_manager"] as const;
+  return [role] as const;
+}
+
 export interface ReminderRun {
   sent: { kind: string; scheduleId: string; recipients: number }[];
 }
@@ -108,8 +115,7 @@ async function sendCountAlert(
     .select("id, staff_roles!staff_roles_staff_id_fkey!inner(role)")
     .eq("is_active", true)
     .eq("location_id", alert.schedule.locationId)
-    // مسؤول الفرع بيوصله نفس تنبيهات موظفين فرعه
-    .in("staff_roles.role", role === "branch_staff" ? ["branch_staff", "branch_manager"] : [role]);
+    .in("staff_roles.role", withManagers(role));
   if (staffError) throw new Error(staffError.message);
   const admins = alert.kind === "count_late" ? await activeAdmins(db) : [];
   const adminIds = new Set(admins);
@@ -194,8 +200,7 @@ async function alertMonthlyCounts(
       .from("staff")
       .select("id, staff_roles!staff_roles_staff_id_fkey!inner(role)")
       .eq("is_active", true)
-      // مسؤول الفرع بيوصله نفس تنبيهات موظفين فرعه
-      .in("staff_roles.role", role === "branch_staff" ? ["branch_staff", "branch_manager"] : [role]);
+      .in("staff_roles.role", withManagers(role));
     // أمين التغليف وين ما كان، والباقي بموقعه
     if (role !== "packaging_keeper") query = query.eq("location_id", m.location_id);
     const { data: staff } = await query;

@@ -295,6 +295,8 @@ export const createDispatchSchema = z.object({
   confirmFefoOverride: z.boolean().default(false),
   // اسم السائق (اختياري): بيطلع مع التوالف وقت الاستلام
   driverName: z.string().trim().max(60).default(""),
+  // الطلب طلع جزء منه والباقي ما رح يطلع: بيتسكّر (بدونها بيضل مفتوح لآخر اليوم)
+  closeRequest: z.boolean().default(false),
 });
 
 export const receiveSchema = z.object({

@@ -49,7 +49,7 @@ export async function pendingPackagingRequests(storeId: string): Promise<number>
     .from("stock_requests")
     .select("id", { count: "exact", head: true })
     .eq("supplying_location_id", storeId)
-    .eq("status", "sent");
+    .in("status", ["sent", "partial"]);
   if (error) throw new Error(`Could not load packaging requests: ${error.message}`);
   return count ?? 0;
 }

@@ -8,8 +8,10 @@ import { RoundForm } from "@/features/orders/components/RoundForm";
 import {
   allActiveProducts,
   factoryBatchStock,
+  factoryDispatchWithoutStock,
   factoryLoosePiecesEnabled,
   loadDocuments,
+  openForDispatch,
 } from "@/features/orders/queries";
 
 // توزيع اليوم: كل طلبات الفروع مرة وحدة، والقديم بالعدل
@@ -27,15 +29,17 @@ async function Round() {
     return <NotForYou title="توزيع اليوم" text="التوزيع لموظف الإخراج بالمصنع." />;
   }
   await connection();
-  const [{ requests }, batches, products, piecesEnabled] = await Promise.all([
+  const [{ requests: loaded }, batches, products, piecesEnabled, allowShort] = await Promise.all([
     loadDocuments({
-      requests: { supplyingLocationId: staff.location.id, statuses: ["sent"] },
+      requests: { supplyingLocationId: staff.location.id, statuses: ["sent", "partial"] },
       sinceDays: 14,
     }),
     factoryBatchStock(staff.location.id),
     allActiveProducts(["cake", "sauce"]),
     factoryLoosePiecesEnabled(),
+    factoryDispatchWithoutStock(),
   ]);
+  const requests = openForDispatch(loaded, new Date());
   const sizes = Object.fromEntries(products.map((p) => [p.id, p.piecesPerCake]));
 
   return (
@@ -53,6 +57,7 @@ async function Round() {
           sizes={sizes}
           sauces={products.filter((p) => p.kind === "sauce").map((p) => p.id)}
           cakesOnly={!piecesEnabled}
+          allowShort={allowShort}
         />
       )}
     </StaffScreen>

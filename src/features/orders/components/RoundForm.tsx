@@ -20,6 +20,7 @@ export function RoundForm({
   sizes,
   sauces = [],
   cakesOnly = false,
+  allowShort = false,
 }: {
   requests: RequestDoc[];
   batches: FactoryBatchStock[];
@@ -29,6 +30,8 @@ export function RoundForm({
   sizes: Record<string, number | null>;
   // الصوصات بتطلع باللتر، بدون دفعات
   sauces?: string[];
+  // إعداد: المصنع بيطلّع حتى لو الستوك ما بيكفي (الناقص من دفعة اليوم)
+  allowShort?: boolean;
 }) {
   const isSauce = (productId: string) => sauces.includes(productId);
   const router = useRouter();
@@ -180,9 +183,9 @@ export function RoundForm({
           {short.size > 0 && (
             <p
               role="alert"
-              className="rounded-xl bg-danger-soft px-3 py-2 text-center text-sm text-danger-text"
+              className={`rounded-xl px-3 py-2 text-center text-sm ${allowShort ? "bg-warn-soft text-warn-text" : "bg-danger-soft text-danger-text"}`}
             >
-              ستوك المصنع ما بيكفي:{" "}
+              {allowShort ? "الناقص بيطلع على دفعة اليوم:" : "ستوك المصنع ما بيكفي:"}{" "}
               {[...short.entries()]
                 .map(([productId, missing]) => {
                   const line = requests.flatMap((r) => r.lines).find((l) => l.productId === productId)!;
@@ -201,7 +204,7 @@ export function RoundForm({
           )}
           <button
             type="button"
-            disabled={isSaving || short.size > 0}
+            disabled={isSaving || (short.size > 0 && !allowShort)}
             onClick={confirm}
             className="h-14 rounded-[14px] bg-ink text-lg font-semibold text-white disabled:opacity-40"
           >

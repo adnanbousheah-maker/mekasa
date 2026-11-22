@@ -5,6 +5,16 @@ import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
 
+function withImpliedRoles(roles: AppRole[]): AppRole[] {
+  const all = new Set(roles);
+  if (all.has("branch_manager")) all.add("branch_staff");
+  if (all.has("factory_manager")) {
+    all.add("storekeeper");
+    all.add("dispatcher");
+  }
+  return [...all];
+}
+
 export type AppRole = Database["public"]["Enums"]["app_role"];
 export type LocationKind = Database["public"]["Enums"]["location_kind"];
 
@@ -42,11 +52,8 @@ export const getCurrentStaff = cache(async (): Promise<CurrentStaff | null> => {
   return {
     id: data.id,
     fullName: data.full_name,
-    // مسؤول الفرع بيعمل كل شغل موظف الفرع (نفس has_role بقاعدة البيانات)
-    roles:
-      roles.includes("branch_manager") && !roles.includes("branch_staff")
-        ? [...roles, "branch_staff"]
-        : roles,
+    // مسؤول الفرع بيعمل كل شغل موظف الفرع، ومسؤول المصنع شغل أمين المستودع والإخراج (نفس has_role)
+    roles: withImpliedRoles(roles),
     location: data.location,
   };
 });

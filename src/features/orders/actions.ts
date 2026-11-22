@@ -2,7 +2,8 @@
 
 import { refresh } from "next/cache";
 import { z } from "zod";
-import { requireAdmin, requireStaff } from "@/features/auth/session";
+import { requireAdmin, requireManager, requireStaff } from "@/features/auth/session";
+import type { SaveResult } from "@/features/settings/actions";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/types/database";
 import {
@@ -142,8 +143,27 @@ export async function createDispatchAction(input: CreateDispatchInput): Promise<
     if (error.hint !== "fefo_override") console.error("createDispatch", error);
     return messageFor(error);
   }
+  if (d.closeRequest && d.requestId) {
+    // إذا كل الطلب طلع، الطلب مش "طلع جزء" والتسكير ما إله لزوم
+    const { error: closeError } = await supabase.rpc("close_request", { p_request_id: d.requestId });
+    if (closeError && closeError.code !== "23514") console.error("closeRequest", closeError);
+  }
   refresh();
   return { status: "done", id: data };
+}
+
+/** "سكّر الطلب": اللي ضل من طلب طلع جزء منه ما رح يطلع. */
+export async function closeRequestAction(requestId: string): Promise<OrderResult> {
+  await requireStaff();
+  if (!/^[0-9a-f-]{36}$/i.test(requestId)) return { status: "error", message: "الطلب مش موجود" };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("close_request", { p_request_id: requestId });
+  if (error) {
+    console.error("closeRequest", error);
+    return error.code === "23514" ? { status: "error", message: "هالطلب مش مفتوح" } : messageFor(error);
+  }
+  refresh();
+  return { status: "done", id: requestId };
 }
 
 /** توزيع اليوم: كل الطلبات مرة وحدة، والقديم بيتوزع بالعدل (dispatch_round). */
@@ -304,4 +324,18 @@ export async function decideReturnAction(input: z.input<typeof returnSchema>): P
   if (error) return messageFor(error);
   refresh();
   return { status: "done", id: data };
+}
+
+/** إعداد التطليع بدون ستوك: الأدمن أو المدير العام (قاعدة البيانات بتفحص كمان). */
+export async function setDispatchWithoutStockAction(on: boolean): Promise<SaveResult> {
+  await requireManager();
+  if (typeof on !== "boolean") return { status: "error", message: "القيمة مش صحيحة" };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_factory_dispatch_without_stock", { p_on: on });
+  if (error) {
+    console.error("setDispatchWithoutStock", error);
+    return { status: "error", message: error.code === "42501" ? "ما إلك صلاحية" : "ما انحفظ" };
+  }
+  refresh();
+  return { status: "done" };
 }

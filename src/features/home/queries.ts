@@ -68,7 +68,8 @@ export async function factoryHomeData(factoryId: string): Promise<FactoryHomeDat
         .from("stock_requests")
         .select("id", { count: "exact", head: true })
         .eq("supplying_location_id", factoryId)
-        .eq("status", "sent"),
+        // الجديدة واللي طلع منها جزء (الباقي بيطلع بدفعة ثانية)
+        .in("status", ["sent", "partial"]),
       supabase
         .from("v_factory_batches")
         .select("product_id, day_number, production_date, shelf_life_days, qty_pieces, is_frozen")

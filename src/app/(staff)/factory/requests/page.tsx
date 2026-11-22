@@ -4,9 +4,10 @@ import { Suspense } from "react";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { StaffLoading, StaffScreen } from "@/components/ui/StaffScreen";
 import { requireStaff } from "@/features/auth/session";
+import { CloseRequestButton } from "@/features/orders/components/CloseRequestButton";
 import { NotForYou, STATUS_TONES } from "@/features/orders/components/OrderBits";
 import { linesSummary } from "@/features/orders/logic";
-import { loadDocuments } from "@/features/orders/queries";
+import { loadDocuments, openForDispatch } from "@/features/orders/queries";
 import { createClient } from "@/lib/supabase/server";
 import { formatClock } from "@/lib/time";
 
@@ -30,12 +31,16 @@ async function Requests() {
   await connection();
   const factoryId = staff.location.id;
   const supabase = await createClient();
-  const [{ requests }, { dispatches }, { data: settings }, { data: bins }] = await Promise.all([
-    loadDocuments({ requests: { supplyingLocationId: factoryId, statuses: ["sent"] }, sinceDays: 14 }),
+  const [{ requests: loaded }, { dispatches }, { data: settings }, { data: bins }] = await Promise.all([
+    loadDocuments({
+      requests: { supplyingLocationId: factoryId, statuses: ["sent", "partial"] },
+      sinceDays: 14,
+    }),
     loadDocuments({ dispatches: { fromLocationId: factoryId, statuses: ["in_transit"] }, sinceDays: 14 }),
     supabase.from("app_settings").select("unreceived_alert_hours").single(),
     supabase.from("locations").select("id").eq("kind", "returns_bin").eq("parent_location_id", factoryId),
   ]);
+  const requests = openForDispatch(loaded, new Date());
   const returns = bins?.length
     ? (
         await loadDocuments({
@@ -72,6 +77,13 @@ async function Requests() {
               <span className="text-[17px] font-bold">فرع {r.fromName}</span>
               <span className="text-sm text-muted">{formatClock(new Date(r.requestedAt))}</span>
             </div>
+            {r.status === "partial" && (
+              <span
+                className={`self-start rounded-[10px] px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONES.partial}`}
+              >
+                طلع جزء · الباقي
+              </span>
+            )}
             <span className="text-sm text-muted">
               {linesSummary(r.lines, r.isPackaging)} · طلبها {r.requestedBy}
             </span>
@@ -80,8 +92,11 @@ async function Requests() {
                 href={`/factory/dispatch?request=${r.id}`}
                 className="flex h-12 items-center justify-center rounded-xl bg-ink font-semibold text-white"
               >
-                ابدأ الإخراج
+                {r.status === "partial" ? "طلّع الباقي" : "ابدأ الإخراج"}
               </Link>
+            )}
+            {isDispatcher && r.status === "partial" && (
+              <CloseRequestButton requestId={r.id} branchName={r.fromName} />
             )}
           </li>
         ))}

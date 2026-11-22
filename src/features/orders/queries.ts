@@ -125,7 +125,7 @@ export interface DocLine {
 
 export interface RequestDoc {
   id: string;
-  status: "pending_approval" | "sent" | "dispatched" | "received" | "cancelled";
+  status: "pending_approval" | "sent" | "partial" | "dispatched" | "received" | "cancelled";
   requestedAt: string;
   requestedBy: string;
   fromName: string;
@@ -135,7 +135,8 @@ export interface RequestDoc {
   replacesRequestId: string | null;
   // طلب من مستودع التغليف
   isPackaging: boolean;
-  lines: (DocLine & { lineId: string; suggestedPieces: number | null })[];
+  // dispatchedPieces: اللي طلع من هالسطر لحد هلا (الطلب ممكن يطلع على دفعتين)
+  lines: (DocLine & { lineId: string; suggestedPieces: number | null; dispatchedPieces: number })[];
   // أصناف كانت مقترحة والفرع بعت بدونها
   missing: {
     productId: string;
@@ -180,7 +181,7 @@ export interface DispatchDoc {
 }
 
 const REQUEST_COLUMNS =
-  "id, status, requested_at, requested_by, requesting_location_id, replaces_request_id, requesting:locations!stock_requests_requesting_location_id_fkey(name), supplying:locations!stock_requests_supplying_location_id_fkey(name, kind), stock_request_lines(id, product_id, whole_cakes, loose_pieces, qty_pieces, pieces_per_cake_snapshot, suggested_pieces), stock_request_missing(product_id, suggested_pieces)";
+  "id, status, requested_at, requested_by, requesting_location_id, replaces_request_id, requesting:locations!stock_requests_requesting_location_id_fkey(name), supplying:locations!stock_requests_supplying_location_id_fkey(name, kind), stock_request_lines(id, product_id, whole_cakes, loose_pieces, qty_pieces, pieces_per_cake_snapshot, suggested_pieces, dispatch_lines(qty_pieces, dispatch:dispatches(status))), stock_request_missing(product_id, suggested_pieces)";
 
 const DISPATCH_COLUMNS =
   "id, kind, status, request_id, from_location_id, to_location_id, dispatched_at, dispatched_by, driver_name, from:locations!dispatches_from_location_id_fkey(name, kind), to:locations!dispatches_to_location_id_fkey(name), dispatch_lines(id, product_id, request_line_id, whole_cakes, loose_pieces, qty_pieces, pieces_per_cake_snapshot, dispatch_line_batches(qty_pieces, is_fefo_override, batch:batches(production_date, day_number))), receipts(received_at, received_by, receipt_lines(id, dispatch_line_id, whole_cakes, loose_pieces, qty_pieces, note, resolution, damaged_pieces))";
@@ -267,6 +268,9 @@ export async function loadDocuments(filter: {
         loosePieces: l.loose_pieces,
         qtyPieces: l.qty_pieces ?? 0,
         suggestedPieces: l.suggested_pieces,
+        dispatchedPieces: l.dispatch_lines
+          .filter((d) => d.dispatch?.status !== "cancelled")
+          .reduce((s, d) => s + (d.qty_pieces ?? 0), 0),
       })),
       missing: r.stock_request_missing.map((m) => ({
         productId: m.product_id,
@@ -383,6 +387,14 @@ export async function factoryLoosePiecesEnabled(): Promise<boolean> {
   const supabase = await createClient();
   const { data } = await supabase.from("app_settings").select("factory_loose_pieces_enabled").single();
   return data?.factory_loose_pieces_enabled ?? true;
+}
+
+/** إعداد (الأدمن أو المدير العام): المصنع بيطلّع حتى لو الستوك ما بيكفي، والناقص من دفعة اليوم. */
+export async function factoryDispatchWithoutStock(): Promise<boolean> {
+  await requireStaff();
+  const supabase = await createClient();
+  const { data } = await supabase.from("app_settings").select("factory_dispatch_without_stock").single();
+  return data?.factory_dispatch_without_stock ?? false;
 }
 
 export interface Destination {
@@ -531,4 +543,38 @@ export async function ordersOfDay(date: string): Promise<DaySummary> {
     requests.length,
   );
   return { ...summary, repeated: [...perBranch.values()].filter((b) => b.count > 1) };
+}
+
+/**
+ * الطلبات اللي بتستنى إخراج: الجديدة، واللي طلع منها جزء اليوم (الباقي بيضل مفتوح لآخر يوم الطلب).
+ * أسطر اللي طلع منها جزء بتصير الباقي بس، واللي خلص بينشال.
+ */
+export function openForDispatch(requests: RequestDoc[], now: Date): RequestDoc[] {
+  const today = businessDate(now);
+  return requests
+    .filter(
+      (r) =>
+        r.status === "sent" || (r.status === "partial" && businessDate(new Date(r.requestedAt)) === today),
+    )
+    .map((r) =>
+      r.status === "sent"
+        ? r
+        : {
+            ...r,
+            lines: r.lines.flatMap((l) => {
+              const left = l.qtyPieces - l.dispatchedPieces;
+              if (left <= 0) return [];
+              const ppc = l.piecesPerCake;
+              return [
+                {
+                  ...l,
+                  qtyPieces: left,
+                  wholeCakes: ppc ? Math.floor(left / ppc) : 0,
+                  loosePieces: ppc ? left % ppc : left,
+                },
+              ];
+            }),
+          },
+    )
+    .filter((r) => r.lines.length > 0);
 }

@@ -6,6 +6,7 @@ export type Role =
   | "general_manager"
   | "branch_manager"
   | "branch_staff"
+  | "factory_manager"
   | "dispatcher"
   | "storekeeper"
   | "packaging_keeper"
@@ -16,6 +17,7 @@ export type LocationKind = "factory" | "branch" | "returns_bin" | "packaging";
 export const ROLES: readonly Role[] = [
   "branch_staff",
   "branch_manager",
+  "factory_manager",
   "dispatcher",
   "storekeeper",
   "packaging_keeper",
@@ -28,6 +30,7 @@ export const ROLE_LABELS: Readonly<Record<Role, string>> = {
   general_manager: "المدير العام",
   branch_manager: "مسؤول فرع",
   branch_staff: "موظف فرع",
+  factory_manager: "مسؤول المصنع",
   dispatcher: "الإخراج",
   storekeeper: "أمين المستودع",
   packaging_keeper: "أمين التغليف",
@@ -38,6 +41,7 @@ export const ROLE_DESCRIPTIONS: Readonly<Record<Role, string>> = {
   branch_staff: "جرد، طلب، استلام، تالف. بفرعه بس.",
   branch_manager: "كل شغل موظف الفرع، وبيشوف تقرير فرعه وبيوصله تنبيهاته.",
   general_manager: "بيشوف كل لوحة الإدارة والتقارير والمساعد، بدون تعديل.",
+  factory_manager: "كل شغل أمين المستودع والإخراج، وبيشوف تقرير المصنع وجروداته.",
   dispatcher: "طلبات الفروع، الإخراج والتحويل، اختيار الدفعات.",
   storekeeper: "الإنتاج، المواد الأولية، جرد المصنع.",
   packaging_keeper: "مستودع التغليف: طلبات الفروع، الإخراج، الجرد. بينعطى لموظف بأي موقع.",
@@ -51,6 +55,7 @@ const REQUIRED_KIND: Readonly<
 > = {
   branch_staff: "branch",
   branch_manager: "branch",
+  factory_manager: "factory",
   dispatcher: "factory",
   storekeeper: "factory",
   packaging_keeper: null,

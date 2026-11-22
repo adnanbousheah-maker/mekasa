@@ -4,7 +4,12 @@ import { StaffLoading, StaffScreen } from "@/components/ui/StaffScreen";
 import { requireStaff } from "@/features/auth/session";
 import { DispatchForm } from "@/features/orders/components/DispatchForm";
 import { NotForYou } from "@/features/orders/components/OrderBits";
-import { allActiveProducts, destinationsFrom, loadDocuments } from "@/features/orders/queries";
+import {
+  allActiveProducts,
+  destinationsFrom,
+  loadDocuments,
+  openForDispatch,
+} from "@/features/orders/queries";
 import { isPackagingKeeper, packagingStore } from "@/features/packaging/queries";
 import { formatClock } from "@/lib/time";
 
@@ -34,12 +39,12 @@ async function PackagingDispatch({ searchParams }: { searchParams: SearchParams 
     destinationsFrom({ id: store.id, kind: "packaging" }),
     requestId
       ? loadDocuments({
-          requests: { ids: [requestId], supplyingLocationId: store.id, statuses: ["sent"] },
+          requests: { ids: [requestId], supplyingLocationId: store.id, statuses: ["sent", "partial"] },
           sinceDays: 30,
         })
       : null,
   ]);
-  const request = docs?.requests[0] ?? null;
+  const request = docs ? (openForDispatch(docs.requests, new Date())[0] ?? null) : null;
   if (requestId && !request) return <NotForYou title="إخراج تغليف" text="هالطلب طلع قبل أو انلغى." />;
 
   return (

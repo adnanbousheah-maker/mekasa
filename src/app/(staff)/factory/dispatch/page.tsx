@@ -8,8 +8,10 @@ import {
   allActiveProducts,
   destinationsFrom,
   factoryBatchStock,
+  factoryDispatchWithoutStock,
   factoryLoosePiecesEnabled,
   loadDocuments,
+  openForDispatch,
 } from "@/features/orders/queries";
 import { formatClock } from "@/lib/time";
 
@@ -32,14 +34,17 @@ async function Dispatch({ searchParams }: { searchParams: SearchParams }) {
     return <NotForYou title="إخراج" text="الإخراج لموظف الإخراج بالمصنع." />;
   }
   const requestId = typeof requestParam === "string" && UUID.test(requestParam) ? requestParam : null;
-  const [products, destinations, batches, piecesEnabled, docs] = await Promise.all([
+  const [products, destinations, batches, piecesEnabled, allowShort, docs] = await Promise.all([
     allActiveProducts(["cake", "sauce"]),
     destinationsFrom(staff.location),
     factoryBatchStock(staff.location.id),
     factoryLoosePiecesEnabled(),
-    requestId ? loadDocuments({ requests: { ids: [requestId], statuses: ["sent"] }, sinceDays: 30 }) : null,
+    factoryDispatchWithoutStock(),
+    requestId
+      ? loadDocuments({ requests: { ids: [requestId], statuses: ["sent", "partial"] }, sinceDays: 30 })
+      : null,
   ]);
-  const request = docs?.requests[0] ?? null;
+  const request = docs ? (openForDispatch(docs.requests, new Date())[0] ?? null) : null;
   if (requestId && !request) return <NotForYou title="إخراج" text="هالطلب طلع قبل أو انلغى." />;
 
   return (
@@ -61,6 +66,7 @@ async function Dispatch({ searchParams }: { searchParams: SearchParams }) {
         requestId={request?.id ?? null}
         batches={batches}
         cakesOnly={!piecesEnabled}
+        allowShort={allowShort}
         doneHref="/factory/requests"
         initialLines={(request?.lines ?? []).map((l) => ({
           productId: l.productId,

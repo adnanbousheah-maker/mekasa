@@ -4,7 +4,8 @@ select no_plan();
 
 select results_eq(
   $$ select jobname, schedule from cron.job where jobname like 'mekasa-%' order by jobname $$,
-  $$ values ('mekasa-login-attempts-cleanup', '17 3 * * *'), ('mekasa-reminders', '* * * * *') $$,
+  $$ values ('mekasa-close-partial-requests', '7 22 * * *'), ('mekasa-login-attempts-cleanup', '17 3 * * *'),
+            ('mekasa-reminders', '* * * * *') $$,
   'the reminder and cleanup jobs are scheduled'
 );
 select ok(not has_function_privilege('authenticated', 'private.call_reminders()', 'execute'), 'staff cannot trigger the cron call');

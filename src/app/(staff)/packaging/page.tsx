@@ -5,8 +5,9 @@ import { ProductName } from "@/components/ui/ProductName";
 import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { StaffLoading, StaffScreen } from "@/components/ui/StaffScreen";
 import { requireStaff } from "@/features/auth/session";
+import { CloseRequestButton } from "@/features/orders/components/CloseRequestButton";
 import { NotForYou, STATUS_TONES } from "@/features/orders/components/OrderBits";
-import { allActiveProducts, loadDocuments } from "@/features/orders/queries";
+import { allActiveProducts, loadDocuments, openForDispatch } from "@/features/orders/queries";
 import {
   isPackagingKeeper,
   packagingBelowMin,
@@ -38,13 +39,17 @@ async function Packaging({ searchParams }: { searchParams: SearchParams }) {
   await connection();
   const store = await packagingStore();
   if (!store) return <NotForYou title="مستودع التغليف" text="ما في مستودع تغليف فعّال." />;
-  const [{ requests }, { dispatches }, items, stock, low] = await Promise.all([
-    loadDocuments({ requests: { supplyingLocationId: store.id, statuses: ["sent"] }, sinceDays: 14 }),
+  const [{ requests: loaded }, { dispatches }, items, stock, low] = await Promise.all([
+    loadDocuments({
+      requests: { supplyingLocationId: store.id, statuses: ["sent", "partial"] },
+      sinceDays: 14,
+    }),
     loadDocuments({ dispatches: { fromLocationId: store.id, statuses: ["in_transit"] }, sinceDays: 14 }),
     allActiveProducts(["packaging"]),
     packagingStock(store.id),
     packagingBelowMin(store.id),
   ]);
+  const requests = openForDispatch(loaded, new Date());
 
   return (
     <StaffScreen>
@@ -92,8 +97,9 @@ async function Packaging({ searchParams }: { searchParams: SearchParams }) {
               href={`/packaging/dispatch?request=${r.id}`}
               className="flex h-12 items-center justify-center rounded-xl bg-ink font-semibold text-white"
             >
-              ابدأ الإخراج
+              {r.status === "partial" ? "طلّع الباقي" : "ابدأ الإخراج"}
             </Link>
+            {r.status === "partial" && <CloseRequestButton requestId={r.id} branchName={r.fromName} />}
           </li>
         ))}
       </ul>

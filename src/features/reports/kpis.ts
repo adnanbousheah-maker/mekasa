@@ -145,6 +145,47 @@ export async function branchReport(period: Period): Promise<ManagementReport | n
   return buildReport(period, staff.location.id);
 }
 
+/** تقرير المصنع لمسؤول المصنع: نفس الأرقام لموقعه (RLS). */
+export async function factoryReport(period: Period): Promise<ManagementReport | null> {
+  const staff = await requireStaff();
+  if (!staff.roles.includes("factory_manager") || staff.location?.kind !== "factory") return null;
+  return buildReport(period, staff.location.id);
+}
+
+export interface FactoryCountRow {
+  id: string;
+  startedAt: string;
+  scope: string;
+  isOpening: boolean;
+  consumedCakes: number;
+  impossibleLines: number;
+  lineCount: number;
+}
+
+/** آخر جرودات المصنع (الكيك والصوصات) مع النقص والأرقام المستحيلة، لمسؤول المصنع. */
+export async function factoryCounts(locationId: string, limit = 15): Promise<FactoryCountRow[]> {
+  const staff = await requireStaff();
+  if (!staff.roles.includes("factory_manager")) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("v_count_list")
+    .select("id, started_at, scope, is_opening, consumed_cakes, impossible_lines, line_count")
+    .eq("location_id", locationId)
+    .not("confirmed_at", "is", null)
+    .order("started_at", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(`Could not load factory counts: ${error.message}`);
+  return data.map((c) => ({
+    id: c.id!,
+    startedAt: c.started_at!,
+    scope: c.scope ?? "stock",
+    isOpening: c.is_opening ?? false,
+    consumedCakes: Number(c.consumed_cakes ?? 0),
+    impossibleLines: c.impossible_lines ?? 0,
+    lineCount: c.line_count ?? 0,
+  }));
+}
+
 // الصلاحية عند اللي بينادي (managementReport / branchReport)
 async function buildReport(period: Period, onlyLocation: string | null): Promise<ManagementReport> {
   const supabase = await createClient();

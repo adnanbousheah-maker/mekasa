@@ -6,6 +6,8 @@ import { businessDate } from "@/lib/time";
 export const REQUEST_STATUS_LABELS = {
   pending_approval: "بانتظار الموافقة",
   sent: "مرسل",
+  // طلع جزء والباقي بدفعة ثانية بنفس اليوم
+  partial: "طلع جزء",
   dispatched: "طلع من المصنع",
   received: "مستلم",
   cancelled: "ملغي",
@@ -14,6 +16,7 @@ export const REQUEST_STATUS_LABELS = {
 export const STATUS_TONES = {
   pending_approval: "bg-warn-chip text-warn-text",
   sent: "bg-quiet-strong text-table-head-text",
+  partial: "bg-warn-chip text-warn-text",
   dispatched: "bg-info-soft text-info-text",
   in_transit: "bg-info-soft text-info-text",
   received: "bg-ok-soft text-ok-text",

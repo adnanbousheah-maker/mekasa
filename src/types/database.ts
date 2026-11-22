@@ -250,6 +250,7 @@ export type Database = {
           count_late_after_minutes: number;
           count_reminder_minutes_before: number;
           default_pieces_per_cake: number;
+          factory_dispatch_without_stock: boolean;
           factory_loose_pieces_enabled: boolean;
           factory_shelf_life_days: number;
           feature_tasks: boolean;
@@ -269,6 +270,7 @@ export type Database = {
           count_late_after_minutes?: number;
           count_reminder_minutes_before?: number;
           default_pieces_per_cake?: number;
+          factory_dispatch_without_stock?: boolean;
           factory_loose_pieces_enabled?: boolean;
           factory_shelf_life_days?: number;
           feature_tasks?: boolean;
@@ -287,6 +289,7 @@ export type Database = {
           count_late_after_minutes?: number;
           count_reminder_minutes_before?: number;
           default_pieces_per_cake?: number;
+          factory_dispatch_without_stock?: boolean;
           factory_loose_pieces_enabled?: boolean;
           factory_shelf_life_days?: number;
           feature_tasks?: boolean;
@@ -4012,6 +4015,10 @@ export type Database = {
         }[];
       };
       cancel_request: { Args: { p_request_id: string }; Returns: undefined };
+      close_request: {
+        Args: { p_request_id: string };
+        Returns: Database["public"]["Enums"]["request_status"];
+      };
       complete_task: {
         Args: { p_note?: string; p_photo_path?: string; p_template_id: string };
         Returns: string;
@@ -4196,6 +4203,7 @@ export type Database = {
           on_time: number;
         }[];
       };
+      set_factory_dispatch_without_stock: { Args: { p_on: boolean }; Returns: undefined };
       staff_edit_count: { Args: { p_count_id: string; p_lines: Json }; Returns: undefined };
       submit_count: {
         Args: {
@@ -4222,7 +4230,8 @@ export type Database = {
         | "packaging_keeper"
         | "general_manager"
         | "branch_manager"
-        | "it_admin";
+        | "it_admin"
+        | "factory_manager";
       count_method: "manual" | "photo";
       count_status: "draft" | "confirmed";
       discrepancy_resolution: "waste" | "review" | "resolved";
@@ -4251,7 +4260,7 @@ export type Database = {
         | "monthly_raw_late";
       product_kind: "cake" | "packaging" | "sauce";
       raw_movement_type: "opening_balance" | "receipt" | "issue" | "count_adjustment" | "admin_correction";
-      request_status: "pending_approval" | "sent" | "dispatched" | "received" | "cancelled";
+      request_status: "pending_approval" | "sent" | "dispatched" | "received" | "cancelled" | "partial";
       sell_mode: "whole_and_pieces" | "pieces_only";
       waste_reason: "expired" | "broken" | "other";
     };
@@ -4374,6 +4383,7 @@ export const Constants = {
         "general_manager",
         "branch_manager",
         "it_admin",
+        "factory_manager",
       ],
       count_method: ["manual", "photo"],
       count_status: ["draft", "confirmed"],
@@ -4405,7 +4415,7 @@ export const Constants = {
       ],
       product_kind: ["cake", "packaging", "sauce"],
       raw_movement_type: ["opening_balance", "receipt", "issue", "count_adjustment", "admin_correction"],
-      request_status: ["pending_approval", "sent", "dispatched", "received", "cancelled"],
+      request_status: ["pending_approval", "sent", "dispatched", "received", "cancelled", "partial"],
       sell_mode: ["whole_and_pieces", "pieces_only"],
       waste_reason: ["expired", "broken", "other"],
     },

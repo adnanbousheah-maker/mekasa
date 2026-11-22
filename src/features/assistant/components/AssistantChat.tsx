@@ -62,7 +62,11 @@ export function AssistantChat() {
     const id = requestAnimationFrame(() => setVoiceShown(true));
     return () => cancelAnimationFrame(id);
   }, []);
-  useEffect(() => end.current?.scrollIntoView({ behavior: "smooth", block: "end" }), [messages, isAsking]);
+  // بالأقواس: Chrome الجديد بيرجّع Promise من scrollIntoView، وإذا انرجع من useEffect
+  // React بيعتبره دالة تنظيف وبتوقع الصفحة لما يوصل الجواب ("destroy is not a function")
+  useEffect(() => {
+    end.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, isAsking]);
 
   const ask = (question: string, voice = false) => {
     const q = question.trim();

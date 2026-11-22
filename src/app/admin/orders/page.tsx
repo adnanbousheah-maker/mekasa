@@ -12,6 +12,8 @@ import {
 import { REQUEST_STATUS_LABELS, dayLabel } from "@/features/orders/components/OrderBits";
 import { linesSummary, receiptDifference, requestVsDispatch } from "@/features/orders/logic";
 import { loadDocuments, type DispatchDoc, type RequestDoc } from "@/features/orders/queries";
+import { setDispatchWithoutStockAction } from "@/features/orders/actions";
+import { SavedSwitch } from "@/features/settings/components/SavedSwitch";
 import { canEdit, requireManager } from "@/features/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { formatClock } from "@/lib/time";
@@ -33,12 +35,13 @@ type Move = {
   request: RequestDoc | null;
   dispatch: DispatchDoc | null;
   at: string;
-  state: "approve" | "wait" | "road" | "late" | "diff" | "ok" | "cancelled";
+  state: "approve" | "wait" | "partial" | "road" | "late" | "diff" | "ok" | "cancelled";
 };
 
 const BADGES: Record<Move["state"], [string, string]> = {
   approve: ["بانتظار موافقتك", "bg-warn-chip text-warn-text"],
   wait: ["بانتظار الإخراج", "bg-quiet-strong text-table-head-text"],
+  partial: ["طلع جزء", "bg-warn-chip text-warn-text"],
   road: ["بالطريق", "bg-info-soft text-info-text"],
   late: ["ما انستلم", "bg-danger-soft text-danger-text"],
   diff: ["فرق بالاستلام", "bg-danger-soft text-danger-text"],
@@ -60,14 +63,24 @@ async function Orders({ searchParams }: { searchParams: SearchParams }) {
   const supabase = await createClient();
   const [{ requests, dispatches }, { data: settings }] = await Promise.all([
     loadDocuments({ requests: {}, dispatches: {}, sinceDays: 30 }),
-    supabase.from("app_settings").select("unreceived_alert_hours").single(),
+    supabase.from("app_settings").select("unreceived_alert_hours, factory_dispatch_without_stock").single(),
   ]);
   const alertHours = settings?.unreceived_alert_hours ?? 3;
 
   const moves: Move[] = [
-    ...requests.map((r) => {
-      const d = dispatches.find((x) => x.requestId === r.id) ?? null;
-      return { id: r.id, request: r, dispatch: d, at: r.requestedAt, state: stateOf(r, d, alertHours) };
+    ...requests.flatMap((r) => {
+      // الطلب ممكن يطلع على دفعتين: الأولى مع الطلب، والباقي كل دفعة لحالها
+      const [first = null, ...more] = dispatches.filter((x) => x.requestId === r.id).reverse();
+      return [
+        { id: r.id, request: r, dispatch: first, at: r.requestedAt, state: stateOf(r, first, alertHours) },
+        ...more.map((d) => ({
+          id: d.id,
+          request: r,
+          dispatch: d,
+          at: d.dispatchedAt,
+          state: stateOf(r, d, alertHours),
+        })),
+      ];
     }),
     ...dispatches
       .filter((d) => !d.requestId)
@@ -85,7 +98,7 @@ async function Orders({ searchParams }: { searchParams: SearchParams }) {
     filter === "all"
       ? true
       : filter === "wait"
-        ? m.state === "wait" || m.state === "approve"
+        ? m.state === "wait" || m.state === "approve" || m.state === "partial"
         : filter === "road"
           ? m.state === "road" || m.state === "late"
           : filter === "diff"
@@ -115,13 +128,32 @@ async function Orders({ searchParams }: { searchParams: SearchParams }) {
           </>
         }
       />
+      {canDelete && (
+        <section
+          aria-label="التطليع بدون ستوك"
+          className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-surface p-4"
+        >
+          <span className="flex flex-col">
+            <span className="font-semibold">المصنع بيطلّع حتى لو ما في ستوك</span>
+            <span className="text-sm text-muted">
+              الناقص بيطلع على دفعة اليوم، وستوكها بيصير سالب لحد ما ينسجل الإنتاج أو الجرد.
+            </span>
+          </span>
+          <SavedSwitch
+            label="المصنع بيطلّع حتى لو ما في ستوك"
+            initial={settings?.factory_dispatch_without_stock ?? false}
+            states={{ on: "مسموح", off: "ممنوع" }}
+            onSave={setDispatchWithoutStockAction}
+          />
+        </section>
+      )}
       <FilterLinks
         label="فلتر"
         current={filter}
         hrefFor={(v) => href(v)}
         options={[
           { value: "all", label: "الكل" },
-          { value: "wait", label: `بانتظار الإخراج (${count(["wait", "approve"])})` },
+          { value: "wait", label: `بانتظار الإخراج (${count(["wait", "approve", "partial"])})` },
           { value: "road", label: `بالطريق (${count(["road", "late"])})` },
           { value: "diff", label: `فيها فرق (${count(["diff"])})` },
           { value: "move", label: "تحويل وإرجاع" },
@@ -168,6 +200,7 @@ function stateOf(r: RequestDoc | null, d: DispatchDoc | null, alertHours: number
   if (r?.status === "cancelled") return "cancelled";
   if (r?.status === "pending_approval") return "approve";
   if (!d) return "wait";
+  if (r?.status === "partial" && d.status !== "in_transit") return "partial";
   if (d.status === "in_transit") return d.hoursInTransit >= alertHours ? "late" : "road";
   return hasOpenDifference(d) ? "diff" : "ok";
 }

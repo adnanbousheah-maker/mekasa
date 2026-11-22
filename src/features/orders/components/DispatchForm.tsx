@@ -51,6 +51,8 @@ type Props = {
   // إعداد الأدمن: المصنع بيطلّع كيكات كاملة بس (بدون خانة قطع)
   cakesOnly?: boolean;
   doneHref: string;
+  // إعداد: المصنع بيطلّع حتى لو الستوك ما بيكفي (الناقص من دفعة اليوم)
+  allowShort?: boolean;
 };
 
 type Line = DispatchLineInit & { firstDate: string | null };
@@ -67,6 +69,7 @@ export function DispatchForm({
   packaging = false,
   cakesOnly = false,
   doneHref,
+  allowShort = false,
 }: Props) {
   const router = useRouter();
   const byId = new Map(products.map((p) => [p.id, p]));
@@ -77,6 +80,8 @@ export function DispatchForm({
   const [adding, setAdding] = useState(false);
   const [fefoAlert, setFefoAlert] = useState(false);
   const [driverName, setDriverName] = useState("");
+  // الطلب طلع ناقص: الباقي بيطلع بدفعة ثانية اليوم (افتراضياً)، أو بيتسكّر
+  const [keepOpen, setKeepOpen] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, startTransition] = useTransition();
   const isFactory = batches !== null;
@@ -146,6 +151,7 @@ export function DispatchForm({
         requestId,
         confirmFefoOverride: confirmOverride,
         driverName,
+        closeRequest: !!requestId && sentLess && !keepOpen,
         lines: send.map((l) => ({
           productId: l.productId,
           wholeCakes: byId.get(l.productId)?.piecesPerCake === null ? 0 : l.wholeCakes,
@@ -180,6 +186,17 @@ export function DispatchForm({
     ? fefoAllocate(batchesOf(overridden.productId), pieces(overridden)).allocations[0]
     : null;
   const shortLines = lines.filter((l) => hasBatches(l) && pieces(l) > 0 && allocationOf(l).short > 0);
+  // الستوك ناقص بس الإعداد بيسمح: بيطلع، والناقص من دفعة اليوم
+  const blockingShort = allowShort ? [] : shortLines;
+  // أقل من الطلب: في باقي ممكن يطلع بدفعة ثانية
+  const sentLess = initialLines.some(
+    (i) =>
+      i.requestLineId !== null &&
+      (i.requestedPieces ?? 0) >
+        (lines.find((l) => l.requestLineId === i.requestLineId)
+          ? pieces(lines.find((l) => l.requestLineId === i.requestLineId)!)
+          : 0),
+  );
   const sauceUnits = lines.filter((l) => isSauce(l.productId)).reduce((n, l) => n + l.loosePieces, 0);
   const cakeLines = lines.filter((l) => !isSauce(l.productId));
   const summary = [
@@ -353,10 +370,27 @@ export function DispatchForm({
 
       <div className="fixed inset-x-0 bottom-0 border-t border-line bg-surface">
         <div className="mx-auto flex w-full max-w-md flex-col gap-2 px-5 pt-3 pb-6">
-          {shortLines.length > 0 && (
-            <span className="text-center text-sm font-semibold text-danger-text">
-              ستوك المصنع ما بيكفي لـ {shortLines.map((l) => byId.get(l.productId)?.nameEn).join("، ")}
-            </span>
+          {shortLines.length > 0 &&
+            (allowShort ? (
+              <span className="text-center text-sm font-semibold text-warn-text">
+                ستوك {shortLines.map((l) => byId.get(l.productId)?.nameEn).join("، ")} ما بيكفي. الناقص بيطلع
+                على دفعة اليوم
+              </span>
+            ) : (
+              <span className="text-center text-sm font-semibold text-danger-text">
+                ستوك المصنع ما بيكفي لـ {shortLines.map((l) => byId.get(l.productId)?.nameEn).join("، ")}
+              </span>
+            ))}
+          {requestId && sentLess && (
+            <label className="flex min-h-12 items-center gap-3 rounded-xl bg-quiet px-3 py-2">
+              <input
+                type="checkbox"
+                checked={keepOpen}
+                onChange={(e) => setKeepOpen(e.target.checked)}
+                className="size-6 shrink-0"
+              />
+              <span className="text-[15px]">الباقي من الطلب رح يطلع بدفعة ثانية اليوم</span>
+            </label>
           )}
           {error && (
             <p
@@ -370,7 +404,7 @@ export function DispatchForm({
           <button
             type="button"
             disabled={
-              !destination || isSaving || shortLines.length > 0 || lines.every((l) => pieces(l) === 0)
+              !destination || isSaving || blockingShort.length > 0 || lines.every((l) => pieces(l) === 0)
             }
             onClick={confirm}
             className="flex h-14 items-center justify-center rounded-[14px] bg-ink text-lg font-semibold text-white disabled:opacity-40"
