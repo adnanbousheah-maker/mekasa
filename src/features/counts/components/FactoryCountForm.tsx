@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { BatchBadge } from "@/components/ui/BatchBadge";
+import { Dialog } from "@/components/ui/Dialog";
 import { NumberField } from "@/components/ui/Stepper";
 import { ProductName } from "@/components/ui/ProductName";
 import { batchLabel, usesDate } from "@/lib/batch-label";
@@ -73,7 +74,13 @@ export function FactoryCountForm({ products, batches, today, scheduleId, started
   // إضافة دفعة مفرّزة: الصنف وتاريخ الإنتاج
   const [freezing, setFreezing] = useState<{ productId: string; date: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [askMissing, setAskMissing] = useState(false);
   const [isSaving, startTransition] = useTransition();
+
+  // الدفعات اللي إلها ستوك وانتركت صفر: الجرد كامل، فرح تنحسب صفر (23 نوفمبر: جرد انعدّ فيه صنف واحد صفّر المصنع)
+  const known = new Set(batches.map((b) => `${b.productId}:${keyOf(b)}`));
+  const notCounted = rows.filter((r) => r.qty === 0 && known.has(`${r.productId}:${keyOf(r)}`));
+  const productOf = new Map(products.map((p) => [p.id, p]));
 
   // الأصناف اللي إلها دفعات أول
   const ordered = [...products].sort(
@@ -98,7 +105,15 @@ export function FactoryCountForm({ products, batches, today, scheduleId, started
   };
   const oldestFrozen = recentDates(today, FROZEN_DAYS).at(-1)!;
 
-  const confirm = () =>
+  const confirm = () => {
+    if (notCounted.length > 0 && !askMissing) {
+      setAskMissing(true);
+      return;
+    }
+    save();
+  };
+
+  const save = () =>
     startTransition(async () => {
       const byProduct = new Map(products.map((p) => [p.id, p]));
       const result = await submitCountAction({
@@ -302,6 +317,13 @@ export function FactoryCountForm({ products, batches, today, scheduleId, started
               {error}
             </p>
           )}
+          {batches.length > 0 && (
+            <span className="text-center text-sm text-muted">
+              <strong className={notCounted.length > 0 ? "text-warn-text" : "text-ok-text"}>
+                عدّيت {batches.length - notCounted.length} من {batches.length} دفعة
+              </strong>
+            </span>
+          )}
           <button
             type="button"
             disabled={isSaving}
@@ -312,6 +334,40 @@ export function FactoryCountForm({ products, batches, today, scheduleId, started
           </button>
         </div>
       </div>
+
+      <Dialog open={askMissing} onClose={() => setAskMissing(false)} title="في دفعات ما عدّيتها">
+        <p className="mb-2 text-[15px]">
+          {notCounted.length === 1 ? "هالدفعة" : `هدول الـ${notCounted.length} دفعة`} رح{" "}
+          {notCounted.length === 1 ? "تنحسب" : "ينحسبوا"} <strong>صفر</strong> (يعني ما في منهم بالمصنع):
+        </p>
+        <ul dir="auto" className="mb-4 max-h-48 overflow-y-auto text-sm text-muted">
+          {notCounted.map((r) => {
+            const p = productOf.get(r.productId);
+            return (
+              <li key={`${r.productId}:${keyOf(r)}`}>
+                {p?.nameEn ?? ""} · {batchLabel(r.productionDate, p?.shelfLifeDays ?? 7, r.frozen).text}
+              </li>
+            );
+          })}
+        </ul>
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={() => setAskMissing(false)}
+            className="h-14 rounded-[14px] bg-ink text-lg font-semibold text-white"
+          >
+            ارجع وعدّهم
+          </button>
+          <button
+            type="button"
+            disabled={isSaving}
+            onClick={save}
+            className="h-12 rounded-xl border border-line-strong disabled:opacity-50"
+          >
+            {isSaving ? "لحظة…" : "أكيد، ما في منهم"}
+          </button>
+        </div>
+      </Dialog>
     </>
   );
 }

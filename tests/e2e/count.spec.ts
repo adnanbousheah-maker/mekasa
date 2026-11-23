@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { dayNumberOf } from "../../src/lib/day-number";
 import { businessDate } from "../../src/lib/time";
 import { BRANCH_DBQ, FACTORY, signInAndWait, stockOf } from "./support";
+import { confirmUncountedBatches } from "./support";
 
 test("a branch employee counts by hand and the stock follows the count", async ({ page }) => {
   await signInAndWait(page, BRANCH_DBQ.phone, BRANCH_DBQ.pin);
@@ -87,6 +88,7 @@ test("the factory counts blind, by day number", async ({ page }) => {
   await expect(flan.getByText("المجموع: 2 كيكات")).toBeVisible();
 
   await page.getByRole("button", { name: "تأكيد جرد المصنع" }).click();
+  await confirmUncountedBatches(page);
   await expect(page.getByRole("heading", { name: "تم الجرد" })).toBeVisible();
   expect(await stockOf("FAC", "Flan")).toBe(20);
 });

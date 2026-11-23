@@ -304,3 +304,15 @@ export async function addWastePhoto(page: Page) {
   });
   await expect(page.getByText("انرفعت الصورة")).toBeVisible();
 }
+
+/** جرد المصنع: إذا في دفعات ما انعدّت بتطلع نافذة "في دفعات ما عدّيتها"، فبنأكد إنه ما في منهم. */
+export async function confirmUncountedBatches(page: Page) {
+  const dialog = page.getByRole("dialog", { name: "في دفعات ما عدّيتها" });
+  const shown = await dialog
+    .waitFor({ state: "visible", timeout: 1500 })
+    .then(() => true)
+    .catch(() => false);
+  if (shown) {
+    await dialog.getByRole("button", { name: "أكيد، ما في منهم" }).click();
+  }
+}

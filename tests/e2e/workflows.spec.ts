@@ -14,6 +14,7 @@ import {
   stockOf,
   updateAppSettings,
 } from "./support";
+import { confirmUncountedBatches } from "./support";
 
 // باقي قائمة الفحص اليدوي: FEFO مع التجاوز، التحويل، رابط فرع ثاني، الإرجاع، وموافقة الطلبات.
 // الملف آخر واحد بالترتيب لأن جرد المصنع هون كامل (اللي ما انعد بيصير صفر).
@@ -75,6 +76,7 @@ test("the factory counts two batches, and picking the newer one needs a confirme
   }
   await expect(item.getByText("المجموع: 2 كيكات")).toBeVisible();
   await page.getByRole("button", { name: "تأكيد جرد المصنع" }).click();
+  await confirmUncountedBatches(page);
   await expect(page.getByRole("heading", { name: "تم الجرد" })).toBeVisible();
 
   await page.goto("/factory/dispatch");
@@ -220,6 +222,7 @@ test("the daily round shares the old batch between branches", async ({ page }) =
     await expect(item.getByRole("textbox", { name: `${PRODUCT} رقم ${day}` })).toHaveValue(`${cakes}`);
   }
   await page.getByRole("button", { name: "تأكيد جرد المصنع" }).click();
+  await confirmUncountedBatches(page);
   await expect(page.getByRole("heading", { name: "تم الجرد" })).toBeVisible();
 
   // الصويفية بتطلب 4 والجبيهة 2
