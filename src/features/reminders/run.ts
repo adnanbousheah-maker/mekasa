@@ -2,7 +2,14 @@ import "server-only";
 import { formatScheduleTime } from "@/features/settings/schemas";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { businessDate, countDay, isLastDayOfMonth } from "@/lib/time";
-import { pendingAlerts, slotStatus, slotTime, type PendingAlert, type ReminderSettings } from "./slots";
+import {
+  doneScheduleIds,
+  pendingAlerts,
+  slotStatus,
+  slotTime,
+  type PendingAlert,
+  type ReminderSettings,
+} from "./slots";
 import { sendPushToStaff } from "./push";
 import { countReminderMessage, monthlyCountMessage } from "./subscription";
 
@@ -35,7 +42,11 @@ export async function runReminders(now = new Date()): Promise<ReminderRun> {
       .select("id, location_id, time_of_day, location:locations!inner(name, kind, is_active)")
       .eq("is_active", true)
       .eq("location.is_active", true),
-    db.from("stock_counts").select("schedule_id").eq("business_date", countToday).eq("status", "confirmed"),
+    db
+      .from("stock_counts")
+      .select("schedule_id, location_id, started_at, scope")
+      .eq("business_date", countToday)
+      .eq("status", "confirmed"),
     db.from("notification_log").select("kind, schedule_id").eq("slot_date", countToday),
   ]);
   for (const r of [settings, schedules, counts, sent]) if (r.error) throw new Error(r.error.message);
@@ -44,11 +55,25 @@ export async function runReminders(now = new Date()): Promise<ReminderRun> {
     reminderMinutesBefore: settings.data!.count_reminder_minutes_before,
     lateAfterMinutes: settings.data!.count_late_after_minutes,
   };
+  const scheduleList = schedules.data!.map((s) => ({
+    id: s.id,
+    locationId: s.location_id,
+    timeOfDay: s.time_of_day,
+  }));
   const alerts = pendingAlerts(
-    schedules.data!.map((s) => ({ id: s.id, locationId: s.location_id, timeOfDay: s.time_of_day })),
+    scheduleList,
     countToday,
     now,
-    new Set(counts.data!.map((c) => c.schedule_id).filter((id): id is string => id !== null)),
+    doneScheduleIds(
+      scheduleList,
+      countToday,
+      counts.data!.map((c) => ({
+        scheduleId: c.schedule_id,
+        locationId: c.location_id,
+        startedAt: c.started_at,
+        scope: c.scope,
+      })),
+    ),
     new Set(sent.data!.map((n) => `${n.kind}:${n.schedule_id}`)),
     reminderSettings,
   );

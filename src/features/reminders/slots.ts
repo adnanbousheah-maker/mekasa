@@ -74,3 +74,37 @@ export function pendingAlerts(
   }
   return alerts;
 }
+
+export interface DoneCount {
+  scheduleId: string | null;
+  locationId: string;
+  startedAt: string;
+  scope: string;
+}
+
+/**
+ * المواعيد اللي انعملت اليوم: جرد مربوط فيها، أو جرد كيك مش مربوط بلّش قبل الموعد وبعد الموعد اللي قبله
+ * بنفس الموقع (اللي جرد بدري ما بيطلع "متأخر"). نفس منطق v_count_slots_today.
+ */
+export function doneScheduleIds(schedules: Schedule[], todayIso: string, counts: DoneCount[]): Set<string> {
+  const done = new Set(counts.map((c) => c.scheduleId).filter((id): id is string => id !== null));
+  const byLocation = new Map<string, { id: string; at: number }[]>();
+  for (const s of schedules) {
+    const list = byLocation.get(s.locationId) ?? [];
+    list.push({ id: s.id, at: slotTime(todayIso, s.timeOfDay).getTime() });
+    byLocation.set(s.locationId, list);
+  }
+  for (const [locationId, list] of byLocation) {
+    list.sort((a, b) => a.at - b.at);
+    list.forEach((slot, i) => {
+      const prev = i > 0 ? list[i - 1]!.at : -Infinity;
+      const early = counts.some((c) => {
+        if (c.scheduleId !== null || c.scope !== "stock" || c.locationId !== locationId) return false;
+        const at = new Date(c.startedAt).getTime();
+        return at < slot.at && at >= prev;
+      });
+      if (early) done.add(slot.id);
+    });
+  }
+  return done;
+}

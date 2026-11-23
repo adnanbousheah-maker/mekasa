@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lateLabel, pendingAlerts, slotStatus, slotTime } from "./slots";
+import { doneScheduleIds, lateLabel, pendingAlerts, slotStatus, slotTime } from "./slots";
 
 const settings = { reminderMinutesBefore: 10, lateAfterMinutes: 15 };
 const at = (hhmm: string) => new Date(`2026-10-23T${hhmm}:00+03:00`);
@@ -75,5 +75,47 @@ describe("pendingAlerts", () => {
     expect(
       pendingAlerts(schedules.slice(0, 1), "2026-10-23", at("11:30"), new Set(), new Set(), settings),
     ).toEqual([]);
+  });
+});
+
+describe("doneScheduleIds", () => {
+  const schedules = [
+    { id: "a", locationId: "L", timeOfDay: "09:00:00" },
+    { id: "b", locationId: "L", timeOfDay: "17:00:00" },
+    { id: "c", locationId: "M", timeOfDay: "17:00:00" },
+  ];
+  const count = (
+    startedAt: string,
+    extra: Partial<{ scheduleId: string; locationId: string; scope: string }> = {},
+  ) => ({
+    scheduleId: extra.scheduleId ?? null,
+    locationId: extra.locationId ?? "L",
+    startedAt,
+    scope: extra.scope ?? "stock",
+  });
+
+  it("counts a linked count", () => {
+    expect(
+      doneScheduleIds(schedules, "2026-11-23", [count("2026-11-23T08:00:00+03:00", { scheduleId: "a" })]),
+    ).toEqual(new Set(["a"]));
+  });
+
+  it("a count done hours early covers the next slot only", () => {
+    expect(doneScheduleIds(schedules, "2026-11-23", [count("2026-11-23T15:37:00+03:00")])).toEqual(
+      new Set(["b"]),
+    );
+    expect(doneScheduleIds(schedules, "2026-11-23", [count("2026-11-23T06:00:00+03:00")])).toEqual(
+      new Set(["a"]),
+    );
+  });
+
+  it("ignores sauce counts, other locations and counts after the slot", () => {
+    expect(
+      doneScheduleIds(schedules, "2026-11-23", [
+        count("2026-11-23T15:00:00+03:00", { scope: "sauce" }),
+        count("2026-11-23T18:00:00+03:00"),
+        count("2026-11-23T15:00:00+03:00", { locationId: "Z" }),
+      ]),
+    ).toEqual(new Set());
   });
 });
