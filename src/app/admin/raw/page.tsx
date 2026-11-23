@@ -5,7 +5,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { AdminLoading } from "@/components/ui/AdminLoading";
 import { ExportButton, PageHeader } from "@/features/admin/components/AdminBits";
-import { AddUnit, NewMaterialButton } from "@/features/raw/components/AdminRawControls";
+import { AddUnit, NewMaterialButton, UnitEditor } from "@/features/raw/components/AdminRawControls";
 import { RawImportButton } from "@/features/raw/components/RawImport";
 import { amount, daysLeftLabel, daysTone } from "@/features/raw/logic";
 import { listRawMaterials, recentRawMoves } from "@/features/raw/queries";
@@ -180,9 +180,13 @@ async function Raw({ searchParams }: { searchParams: SearchParams }) {
                   <td className="px-3 py-2.5 text-center text-[13px]">
                     <span className="flex flex-col items-center gap-1">
                       {m.units.map((u) => (
-                        <span key={u.id}>
-                          {u.name} = {amount(u.factor, m.baseUnit)}
-                        </span>
+                        <UnitEditor
+                          key={u.id}
+                          unit={u}
+                          baseUnit={m.baseUnit}
+                          label={`${u.name} = ${amount(u.factor, m.baseUnit)}`}
+                          editable={editor}
+                        />
                       ))}
                       {editor && <AddUnit materialId={m.id} baseUnit={m.baseUnit} />}
                     </span>

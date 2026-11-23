@@ -25,7 +25,7 @@ export async function listRawMaterials(includeInactive = false): Promise<RawMate
   let materials = supabase
     .from("raw_materials")
     .select(
-      "id, code, name, base_unit, min_qty, is_active, category_id, raw_material_units(id, unit_name, factor_to_base)",
+      "id, code, name, base_unit, min_qty, is_active, category_id, raw_material_units(id, unit_name, factor_to_base, is_active)",
     )
     .order("sort_order")
     .order("name");
@@ -57,7 +57,7 @@ export async function listRawMaterials(includeInactive = false): Promise<RawMate
       dailyIssue: Number(s?.avg_daily_issue ?? 0),
       daysLeft: s?.days_left ?? null,
       belowMin: s?.below_min ?? Number(m.min_qty) > 0,
-      units: m.raw_material_units.map((u) => ({
+      units: m.raw_material_units.filter((u) => u.is_active).map((u) => ({
         id: u.id,
         name: u.unit_name,
         factor: Number(u.factor_to_base),

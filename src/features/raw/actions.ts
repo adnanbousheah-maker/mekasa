@@ -168,7 +168,45 @@ export async function addUnitAction(
   const { error } = await supabase
     .from("raw_material_units")
     .insert({ material_id: materialId, unit_name: name.data, factor_to_base: f.data });
-  if (error) return fail(error.code === "23505" ? "الوحدة موجودة" : "ما انحفظت الوحدة");
+  if (error?.code === "23505") {
+    // وحدة انشالت قبل بنفس الاسم: بترجع بالحجم الجديد
+    const { data: back } = await supabase
+      .from("raw_material_units")
+      .update({ is_active: true, factor_to_base: f.data })
+      .eq("material_id", materialId)
+      .eq("unit_name", name.data)
+      .eq("is_active", false)
+      .select("id");
+    if (!back?.length) return fail("الوحدة موجودة");
+  } else if (error) return fail("ما انحفظت الوحدة");
+  refresh();
+  return { status: "done" };
+}
+
+/** تعديل تعبئة (الاسم والحجم). الحركات القديمة ما بتتغير لأن كميتها محفوظة بالوحدة الأساسية. */
+export async function updateUnitAction(unitId: string, unitName: string, factor: number): Promise<RawResult> {
+  await requireAdmin();
+  const name = z.string().trim().min(1).max(20).safeParse(unitName);
+  const f = z.number().positive().max(100_000).safeParse(factor);
+  if (!idSchema.safeParse(unitId).success || !name.success || !f.success)
+    return fail("اكتب اسم الوحدة وكم بتساوي");
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("raw_material_units")
+    .update({ unit_name: name.data, factor_to_base: f.data })
+    .eq("id", unitId);
+  if (error) return fail(error.code === "23505" ? "في وحدة بنفس الاسم لهالمادة" : "ما انحفظت الوحدة");
+  refresh();
+  return { status: "done" };
+}
+
+/** شيل تعبئة: بتختفي من الاختيار، والحركات القديمة بتضل. */
+export async function setUnitActiveAction(unitId: string, active: boolean): Promise<RawResult> {
+  await requireAdmin();
+  if (!idSchema.safeParse(unitId).success || typeof active !== "boolean") return fail("الوحدة مش موجودة");
+  const supabase = await createClient();
+  const { error } = await supabase.from("raw_material_units").update({ is_active: active }).eq("id", unitId);
+  if (error) return fail("ما انحفظ");
   refresh();
   return { status: "done" };
 }

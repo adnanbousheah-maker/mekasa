@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Dialog } from "@/components/ui/Dialog";
-import { addUnitAction, createMaterialAction } from "../actions";
+import { addUnitAction, createMaterialAction, setUnitActiveAction, updateUnitAction } from "../actions";
 
 const field = "h-11 rounded-xl border border-line-strong bg-surface px-3 outline-none focus:border-ink";
 
@@ -156,6 +156,121 @@ export function AddUnit({ materialId, baseUnit }: { materialId: string; baseUnit
       >
         حفظ
       </button>
+      {error && (
+        <span role="alert" className="text-xs text-danger-text">
+          {error}
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** تعبئة موجودة: عرض، وللأدمن "عدّل" (الاسم والحجم) و"شيل". */
+export function UnitEditor({
+  unit,
+  baseUnit,
+  label,
+  editable,
+}: {
+  unit: { id: string; name: string; factor: number };
+  baseUnit: string;
+  label: string;
+  editable: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState(unit.name);
+  const [factor, setFactor] = useState(String(unit.factor));
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, startTransition] = useTransition();
+
+  const run = (action: () => Promise<{ status: string; message?: string }>) =>
+    startTransition(async () => {
+      const result = await action();
+      if (result.status === "error") setError(result.message ?? "ما انحفظ");
+      else {
+        setError(null);
+        setOpen(false);
+      }
+    });
+
+  if (!open) {
+    return (
+      <span className="inline-flex items-center gap-2">
+        <span>{label}</span>
+        {editable && (
+          <button
+            type="button"
+            onClick={() => {
+              setName(unit.name);
+              setFactor(String(unit.factor));
+              setOpen(true);
+            }}
+            aria-label={`عدّل ${unit.name}`}
+            className="text-xs text-muted underline"
+          >
+            عدّل
+          </button>
+        )}
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex flex-col items-center gap-1">
+      <span className="inline-flex flex-wrap items-center justify-center gap-1">
+        <input
+          aria-label="اسم الوحدة"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={20}
+          className="h-8 w-20 rounded-lg border border-line-strong px-2 text-xs"
+        />
+        <span className="text-xs">=</span>
+        <input
+          aria-label="بتساوي"
+          inputMode="decimal"
+          value={factor}
+          onChange={(e) => setFactor(e.target.value)}
+          className="h-8 w-14 rounded-lg border border-line-strong px-2 text-xs"
+        />
+        <span className="text-xs">{baseUnit}</span>
+      </span>
+      <span className="inline-flex flex-wrap items-center justify-center gap-1">
+        <button
+          type="button"
+          disabled={isSaving}
+          onClick={() =>
+            run(() =>
+              updateUnitAction(
+                unit.id,
+                name,
+                Number(factor.replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))),
+              ),
+            )
+          }
+          className="h-8 rounded-lg bg-ink px-3 text-xs text-white disabled:opacity-40"
+        >
+          حفظ
+        </button>
+        <button
+          type="button"
+          disabled={isSaving}
+          onClick={() => run(() => setUnitActiveAction(unit.id, false))}
+          className="h-8 rounded-lg border border-danger-text px-3 text-xs text-danger-text disabled:opacity-40"
+        >
+          شيل الوحدة
+        </button>
+        <button
+          type="button"
+          disabled={isSaving}
+          onClick={() => {
+            setError(null);
+            setOpen(false);
+          }}
+          className="h-8 rounded-lg px-2 text-xs text-muted underline"
+        >
+          إلغاء
+        </button>
+      </span>
       {error && (
         <span role="alert" className="text-xs text-danger-text">
           {error}

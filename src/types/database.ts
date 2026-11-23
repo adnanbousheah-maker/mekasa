@@ -1696,6 +1696,7 @@ export type Database = {
         Row: {
           factor_to_base: number;
           id: string;
+          is_active: boolean;
           material_id: string;
           unit_name: string;
         };
@@ -1703,12 +1704,14 @@ export type Database = {
         Insert: {
           factor_to_base: number;
           id?: string;
+          is_active?: boolean;
           material_id: string;
           unit_name: string;
         };
         Update: {
           factor_to_base?: number;
           id?: string;
+          is_active?: boolean;
           material_id?: string;
           unit_name?: string;
         };
