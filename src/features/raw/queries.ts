@@ -57,11 +57,13 @@ export async function listRawMaterials(includeInactive = false): Promise<RawMate
       dailyIssue: Number(s?.avg_daily_issue ?? 0),
       daysLeft: s?.days_left ?? null,
       belowMin: s?.below_min ?? Number(m.min_qty) > 0,
-      units: m.raw_material_units.filter((u) => u.is_active).map((u) => ({
-        id: u.id,
-        name: u.unit_name,
-        factor: Number(u.factor_to_base),
-      })),
+      units: m.raw_material_units
+        .filter((u) => u.is_active)
+        .map((u) => ({
+          id: u.id,
+          name: u.unit_name,
+          factor: Number(u.factor_to_base),
+        })),
       lastReceipt: last
         ? {
             at: last.occurred_at,

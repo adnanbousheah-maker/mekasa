@@ -36,12 +36,19 @@ export async function resetOperationsAction(confirm: string): Promise<ResetResul
   return { status: "done", photos };
 }
 
-/** مفتاح ميزة (هلا المهام المتكررة بس). */
-export async function setFeatureAction(feature: "tasks", on: boolean): Promise<SaveResult> {
+/** مفتاح ميزة: المهام المتكررة، وزر "تم إخراج الطلبية". */
+export async function setFeatureAction(
+  feature: "tasks" | "request_mark_out",
+  on: boolean,
+): Promise<SaveResult> {
   await requireItAdmin();
-  if (feature !== "tasks" || typeof on !== "boolean") return { status: "error", message: "القيمة مش صحيحة" };
+  if (!(feature === "tasks" || feature === "request_mark_out") || typeof on !== "boolean")
+    return { status: "error", message: "القيمة مش صحيحة" };
   const supabase = await createClient();
-  const { error } = await supabase.from("app_settings").update({ feature_tasks: on }).eq("id", true);
+  const { error } = await supabase
+    .from("app_settings")
+    .update(feature === "tasks" ? { feature_tasks: on } : { feature_request_mark_out: on })
+    .eq("id", true);
   if (error) {
     console.error("setFeature", error);
     return { status: "error", message: "ما انحفظ" };

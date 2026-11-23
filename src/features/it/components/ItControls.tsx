@@ -11,10 +11,12 @@ const card = "flex flex-col gap-3 rounded-2xl border border-line bg-surface p-5"
 export function ItControls({
   previewMode,
   tasks,
+  requestMarkOut,
   locations,
 }: {
   previewMode: boolean;
   tasks: boolean;
+  requestMarkOut: boolean;
   locations: { id: string; name: string; kind: string }[];
 }) {
   return (
@@ -33,6 +35,21 @@ export function ItControls({
             initial={tasks}
             states={{ on: "ظاهرة", off: "مخفية" }}
             onSave={(next) => setFeatureAction("tasks", next)}
+          />
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <span className="flex flex-col">
+            <span className="font-semibold">زر «تم إخراج الطلبية»</span>
+            <span className="text-sm text-muted">
+              لفترة التجربة: مسؤول المصنع بيعلّم الطلبية إنها طلعت برا النظام فبتختفي من طلباته. لما تطفيه
+              بيختفي الزر، واللي انعلّم بيضل.
+            </span>
+          </span>
+          <SavedSwitch
+            label="زر تم إخراج الطلبية"
+            initial={requestMarkOut}
+            states={{ on: "ظاهر", off: "مخفي" }}
+            onSave={(next) => setFeatureAction("request_mark_out", next)}
           />
         </div>
       </section>

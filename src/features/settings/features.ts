@@ -7,11 +7,20 @@ export interface Features {
   tasks: boolean;
   // فترة المعاينة: زر التصفير شغّال
   previewMode: boolean;
+  // فترة التجربة: زر "تم إخراج الطلبية" لمسؤول المصنع
+  requestMarkOut: boolean;
 }
 
 /** مفاتيح IT. لازم بعد قراءة الجلسة (requireStaff بينادي connection). */
 export const getFeatures = cache(async (): Promise<Features> => {
   const supabase = await createClient();
-  const { data } = await supabase.from("app_settings").select("feature_tasks, preview_mode").maybeSingle();
-  return { tasks: data?.feature_tasks ?? false, previewMode: data?.preview_mode ?? true };
+  const { data } = await supabase
+    .from("app_settings")
+    .select("feature_tasks, preview_mode, feature_request_mark_out")
+    .maybeSingle();
+  return {
+    tasks: data?.feature_tasks ?? false,
+    previewMode: data?.preview_mode ?? true,
+    requestMarkOut: data?.feature_request_mark_out ?? false,
+  };
 });

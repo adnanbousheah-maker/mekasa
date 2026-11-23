@@ -166,6 +166,21 @@ export async function closeRequestAction(requestId: string): Promise<OrderResult
   return { status: "done", id: requestId };
 }
 
+/** فترة التجربة: "تم إخراج الطلبية" (طلعت برا النظام). مسؤول المصنع والأدمن، و IT بيطفيه. */
+export async function markRequestOutAction(requestId: string): Promise<OrderResult> {
+  await requireStaff();
+  if (!/^[0-9a-f-]{36}$/i.test(requestId)) return { status: "error", message: "الطلب مش موجود" };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("mark_request_out", { p_request_id: requestId });
+  if (error) {
+    console.error("markRequestOut", error);
+    if (error.hint === "feature_off") return { status: "error", message: "هالزر انطفى" };
+    return error.code === "23514" ? { status: "error", message: "هالطلب مش مفتوح" } : messageFor(error);
+  }
+  refresh();
+  return { status: "done", id: requestId };
+}
+
 /** توزيع اليوم: كل الطلبات مرة وحدة، والقديم بيتوزع بالعدل (dispatch_round). */
 export async function dispatchRoundAction(
   input: RoundInput,

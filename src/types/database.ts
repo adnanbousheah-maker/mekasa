@@ -253,6 +253,7 @@ export type Database = {
           factory_dispatch_without_stock: boolean;
           factory_loose_pieces_enabled: boolean;
           factory_shelf_life_days: number;
+          feature_request_mark_out: boolean;
           feature_tasks: boolean;
           id: boolean;
           order_approval_required: boolean;
@@ -273,6 +274,7 @@ export type Database = {
           factory_dispatch_without_stock?: boolean;
           factory_loose_pieces_enabled?: boolean;
           factory_shelf_life_days?: number;
+          feature_request_mark_out?: boolean;
           feature_tasks?: boolean;
           id?: boolean;
           order_approval_required?: boolean;
@@ -292,6 +294,7 @@ export type Database = {
           factory_dispatch_without_stock?: boolean;
           factory_loose_pieces_enabled?: boolean;
           factory_shelf_life_days?: number;
+          feature_request_mark_out?: boolean;
           feature_tasks?: boolean;
           id?: boolean;
           order_approval_required?: boolean;
@@ -2072,6 +2075,50 @@ export type Database = {
             columns: ["received_by"];
             isOneToOne: false;
             referencedRelation: "v_staff_names";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      request_mark_outs: {
+        Row: {
+          marked_at: string;
+          marked_by: string;
+          previous_status: Database["public"]["Enums"]["request_status"];
+          request_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          marked_at?: string;
+          marked_by: string;
+          previous_status: Database["public"]["Enums"]["request_status"];
+          request_id: string;
+        };
+        Update: {
+          marked_at?: string;
+          marked_by?: string;
+          previous_status?: Database["public"]["Enums"]["request_status"];
+          request_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "request_mark_outs_marked_by_fkey";
+            columns: ["marked_by"];
+            isOneToOne: false;
+            referencedRelation: "staff";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "request_mark_outs_marked_by_fkey";
+            columns: ["marked_by"];
+            isOneToOne: false;
+            referencedRelation: "v_staff_names";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "request_mark_outs_request_id_fkey";
+            columns: ["request_id"];
+            isOneToOne: true;
+            referencedRelation: "stock_requests";
             referencedColumns: ["id"];
           },
         ];
@@ -4121,6 +4168,7 @@ export type Database = {
         Returns: string;
       };
       mark_notifications_read: { Args: { p_ids?: number[] }; Returns: number };
+      mark_request_out: { Args: { p_request_id: string }; Returns: undefined };
       monthly_count_done: {
         Args: { p_day: string; p_location_id: string; p_scope: string; p_slot_at: string };
         Returns: boolean;

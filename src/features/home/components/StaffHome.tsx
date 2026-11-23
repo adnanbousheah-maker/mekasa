@@ -314,43 +314,118 @@ function FactoryTasks({ staff, data }: { staff: CurrentStaff; data: FactoryHomeD
     <>
       {(lastDay.length > 0 || rawBelowMin.length > 0 || belowMin.length > 0) && (
         <section aria-label="تنبيهات" className="flex flex-col gap-2">
-          {lastDay.slice(0, 3).map((b) => (
-            <Link
-              key={`${b.productName}-${b.productionDate}`}
-              href={isDispatcher ? "/factory/requests" : "/count"}
-              className="flex items-center gap-3 rounded-[14px] border border-danger-line bg-danger-soft px-3.5 py-2.5 text-danger-text"
-            >
-              <BatchBadge
-                productionDate={b.productionDate}
-                shelfLifeDays={b.shelfLifeDays}
-                frozen={b.frozen}
-              />
-              <span className="flex flex-col">
-                <strong className="text-[15px]">
-                  دفعة {batchLabel(b.productionDate, b.shelfLifeDays).text} آخر يوم إلها
-                </strong>
-                <span dir="auto" className="text-[13px]">
-                  {b.productName}: {formatQuantity(b.qty, b.piecesPerCake)} لازم تطلع اليوم
+          {lastDay.length > 0 && (
+            <details className="group rounded-[14px] border border-danger-line bg-danger-soft text-danger-text">
+              <summary className="flex cursor-pointer list-none items-center gap-3 px-3.5 py-2.5 [&::-webkit-details-marker]:hidden">
+                <BatchBadge
+                  productionDate={lastDay[0]!.productionDate}
+                  shelfLifeDays={lastDay[0]!.shelfLifeDays}
+                  frozen={lastDay[0]!.frozen}
+                />
+                <span className="flex grow flex-col">
+                  <strong className="text-[15px]">
+                    {lastDay.length === 1
+                      ? `دفعة ${batchLabel(lastDay[0]!.productionDate, lastDay[0]!.shelfLifeDays).text} آخر يوم إلها`
+                      : `${lastDay.length} دفعات آخر يوم إلها`}
+                  </strong>
+                  <span dir="auto" className="text-[13px]">
+                    {lastDay
+                      .slice(0, 2)
+                      .map((b) => `${b.productName}: ${formatQuantity(b.qty, b.piecesPerCake)}`)
+                      .join("، ")}{" "}
+                    · لازم تطلع اليوم
+                  </span>
                 </span>
-              </span>
-            </Link>
-          ))}
+                <span aria-hidden className="text-lg transition-transform group-open:rotate-180">
+                  ⌄
+                </span>
+              </summary>
+              <div className="flex flex-col gap-2 border-t border-danger-line px-3.5 py-2.5">
+                <table aria-label="الدفعات اللي آخر يوم إلها" className="w-full text-sm">
+                  <thead>
+                    <tr>
+                      <th className="pb-1 text-start font-normal">الصنف</th>
+                      <th className="pb-1 text-center font-normal">الدفعة</th>
+                      <th className="pb-1 text-end font-normal">الموجود</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lastDay.map((b) => (
+                      <tr
+                        key={`${b.productName}-${b.productionDate}-${b.frozen}`}
+                        className="border-t border-danger-line"
+                      >
+                        <td dir="auto" className="py-1.5 text-start">
+                          {b.productName}
+                        </td>
+                        <td className="py-1.5 text-center">
+                          <BatchBadge
+                            productionDate={b.productionDate}
+                            shelfLifeDays={b.shelfLifeDays}
+                            frozen={b.frozen}
+                          />
+                        </td>
+                        <td className="py-1.5 text-end font-semibold">
+                          {formatQuantity(b.qty, b.piecesPerCake)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <Link
+                  href={isDispatcher ? "/factory/requests" : "/count"}
+                  className="flex h-12 items-center justify-center rounded-xl bg-surface font-semibold text-ink"
+                >
+                  {isDispatcher ? "طلبات الفروع" : "جرد المصنع"}
+                </Link>
+              </div>
+            </details>
+          )}
           {belowMin.length > 0 && (
-            <div className="flex items-center gap-3 rounded-[14px] border border-danger-line bg-danger-soft px-3.5 py-2.5 text-danger-text">
-              <CartIcon size={24} />
-              <span className="flex flex-col">
-                <strong className="text-[15px]">
-                  {belowMin.length} {belowMin.length >= 3 && belowMin.length <= 10 ? "أصناف" : "صنف"} بالمصنع
-                  تحت الحد الأدنى
-                </strong>
-                <span dir="auto" className="text-[13px]">
-                  {belowMin
-                    .slice(0, 3)
-                    .map((b) => `${b.name} ${formatQuantity(b.qty, b.piecesPerCake)}`)
-                    .join("، ")}
+            <details className="group rounded-[14px] border border-danger-line bg-danger-soft text-danger-text">
+              <summary className="flex cursor-pointer list-none items-center gap-3 px-3.5 py-2.5 [&::-webkit-details-marker]:hidden">
+                <CartIcon size={24} />
+                <span className="flex grow flex-col">
+                  <strong className="text-[15px]">
+                    {belowMin.length} {belowMin.length >= 3 && belowMin.length <= 10 ? "أصناف" : "صنف"}{" "}
+                    بالمصنع تحت الحد الأدنى
+                  </strong>
+                  <span dir="auto" className="text-[13px]">
+                    {belowMin
+                      .slice(0, 3)
+                      .map((b) => `${b.name} ${formatQuantity(b.qty, b.piecesPerCake)}`)
+                      .join("، ")}
+                  </span>
                 </span>
-              </span>
-            </div>
+                <span aria-hidden className="text-lg transition-transform group-open:rotate-180">
+                  ⌄
+                </span>
+              </summary>
+              <div className="border-t border-danger-line px-3.5 py-2.5">
+                <table aria-label="الأصناف تحت الحد الأدنى" className="w-full text-sm">
+                  <thead>
+                    <tr>
+                      <th className="pb-1 text-start font-normal">الصنف</th>
+                      <th className="pb-1 text-center font-normal">الموجود</th>
+                      <th className="pb-1 text-end font-normal">الحد الأدنى</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {belowMin.map((b) => (
+                      <tr key={b.name} className="border-t border-danger-line">
+                        <td dir="auto" className="py-1.5 text-start">
+                          {b.name}
+                        </td>
+                        <td className="py-1.5 text-center font-semibold">
+                          {formatQuantity(b.qty, b.piecesPerCake)}
+                        </td>
+                        <td className="py-1.5 text-end">{formatQuantity(b.min, b.piecesPerCake)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </details>
           )}
           {rawBelowMin.length > 0 && (
             <Link

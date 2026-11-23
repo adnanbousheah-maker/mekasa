@@ -5,10 +5,13 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { StaffLoading, StaffScreen } from "@/components/ui/StaffScreen";
 import { requireStaff } from "@/features/auth/session";
 import { CloseRequestButton } from "@/features/orders/components/CloseRequestButton";
+import { MarkRequestOutButton } from "@/features/orders/components/MarkRequestOutButton";
+import { getFeatures } from "@/features/settings/features";
 import { NotForYou, STATUS_TONES } from "@/features/orders/components/OrderBits";
 import { linesSummary } from "@/features/orders/logic";
 import { loadDocuments, openForDispatch } from "@/features/orders/queries";
 import { createClient } from "@/lib/supabase/server";
+import { formatQuantity, SAUCE_UNIT } from "@/lib/units";
 import { formatClock, formatDateTime } from "@/lib/time";
 
 // design/factory/FactoryRequests
@@ -51,6 +54,8 @@ async function Requests() {
     : [];
   const alertHours = settings?.unreceived_alert_hours ?? 3;
   const isDispatcher = staff.roles.includes("dispatcher");
+  // فترة التجربة: مسؤول المصنع بيعلّم الطلبية إنها طلعت برا النظام (IT بيطفيه)
+  const canMarkOut = staff.roles.includes("factory_manager") && (await getFeatures()).requestMarkOut;
 
   return (
     <StaffScreen>
@@ -86,6 +91,30 @@ async function Requests() {
                   طلع جزء · الباقي
                 </span>
               )}
+              {r.status === "partial" && (
+                <table aria-label={`نواقص طلب ${r.fromName}`} className="w-full text-sm">
+                  <thead>
+                    <tr className="text-muted">
+                      <th className="pb-1 text-start font-normal">النواقص</th>
+                      <th className="pb-1 text-end font-normal">الباقي</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {r.lines.map((l) => (
+                      <tr key={l.productId} className="border-t border-line">
+                        <td dir="auto" className="py-1.5 text-start">
+                          {l.productName}
+                        </td>
+                        <td className="py-1.5 text-end font-semibold">
+                          {l.kind === "sauce"
+                            ? `${l.qtyPieces} ${SAUCE_UNIT}`
+                            : formatQuantity(l.qtyPieces, l.piecesPerCake)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
               <span className="text-sm text-muted">
                 {linesSummary(r.lines, r.isPackaging)} · طلبها {r.requestedBy}
               </span>
@@ -100,6 +129,7 @@ async function Requests() {
               {isDispatcher && r.status === "partial" && (
                 <CloseRequestButton requestId={r.id} branchName={r.fromName} />
               )}
+              {canMarkOut && <MarkRequestOutButton requestId={r.id} branchName={r.fromName} />}
             </li>
           ))}
       </ul>

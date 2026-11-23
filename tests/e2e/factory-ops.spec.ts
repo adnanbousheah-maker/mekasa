@@ -63,6 +63,8 @@ test("an order goes out in two parts, the second from today's batch without stoc
 
     const open = page.getByRole("listitem", { name: "طلب فرع الجبيهة" }).first();
     await expect(open.getByText("طلع جزء · الباقي")).toBeVisible();
+    const shortages = open.getByRole("table", { name: "نواقص طلب الجبيهة" });
+    await expect(shortages.getByRole("row", { name: /Latte/ })).toContainText("كيكتين");
     await open.getByRole("link", { name: "طلّع الباقي" }).click();
     await expect(
       page.getByRole("listitem", { name: "Latte" }).getByRole("textbox", { name: "كيكات" }),
@@ -89,6 +91,34 @@ test("the factory manager sees the factory report and a count's differences", as
       await first.click();
       await expect(page.getByRole("heading", { name: "جرد المصنع" })).toBeVisible();
     }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  } finally {
+    await db.from("staff_roles").delete().eq("staff_id", id).eq("role", "factory_manager");
+  }
+});
+
+test("the factory manager marks an order as out and sees what is left of a partial one", async ({ page }) => {
+  const id = await staffId(FACTORY.phone);
+  await db.from("staff_roles").insert({ staff_id: id, role: "factory_manager" });
+  try {
+    await signInAndWait(page, BRANCH_JBH.phone, BRANCH_JBH.pin);
+    await page.goto("/order");
+    for (const item of await page.getByRole("listitem").all()) {
+      const box = item.getByRole("textbox", { name: "كيكات" });
+      if (await box.count()) await box.fill("0");
+    }
+    await page.getByRole("listitem", { name: "Flan" }).getByRole("textbox", { name: "كيكات" }).fill("2");
+    await page.getByRole("button", { name: "مراجعة الطلب" }).click();
+    await page.getByRole("button", { name: "إرسال الطلب للمصنع" }).click();
+    await expect(page.getByText("انبعت طلبك للمصنع")).toBeVisible();
+
+    await page.context().clearCookies();
+    await signInAndWait(page, FACTORY.phone, FACTORY.pin);
+    await page.goto("/factory/requests");
+    const request = page.getByRole("listitem", { name: "طلب فرع الجبيهة" }).first();
+    await request.getByRole("button", { name: "تم إخراج الطلبية" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "أيوا، طلعت" }).click();
+    await expect(page.getByRole("listitem", { name: "طلب فرع الجبيهة" })).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   } finally {
     await db.from("staff_roles").delete().eq("staff_id", id).eq("role", "factory_manager");

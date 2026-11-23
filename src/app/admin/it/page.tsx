@@ -29,7 +29,12 @@ async function It() {
   return (
     <>
       <PageHeader title="IT" subtitle={features.previewMode ? "فترة المعاينة شغّالة" : "الشغل الحقيقي"} />
-      <ItControls previewMode={features.previewMode} tasks={features.tasks} locations={locations ?? []} />
+      <ItControls
+        previewMode={features.previewMode}
+        tasks={features.tasks}
+        requestMarkOut={features.requestMarkOut}
+        locations={locations ?? []}
+      />
     </>
   );
 }
