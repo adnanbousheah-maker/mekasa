@@ -94,3 +94,8 @@ export function formatLongDate(isoDate: string): string {
   const weekday = DAY_NAMES[dayNumberOf(isoDate)];
   return `${weekday} ${date.getUTCDate()} ${MONTH_NAMES[date.getUTCMonth()]}`;
 }
+
+/** وقت الطلب بتاريخه: "الأحد 23 نوفمبر · 0:56". */
+export function formatDateTime(at: Date): string {
+  return `${formatLongDate(businessDate(at))} · ${formatClock(at)}`;
+}

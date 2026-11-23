@@ -9,7 +9,7 @@ import { NotForYou, STATUS_TONES } from "@/features/orders/components/OrderBits"
 import { linesSummary } from "@/features/orders/logic";
 import { loadDocuments, openForDispatch } from "@/features/orders/queries";
 import { createClient } from "@/lib/supabase/server";
-import { formatClock } from "@/lib/time";
+import { formatClock, formatDateTime } from "@/lib/time";
 
 // design/factory/FactoryRequests
 export default function FactoryRequestsPage() {
@@ -67,39 +67,41 @@ async function Requests() {
         </Link>
       )}
       <ul className="flex flex-col gap-3">
-        {[...requests].reverse().map((r) => (
-          <li
-            key={r.id}
-            aria-label={`طلب فرع ${r.fromName}`}
-            className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-4"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[17px] font-bold">فرع {r.fromName}</span>
-              <span className="text-sm text-muted">{formatClock(new Date(r.requestedAt))}</span>
-            </div>
-            {r.status === "partial" && (
-              <span
-                className={`self-start rounded-[10px] px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONES.partial}`}
-              >
-                طلع جزء · الباقي
+        {[...requests]
+          .sort((a, b) => b.requestedAt.localeCompare(a.requestedAt))
+          .map((r) => (
+            <li
+              key={r.id}
+              aria-label={`طلب فرع ${r.fromName}`}
+              className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-4"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[17px] font-bold">فرع {r.fromName}</span>
+                <span className="text-sm text-muted">{formatDateTime(new Date(r.requestedAt))}</span>
+              </div>
+              {r.status === "partial" && (
+                <span
+                  className={`self-start rounded-[10px] px-2.5 py-0.5 text-xs font-semibold ${STATUS_TONES.partial}`}
+                >
+                  طلع جزء · الباقي
+                </span>
+              )}
+              <span className="text-sm text-muted">
+                {linesSummary(r.lines, r.isPackaging)} · طلبها {r.requestedBy}
               </span>
-            )}
-            <span className="text-sm text-muted">
-              {linesSummary(r.lines, r.isPackaging)} · طلبها {r.requestedBy}
-            </span>
-            {isDispatcher && (
-              <Link
-                href={`/factory/dispatch?request=${r.id}`}
-                className="flex h-12 items-center justify-center rounded-xl bg-ink font-semibold text-white"
-              >
-                {r.status === "partial" ? "طلّع الباقي" : "ابدأ الإخراج"}
-              </Link>
-            )}
-            {isDispatcher && r.status === "partial" && (
-              <CloseRequestButton requestId={r.id} branchName={r.fromName} />
-            )}
-          </li>
-        ))}
+              {isDispatcher && (
+                <Link
+                  href={`/factory/dispatch?request=${r.id}`}
+                  className="flex h-12 items-center justify-center rounded-xl bg-ink font-semibold text-white"
+                >
+                  {r.status === "partial" ? "طلّع الباقي" : "ابدأ الإخراج"}
+                </Link>
+              )}
+              {isDispatcher && r.status === "partial" && (
+                <CloseRequestButton requestId={r.id} branchName={r.fromName} />
+              )}
+            </li>
+          ))}
       </ul>
 
       <h2 className="text-[15px] font-semibold text-muted">طلعت · بانتظار الاستلام</h2>

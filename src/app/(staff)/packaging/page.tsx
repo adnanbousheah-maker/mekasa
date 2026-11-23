@@ -14,7 +14,7 @@ import {
   packagingStock,
   packagingStore,
 } from "@/features/packaging/queries";
-import { formatClock } from "@/lib/time";
+import { formatClock, formatDateTime } from "@/lib/time";
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
@@ -80,28 +80,30 @@ async function Packaging({ searchParams }: { searchParams: SearchParams }) {
       <h2 className="text-[15px] font-semibold text-muted">طلبات جديدة · بانتظار الإخراج</h2>
       {requests.length === 0 && <p className="text-sm text-muted">ما في طلبات جديدة.</p>}
       <ul className="flex flex-col gap-3">
-        {[...requests].reverse().map((r) => (
-          <li
-            key={r.id}
-            aria-label={`طلب فرع ${r.fromName}`}
-            className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-4"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[17px] font-bold">فرع {r.fromName}</span>
-              <span className="text-sm text-muted">{formatClock(new Date(r.requestedAt))}</span>
-            </div>
-            <span className="text-sm text-muted">
-              {units(r.lines)} · طلبها {r.requestedBy}
-            </span>
-            <Link
-              href={`/packaging/dispatch?request=${r.id}`}
-              className="flex h-12 items-center justify-center rounded-xl bg-ink font-semibold text-white"
+        {[...requests]
+          .sort((a, b) => b.requestedAt.localeCompare(a.requestedAt))
+          .map((r) => (
+            <li
+              key={r.id}
+              aria-label={`طلب فرع ${r.fromName}`}
+              className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-4"
             >
-              {r.status === "partial" ? "طلّع الباقي" : "ابدأ الإخراج"}
-            </Link>
-            {r.status === "partial" && <CloseRequestButton requestId={r.id} branchName={r.fromName} />}
-          </li>
-        ))}
+              <div className="flex items-center justify-between">
+                <span className="text-[17px] font-bold">فرع {r.fromName}</span>
+                <span className="text-sm text-muted">{formatDateTime(new Date(r.requestedAt))}</span>
+              </div>
+              <span className="text-sm text-muted">
+                {units(r.lines)} · طلبها {r.requestedBy}
+              </span>
+              <Link
+                href={`/packaging/dispatch?request=${r.id}`}
+                className="flex h-12 items-center justify-center rounded-xl bg-ink font-semibold text-white"
+              >
+                {r.status === "partial" ? "طلّع الباقي" : "ابدأ الإخراج"}
+              </Link>
+              {r.status === "partial" && <CloseRequestButton requestId={r.id} branchName={r.fromName} />}
+            </li>
+          ))}
       </ul>
 
       <h2 className="text-[15px] font-semibold text-muted">طلعت · بانتظار الاستلام</h2>

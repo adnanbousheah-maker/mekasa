@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatDateTime,
   businessDate,
   countDay,
   formatClock,
@@ -90,5 +91,11 @@ describe("formatLongDate", () => {
 
   it("handles single-digit days", () => {
     expect(formatLongDate("2026-11-01")).toBe("الأحد 1 نوفمبر");
+  });
+});
+
+describe("formatDateTime", () => {
+  it("writes the day, the date and the clock", () => {
+    expect(formatDateTime(new Date("2026-11-23T21:56:00Z"))).toBe("الثلاثاء 24 نوفمبر · 0:56");
   });
 });
