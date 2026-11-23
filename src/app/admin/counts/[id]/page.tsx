@@ -4,7 +4,9 @@ import { Suspense } from "react";
 import { AdminLoading } from "@/components/ui/AdminLoading";
 import { ExportButton, Kpi, PageHeader } from "@/features/admin/components/AdminBits";
 import { canEdit, requireManager } from "@/features/auth/session";
+import { AddCountLine } from "@/features/counts/components/AddCountLine";
 import { CountLinesTable } from "@/features/reports/components/CountLinesTable";
+import { createClient } from "@/lib/supabase/server";
 import { cakesLabel } from "@/features/reports/format";
 import { getCountDetail } from "@/features/reports/queries";
 import { formatScheduleTime } from "@/features/settings/schemas";
@@ -28,6 +30,26 @@ async function CountDetail({ params }: { params: Params }) {
   const detail = await getCountDetail(id);
   if (!detail) notFound();
   const { summary: c, lines, audit } = detail;
+
+  const editor = canEdit(await requireManager());
+  // الأصناف اللي بتنضاف: نوع أصناف الجرد (كيك أو صوصات)
+  let addable: { id: string; name: string; piecesPerCake: number | null }[] = [];
+  if (editor) {
+    const supabase = await createClient();
+    const { data: meta } = await supabase.from("stock_counts").select("scope").eq("id", c.id).single();
+    const kind = meta?.scope === "sauce" ? "sauce" : "cake";
+    const { data } = await supabase
+      .from("v_products")
+      .select("id, name_en, effective_pieces_per_cake")
+      .eq("kind", kind)
+      .eq("is_active", true)
+      .order("sort_order");
+    addable = (data ?? []).map((p) => ({
+      id: p.id!,
+      name: p.name_en!,
+      piecesPerCake: p.effective_pieces_per_cake,
+    }));
+  }
 
   const slotAt = c.scheduleTime ? formatScheduleTime(c.scheduleTime) : null;
   const ocrCorrections = lines.filter(
@@ -92,12 +114,22 @@ async function CountDetail({ params }: { params: Params }) {
             </a>
           </section>
         )}
-        <CountLinesTable
-          lines={lines}
-          isOpening={c.isOpening}
-          isFactory={detail.locationKind === "factory"}
-          canEdit={canEdit(await requireManager())}
-        />
+        <div className="flex flex-[2_1_480px] flex-col gap-3">
+          <CountLinesTable
+            lines={lines}
+            isOpening={c.isOpening}
+            isFactory={detail.locationKind === "factory"}
+            canEdit={editor}
+          />
+          {editor && addable.length > 0 && (
+            <AddCountLine
+              countId={c.id}
+              products={addable}
+              isFactory={detail.locationKind === "factory"}
+              countDate={c.businessDate}
+            />
+          )}
+        </div>
       </div>
 
       <section className="flex flex-col gap-2.5 rounded-2xl border border-line bg-surface p-5">

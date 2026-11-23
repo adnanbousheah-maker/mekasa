@@ -110,6 +110,50 @@ export async function correctCountLineAction(input: {
   return { status: "done" };
 }
 
+const addLineSchema = z.object({
+  countId: z.uuid(),
+  productId: z.uuid(),
+  productionDate: z.iso.date().nullable(),
+  frozen: z.boolean(),
+  wholeCakes: z.number().int().min(0).max(MAX_COUNT_VALUE),
+  loosePieces: z.number().int().min(0).max(MAX_COUNT_PIECES),
+  reason: z.string().trim().min(3, "اكتب السبب (3 أحرف على الأقل)").max(300),
+});
+
+/** الأدمن بيضيف صنف ما انعدّ لجرد مؤكد (مثلاً كان موقوف وقت الجرد). */
+export async function addCountLineAction(input: z.input<typeof addLineSchema>): Promise<CorrectionResult> {
+  await requireAdmin();
+  const parsed = addLineSchema.safeParse(input);
+  if (!parsed.success)
+    return { status: "error", message: parsed.error.issues[0]?.message ?? "القيمة مش صحيحة" };
+  const l = parsed.data;
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("admin_add_count_line", {
+    p_count_id: l.countId,
+    p_product_id: l.productId,
+    // بالفروع ما في دفعة: null (الدالة بتتجاهله)
+    p_production_date: l.productionDate as string,
+    p_frozen: l.frozen,
+    p_whole_cakes: l.wholeCakes,
+    p_loose_pieces: l.loosePieces,
+    p_reason: l.reason,
+  });
+  if (error) {
+    console.error("addCountLine", error);
+    const message =
+      error.hint === "already_counted"
+        ? "هالصنف (بهالدفعة) موجود بالجرد. عدّله من الجدول."
+        : error.hint === "production_date"
+          ? "اختار تاريخ الإنتاج"
+          : error.code === "23514"
+            ? "التاريخ أو الرقم مش منطقي لهالصنف"
+            : "ما انحفظ";
+    return { status: "error", message };
+  }
+  refresh();
+  return { status: "done" };
+}
+
 const editCountSchema = z.object({
   countId: z.uuid(),
   lines: z

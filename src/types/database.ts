@@ -4001,6 +4001,18 @@ export type Database = {
       };
     };
     Functions: {
+      admin_add_count_line: {
+        Args: {
+          p_count_id: string;
+          p_frozen: boolean;
+          p_loose_pieces: number;
+          p_product_id: string;
+          p_production_date: string;
+          p_reason: string;
+          p_whole_cakes: number;
+        };
+        Returns: string;
+      };
       admin_correct_count_line: {
         Args: { p_line_id: string; p_loose_pieces: number; p_reason: string; p_whole_cakes: number };
         Returns: undefined;

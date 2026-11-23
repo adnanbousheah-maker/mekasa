@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { dayNumberOf } from "../../src/lib/day-number";
 import { businessDate } from "../../src/lib/time";
-import { BRANCH_DBQ, FACTORY, signInAndWait, stockOf } from "./support";
+import { ADMIN, BRANCH_DBQ, FACTORY, signInAndWait, stockOf } from "./support";
 import { confirmUncountedBatches } from "./support";
 
 test("a branch employee counts by hand and the stock follows the count", async ({ page }) => {
@@ -91,4 +91,32 @@ test("the factory counts blind, by day number", async ({ page }) => {
   await confirmUncountedBatches(page);
   await expect(page.getByRole("heading", { name: "تم الجرد" })).toBeVisible();
   expect(await stockOf("FAC", "Flan")).toBe(20);
+});
+
+test("the admin adds a product that was missing from a factory count", async ({ page, browser }) => {
+  await signInAndWait(page, FACTORY.phone, FACTORY.pin);
+  await page.getByRole("link", { name: "جرد المصنع" }).click();
+  await page.getByRole("button", { name: "تأكيد جرد المصنع" }).click();
+  await confirmUncountedBatches(page);
+  await expect(page.getByRole("heading", { name: "تم الجرد" })).toBeVisible();
+  const countId = new URL(page.url()).searchParams.get("id")!;
+  const before = await stockOf("FAC", "Carrot");
+
+  const admin = await browser.newPage({ viewport: { width: 1360, height: 900 } });
+  try {
+    await signInAndWait(admin, ADMIN.phone, ADMIN.pin);
+    await admin.goto(`/admin/counts/${countId}`);
+    await admin.getByRole("button", { name: "+ ضيف صنف ما انعدّ" }).click();
+    const dialog = admin.getByRole("dialog", { name: "ضيف صنف للجرد" });
+    await dialog.getByLabel("الصنف").selectOption({ label: "Carrot" });
+    await dialog.getByLabel("كيكات").fill("3");
+    await dialog.getByLabel("السبب").fill("كان موقوف وقت الجرد");
+    await dialog.getByRole("button", { name: "ضيف للجرد" }).click();
+    await expect(dialog).toBeHidden();
+    await expect(admin.getByRole("row", { name: /Carrot/ })).toBeVisible();
+    await expect.poll(() => stockOf("FAC", "Carrot")).toBe(30);
+    expect(before).toBeLessThanOrEqual(0);
+  } finally {
+    await admin.close();
+  }
 });
