@@ -92,8 +92,9 @@ update public.stock_counts set status = 'confirmed', confirmed_at = now() where 
 select tests.authenticate_as('33333333-0000-4000-8000-000000000001');
 
 select results_eq(
-  $$ select time_of_day, status = 'done' from public.v_count_slots_today order by time_of_day $$,
-  $$ values ('09:00'::time, true), ('21:00'::time, false) $$,
+  -- 21:00 مش مفحوص هون: جرد مش مربوط من فوق (وقته الحالي) بيغطّيه إذا الفحص اشتغل بين 9 و21 (20261123100100)
+  $$ select time_of_day, status = 'done' from public.v_count_slots_today where time_of_day = '09:00' $$,
+  $$ values ('09:00'::time, true) $$,
   'branch staff see their own count slots, and a confirmed scheduled count marks the slot done'
 );
 
