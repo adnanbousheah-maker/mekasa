@@ -51,6 +51,8 @@ async function Count() {
           لكل صنف: اختار رقم اليوم المكتوب على الكيك، وعدّ كل رقم لحاله. ما بنعرض الكمية المتوقعة مشان العد
           يكون حقيقي.
         </p>
+        {/* فوق مش تحت: شريط "تأكيد جرد المصنع" ثابت تحت وكان يغطي الزر */}
+        <SauceCountLink />
         <FactoryCountForm
           key={now.toISOString()}
           products={products}
@@ -59,7 +61,6 @@ async function Count() {
           scheduleId={slot?.scheduleId ?? null}
           startedAt={now.toISOString()}
         />
-        <SauceCountLink />
       </StaffScreen>
     );
   }
