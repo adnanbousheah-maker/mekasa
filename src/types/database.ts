@@ -1578,6 +1578,7 @@ export type Database = {
       raw_count_lines: {
         Row: {
           count_id: string;
+          entered_parts: Json | null;
           entered_qty: number;
           entered_unit_id: string | null;
           id: string;
@@ -1587,6 +1588,7 @@ export type Database = {
         ComputedFields: never;
         Insert: {
           count_id: string;
+          entered_parts?: Json | null;
           entered_qty: number;
           entered_unit_id?: string | null;
           id?: string;
@@ -1595,6 +1597,7 @@ export type Database = {
         };
         Update: {
           count_id?: string;
+          entered_parts?: Json | null;
           entered_qty?: number;
           entered_unit_id?: string | null;
           id?: string;

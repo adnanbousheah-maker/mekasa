@@ -35,15 +35,17 @@ test("the storekeeper receives two materials from one supplier, and counts every
   await page.getByRole("link", { name: "جرد المواد اليومي" }).click();
   await expect(page.getByRole("heading", { name: "جرد المواد الأولية" })).toBeVisible();
   const countRow = page.getByRole("main").getByRole("listitem", { name: "طحين" });
-  await countRow.getByRole("textbox", { name: "كمية طحين" }).fill("3");
-  await countRow.getByRole("combobox", { name: "وحدة طحين" }).selectOption({ label: "كيس" });
+  // أكثر من تعبئة لنفس المادة: 3 أكياس (25 كيلو) + 5 كيلو
+  await countRow.getByRole("textbox", { name: "طحين كيس" }).fill("3");
+  await countRow.getByRole("textbox", { name: "طحين كيلو" }).fill("5");
+  await expect(countRow).toContainText("المجموع: 80 كيلو");
   await page.getByRole("button", { name: "تأكيد جرد المواد" }).click();
   // الجرد كامل: اللي ما انعدّ بينحسب صفر، بس بنسأل أول
   const missing = page.getByRole("dialog", { name: "في مواد ما عدّيتها" });
   await expect(missing).toBeVisible();
   await missing.getByRole("button", { name: "أكيد، ما في منهم" }).click();
   await expect(page.getByText("انحفظ جرد المواد")).toBeVisible();
-  await expect(flour).toContainText("75 كيلو");
+  await expect(flour).toContainText("80 كيلو");
 });
 
 test.describe("admin", () => {

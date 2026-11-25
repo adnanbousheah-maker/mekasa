@@ -61,7 +61,8 @@ export const rawCountSchema = z.object({
       }),
     )
     .min(1, "اكتب كمية مادة وحدة على الأقل")
-    .max(200),
+    // المادة ممكن تنكتب بأكثر من تعبئة (كيس + كرتونة + كيلو)، فأكثر من سطر لنفس المادة
+    .max(800),
 });
 
 export const newMaterialSchema = z.object({

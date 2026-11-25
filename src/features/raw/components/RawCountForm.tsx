@@ -6,48 +6,74 @@ import { Dialog } from "@/components/ui/Dialog";
 import { DraftNotice } from "@/features/counts/components/DraftNotice";
 import { useCountDraft } from "@/features/counts/draft";
 import { submitRawCountAction } from "../actions";
+import { amount } from "../logic";
 import type { RawMaterialRow } from "../queries";
 
-type Row = { qty: string; unitId: string | null };
+// المكتوب لكل مادة: خانة لكل وحدة (BASE = الوحدة الأساسية، وإلا رقم التعبئة)
+const BASE = "base";
+type Row = Record<string, string>;
+
+const parse = (v: string) => Number(v.replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660)));
+const isFilled = (v: string | undefined) => !!v && v.trim() !== "" && Number.isFinite(parse(v));
+
+/** المسودة القديمة كانت { qty, unitId } لكل مادة: بنحوّلها للشكل الجديد. */
+function fromSaved(saved: unknown): Row | null {
+  if (!saved || typeof saved !== "object") return null;
+  const old = saved as { qty?: unknown; unitId?: unknown };
+  if (typeof old.qty === "string") return { [typeof old.unitId === "string" ? old.unitId : BASE]: old.qty };
+  return saved as Row;
+}
 
 /**
- * جرد المواد الأولية اليومي: اكتب الموجود لكل مادة (بأي وحدة). الجرد كامل (اجتماع 20 نوفمبر):
- * اللي ما انكتب بينحسب صفر، فقبل التأكيد بنسأل "في مواد ما عدّيتها".
+ * جرد المواد الأولية اليومي: لكل مادة خانة لكل تعبئة إلها (مثلاً كيس، كرتونة، كيلو)، والعامل بيعبّي
+ * اللي موجود منها (25 نوفمبر: "كيسين + كرتونة + 3 كيلو")، والمجموع بالوحدة الأساسية تحت.
+ * الجرد كامل (اجتماع 20 نوفمبر): اللي ما انكتب بينحسب صفر، فقبل التأكيد بنسأل "في مواد ما عدّيتها".
  */
 export function RawCountForm({ materials, startedAt }: { materials: RawMaterialRow[]; startedAt: string }) {
   const router = useRouter();
-  const blankRows = () =>
-    Object.fromEntries(materials.map((m) => [m.id, { qty: "", unitId: null }])) as Record<string, Row>;
+  const blankRows = () => Object.fromEntries(materials.map((m) => [m.id, {}])) as Record<string, Row>;
   const [rows, setRows] = useState<Record<string, Row>>(blankRows);
   const draft = useCountDraft(
     "raw",
     rows,
     (saved) =>
       setRows((current) =>
-        Object.fromEntries(Object.entries(current).map(([id, r]) => [id, saved[id] ?? r])),
+        Object.fromEntries(Object.entries(current).map(([id, r]) => [id, fromSaved(saved[id]) ?? r])),
       ),
     startedAt,
   );
   const [error, setError] = useState<string | null>(null);
   const [missingOpen, setMissingOpen] = useState(false);
   const [isSaving, startTransition] = useTransition();
-  const parse = (v: string) => Number(v.replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660)));
-  const filled = materials.filter(
-    (m) => rows[m.id].qty.trim() !== "" && Number.isFinite(parse(rows[m.id].qty)),
-  );
 
-  const missing = materials.filter((m) => !filled.includes(m));
+  const unitsOf = (m: RawMaterialRow) => [
+    ...m.units.map((u) => ({ key: u.id, name: u.name, factor: u.factor })),
+    { key: BASE, name: m.baseUnit, factor: 1 },
+  ];
+  const filledKeys = (m: RawMaterialRow) => unitsOf(m).filter((u) => isFilled(rows[m.id]?.[u.key]));
+  const totalOf = (m: RawMaterialRow) =>
+    filledKeys(m).reduce((sum, u) => sum + parse(rows[m.id][u.key]) * u.factor, 0);
+
+  const filled = materials.filter((m) => filledKeys(m).length > 0);
+  const missing = materials.filter((m) => filledKeys(m).length === 0);
+
+  const setValue = (materialId: string, key: string, value: string) =>
+    setRows((r) => ({ ...r, [materialId]: { ...r[materialId], [key]: value } }));
 
   const submit = () =>
     startTransition(async () => {
       setMissingOpen(false);
       const result = await submitRawCountAction({
         startedAt: draft.startedAt,
-        lines: materials.map((m) =>
-          filled.includes(m)
-            ? { materialId: m.id, unitId: rows[m.id].unitId, qty: parse(rows[m.id].qty) }
-            : { materialId: m.id, unitId: null, qty: 0 },
-        ),
+        lines: materials.flatMap((m) => {
+          const parts = filledKeys(m);
+          if (parts.length === 0) return [{ materialId: m.id, unitId: null, qty: 0 }];
+          return parts.map((u) => ({
+            materialId: m.id,
+            unitId: u.key === BASE ? null : u.key,
+            qty: parse(rows[m.id][u.key]),
+          }));
+        }),
       });
       if (result.status === "error") setError(result.message);
       else {
@@ -67,37 +93,41 @@ export function RawCountForm({ materials, startedAt }: { materials: RawMaterialR
         />
       )}
       <ul className="flex flex-col gap-2.5 pb-36">
-        {materials.map((m) => (
-          <li
-            key={m.id}
-            aria-label={m.name}
-            className="flex items-center gap-3 rounded-[14px] border border-line bg-surface p-3"
-          >
-            <span className="grow text-base font-semibold">{m.name}</span>
-            <input
-              inputMode="decimal"
-              aria-label={`كمية ${m.name}`}
-              value={rows[m.id].qty}
-              onChange={(e) => setRows((r) => ({ ...r, [m.id]: { ...r[m.id], qty: e.target.value } }))}
-              className="h-12 w-24 rounded-xl border border-line-strong text-center text-lg font-bold"
-            />
-            <select
-              aria-label={`وحدة ${m.name}`}
-              value={rows[m.id].unitId ?? ""}
-              onChange={(e) =>
-                setRows((r) => ({ ...r, [m.id]: { ...r[m.id], unitId: e.target.value || null } }))
-              }
-              className="h-12 rounded-xl border border-line-strong bg-surface px-2"
+        {materials.map((m) => {
+          const units = unitsOf(m);
+          const parts = filledKeys(m);
+          return (
+            <li
+              key={m.id}
+              aria-label={m.name}
+              className="flex flex-col gap-2 rounded-[14px] border border-line bg-surface p-3"
             >
-              <option value="">{m.baseUnit}</option>
-              {m.units.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                </option>
-              ))}
-            </select>
-          </li>
-        ))}
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-base font-semibold">{m.name}</span>
+                {parts.length > 0 && (
+                  <span className="text-sm text-muted">المجموع: {amount(totalOf(m), m.baseUnit)}</span>
+                )}
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {units.map((u) => (
+                  <label key={u.key} className="flex flex-col items-center gap-1">
+                    <input
+                      inputMode="decimal"
+                      aria-label={`${m.name} ${u.name}`}
+                      value={rows[m.id]?.[u.key] ?? ""}
+                      onChange={(e) => setValue(m.id, u.key, e.target.value)}
+                      className="h-12 w-full rounded-xl border border-line-strong text-center text-lg font-bold"
+                    />
+                    <span className="text-xs text-muted">
+                      {u.name}
+                      {u.key !== BASE && ` (${amount(u.factor, m.baseUnit)})`}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </li>
+          );
+        })}
       </ul>
       <div className="fixed inset-x-0 bottom-0 border-t border-line bg-surface">
         <div className="mx-auto flex w-full max-w-md flex-col gap-2 px-5 pt-3 pb-6">
