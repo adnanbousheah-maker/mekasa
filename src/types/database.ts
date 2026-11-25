@@ -1743,6 +1743,7 @@ export type Database = {
           base_unit: string;
           category_id: string | null;
           code: string | null;
+          count_group: string | null;
           created_at: string;
           id: string;
           is_active: boolean;
@@ -1756,6 +1757,7 @@ export type Database = {
           base_unit: string;
           category_id?: string | null;
           code?: string | null;
+          count_group?: string | null;
           created_at?: string;
           id?: string;
           is_active?: boolean;
@@ -1768,6 +1770,7 @@ export type Database = {
           base_unit?: string;
           category_id?: string | null;
           code?: string | null;
+          count_group?: string | null;
           created_at?: string;
           id?: string;
           is_active?: boolean;

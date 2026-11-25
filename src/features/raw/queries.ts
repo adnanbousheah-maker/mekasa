@@ -15,6 +15,8 @@ export interface RawMaterialRow {
   daysLeft: number | null;
   belowMin: boolean;
   units: { id: string; name: string; factor: number }[];
+  // مواد بنفس المجموعة بتنعدّ بنفس الكرت جنب بعض (مثلاً قواعد كيك كبير ووسط)
+  countGroup: string | null;
   lastReceipt: { at: string; enteredQty: number | null; unitName: string | null; qtyBase: number } | null;
 }
 
@@ -25,7 +27,7 @@ export async function listRawMaterials(includeInactive = false): Promise<RawMate
   let materials = supabase
     .from("raw_materials")
     .select(
-      "id, code, name, base_unit, min_qty, is_active, category_id, raw_material_units(id, unit_name, factor_to_base, is_active)",
+      "id, code, name, base_unit, min_qty, is_active, category_id, count_group, raw_material_units(id, unit_name, factor_to_base, is_active)",
     )
     .order("sort_order")
     .order("name");
@@ -53,6 +55,7 @@ export async function listRawMaterials(includeInactive = false): Promise<RawMate
       baseUnit: m.base_unit,
       minQty: Number(m.min_qty),
       isActive: m.is_active,
+      countGroup: m.count_group,
       qty: Number(s?.qty_base ?? 0),
       dailyIssue: Number(s?.avg_daily_issue ?? 0),
       daysLeft: s?.days_left ?? null,

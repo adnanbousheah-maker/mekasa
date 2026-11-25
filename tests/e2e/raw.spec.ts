@@ -1,6 +1,6 @@
 import ExcelJS from "exceljs";
 import { expect, test } from "@playwright/test";
-import { ADMIN, FACTORY, signInAndWait } from "./support";
+import { ADMIN, FACTORY, serviceClient, signInAndWait } from "./support";
 
 test("the storekeeper receives two materials from one supplier, and counts every day", async ({ page }) => {
   await signInAndWait(page, FACTORY.phone, FACTORY.pin);
@@ -118,4 +118,36 @@ test.describe("admin", () => {
     await dialog.getByRole("button", { name: "تمام" }).click();
     await expect(page.getByRole("row", { name: new RegExp(name) })).toContainText("2 كيلو");
   });
+});
+
+test("materials of one group are counted side by side in one card", async ({ page }) => {
+  const db = serviceClient();
+  const tag = `${Date.now() % 100000}`;
+  const group = `قواعد ${tag}`;
+  const { data, error } = await db
+    .from("raw_materials")
+    .insert([
+      { name: `${group} كبير`, base_unit: "ربطة", count_group: group, sort_order: 0 },
+      { name: `${group} وسط`, base_unit: "ربطة", count_group: group, sort_order: 0 },
+    ])
+    .select("id");
+  if (error) throw error;
+  try {
+    await signInAndWait(page, FACTORY.phone, FACTORY.pin);
+    await page.goto("/factory/raw/count");
+    const card = page.getByRole("main").getByRole("listitem", { name: group });
+    await expect(card.getByRole("group")).toHaveCount(2);
+    await expect(card.getByRole("group", { name: `${group} كبير` })).toContainText("كبير");
+    await card.getByRole("textbox", { name: `${group} كبير ربطة` }).fill("3");
+    await card.getByRole("textbox", { name: `${group} وسط ربطة` }).fill("4");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  } finally {
+    await db
+      .from("raw_materials")
+      .update({ is_active: false })
+      .in(
+        "id",
+        (data ?? []).map((r) => r.id),
+      );
+  }
 });

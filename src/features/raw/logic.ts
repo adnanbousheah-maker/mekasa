@@ -76,3 +76,29 @@ export const newMaterialSchema = z.object({
 export type RawMoveInput = z.input<typeof rawMoveSchema>;
 export type RawCountInput = z.input<typeof rawCountSchema>;
 export type NewMaterialInput = z.input<typeof newMaterialSchema>;
+
+/** المواد بالترتيب، والمواد اللي إلها نفس المجموعة بتنحط مع بعض بنفس الكرت (بمكان أول وحدة منهم). */
+export function groupMaterials<T extends { id: string; countGroup: string | null }>(materials: T[]): T[][] {
+  const groups: T[][] = [];
+  const byGroup = new Map<string, T[]>();
+  for (const m of materials) {
+    if (!m.countGroup) {
+      groups.push([m]);
+      continue;
+    }
+    const existing = byGroup.get(m.countGroup);
+    if (existing) existing.push(m);
+    else {
+      const group = [m];
+      byGroup.set(m.countGroup, group);
+      groups.push(group);
+    }
+  }
+  return groups;
+}
+
+/** "قواعد كيك كبير" بمجموعة "قواعد كيك" بتنكتب "كبير" جوا الكرت. */
+export function shortName(name: string, group: string | null): string {
+  if (!group || !name.startsWith(group)) return name;
+  return name.slice(group.length).trim() || name;
+}

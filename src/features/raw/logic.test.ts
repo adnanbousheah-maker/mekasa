@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { amount, daysLeftLabel, daysTone, newMaterialSchema, rawCountSchema, rawMoveSchema } from "./logic";
+import {
+  amount,
+  daysLeftLabel,
+  groupMaterials,
+  shortName,
+  daysTone,
+  newMaterialSchema,
+  rawCountSchema,
+  rawMoveSchema,
+} from "./logic";
 
 const id = "11111111-1111-4111-8111-111111111111";
 
@@ -46,5 +55,21 @@ describe("schemas", () => {
       unitName: "",
       unitFactor: null,
     });
+  });
+});
+
+describe("groupMaterials", () => {
+  const m = (id: string, countGroup: string | null = null) => ({ id, countGroup });
+  it("keeps the order and puts materials of the same group together, where the first one was", () => {
+    const groups = groupMaterials([m("a"), m("big", "قواعد كيك"), m("b"), m("mid", "قواعد كيك")]);
+    expect(groups.map((g) => g.map((x) => x.id))).toEqual([["a"], ["big", "mid"], ["b"]]);
+  });
+});
+
+describe("shortName", () => {
+  it("drops the group name inside the card", () => {
+    expect(shortName("قواعد كيك كبير", "قواعد كيك")).toBe("كبير");
+    expect(shortName("سكر", null)).toBe("سكر");
+    expect(shortName("سكر", "قواعد كيك")).toBe("سكر");
   });
 });

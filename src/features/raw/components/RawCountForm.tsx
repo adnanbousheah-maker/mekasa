@@ -6,7 +6,7 @@ import { Dialog } from "@/components/ui/Dialog";
 import { DraftNotice } from "@/features/counts/components/DraftNotice";
 import { useCountDraft } from "@/features/counts/draft";
 import { submitRawCountAction } from "../actions";
-import { amount } from "../logic";
+import { amount, groupMaterials, shortName } from "../logic";
 import type { RawMaterialRow } from "../queries";
 
 // المكتوب لكل مادة: خانة لكل وحدة (BASE = الوحدة الأساسية، وإلا رقم التعبئة)
@@ -60,6 +60,23 @@ export function RawCountForm({ materials, startedAt }: { materials: RawMaterialR
   const setValue = (materialId: string, key: string, value: string) =>
     setRows((r) => ({ ...r, [materialId]: { ...r[materialId], [key]: value } }));
 
+  const unitFields = (m: RawMaterialRow) =>
+    unitsOf(m).map((u) => (
+      <label key={u.key} className="flex flex-col items-center gap-1">
+        <input
+          inputMode="decimal"
+          aria-label={`${m.name} ${u.name}`}
+          value={rows[m.id]?.[u.key] ?? ""}
+          onChange={(e) => setValue(m.id, u.key, e.target.value)}
+          className="h-12 w-full rounded-xl border border-line-strong text-center text-lg font-bold"
+        />
+        <span className="text-xs text-muted">
+          {u.name}
+          {u.key !== BASE && ` (${amount(u.factor, m.baseUnit)})`}
+        </span>
+      </label>
+    ));
+
   const submit = () =>
     startTransition(async () => {
       setMissingOpen(false);
@@ -93,36 +110,48 @@ export function RawCountForm({ materials, startedAt }: { materials: RawMaterialR
         />
       )}
       <ul className="flex flex-col gap-2.5 pb-36">
-        {materials.map((m) => {
-          const units = unitsOf(m);
-          const parts = filledKeys(m);
+        {groupMaterials(materials).map((group) => {
+          if (group.length === 1) {
+            const m = group[0]!;
+            const parts = filledKeys(m);
+            return (
+              <li
+                key={m.id}
+                aria-label={m.name}
+                className="flex flex-col gap-2 rounded-[14px] border border-line bg-surface p-3"
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-base font-semibold">{m.name}</span>
+                  {parts.length > 0 && (
+                    <span className="text-sm text-muted">المجموع: {amount(totalOf(m), m.baseUnit)}</span>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-2">{unitFields(m)}</div>
+              </li>
+            );
+          }
+          // مواد بنفس المجموعة (مثلاً قواعد كيك كبير ووسط): كرت واحد، وكل مادة عمود لحالها وبينهم فراغ
+          const title = group[0]!.countGroup!;
           return (
             <li
-              key={m.id}
-              aria-label={m.name}
+              key={`group-${title}`}
+              aria-label={title}
               className="flex flex-col gap-2 rounded-[14px] border border-line bg-surface p-3"
             >
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="text-base font-semibold">{m.name}</span>
-                {parts.length > 0 && (
-                  <span className="text-sm text-muted">المجموع: {amount(totalOf(m), m.baseUnit)}</span>
-                )}
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {units.map((u) => (
-                  <label key={u.key} className="flex flex-col items-center gap-1">
-                    <input
-                      inputMode="decimal"
-                      aria-label={`${m.name} ${u.name}`}
-                      value={rows[m.id]?.[u.key] ?? ""}
-                      onChange={(e) => setValue(m.id, u.key, e.target.value)}
-                      className="h-12 w-full rounded-xl border border-line-strong text-center text-lg font-bold"
-                    />
-                    <span className="text-xs text-muted">
-                      {u.name}
-                      {u.key !== BASE && ` (${amount(u.factor, m.baseUnit)})`}
+              <span className="text-base font-semibold">{title}</span>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                {group.map((m) => (
+                  <div key={m.id} role="group" aria-label={m.name} className="flex flex-col gap-2">
+                    <span className="text-center text-sm font-semibold">
+                      {shortName(m.name, m.countGroup)}
                     </span>
-                  </label>
+                    {unitFields(m)}
+                    {filledKeys(m).length > 0 && unitsOf(m).length > 1 && (
+                      <span className="text-center text-xs text-muted">
+                        المجموع: {amount(totalOf(m), m.baseUnit)}
+                      </span>
+                    )}
+                  </div>
                 ))}
               </div>
             </li>
