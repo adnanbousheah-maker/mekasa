@@ -29,8 +29,8 @@ describe("compressImage", () => {
     });
 
     await expect(compressImage(new Blob(["raw"]))).resolves.toBe(out);
-    expect(drawImage).toHaveBeenCalledWith(expect.anything(), 0, 0, 2000, 1500);
-    expect(toBlob).toHaveBeenCalledWith(expect.any(Function), "image/jpeg", 0.85);
+    expect(drawImage).toHaveBeenCalledWith(expect.anything(), 0, 0, 1600, 1200);
+    expect(toBlob).toHaveBeenCalledWith(expect.any(Function), "image/jpeg", 0.72);
     expect(close).toHaveBeenCalled();
   });
 

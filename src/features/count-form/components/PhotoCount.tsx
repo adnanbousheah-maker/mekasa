@@ -7,7 +7,7 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { BranchCountForm, type PrefilledLine } from "@/features/counts/components/BranchCountForm";
 import type { CountProduct } from "@/features/counts/queries";
 import { uploadPhotoAction } from "@/features/photos/actions";
-import { compressImage } from "@/lib/image";
+import { compressImage, FORM_PHOTO_QUALITY, FORM_PHOTO_SIDE } from "@/lib/image";
 import { readCountFormAction } from "../actions";
 
 type Props = { title: string; scheduleId: string | null; startedAt: string };
@@ -38,7 +38,7 @@ export function PhotoCount({ title, scheduleId, startedAt }: Props) {
     if (!file) return;
     setState({ step: "reading" });
     try {
-      const blob = await compressImage(file);
+      const blob = await compressImage(file, FORM_PHOTO_SIDE, FORM_PHOTO_QUALITY);
       setPreview(URL.createObjectURL(blob));
       const data = new FormData();
       data.set("photo", new File([blob], "form.jpg", { type: "image/jpeg" }));
